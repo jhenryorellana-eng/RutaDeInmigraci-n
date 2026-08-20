@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/*
+ * Los colores viven SÓLO aquí, igual que en ANDEX. Un hex suelto en un
+ * componente elude cualquier revisión de contraste sin dejar rastro.
+ *
+ * `--panel` es el color medio del borde inferior del retrato de Henry,
+ * medido sobre el archivo. Por eso la foto y el panel se unen sin canto: no
+ * hay línea ni degradado que delate dónde acaba la fotografía.
+ */
+@theme {
+  --color-panel: #19273E;
+  --color-fondo: #16223A;
+  --color-tinta: #F3F7FA;
+  --color-tinta-suave: #B4C6D6;
+  --color-tinta-tenue: #8FA6BA;
+  --color-pregunta: #C6D5E2;
+  --color-acento: #12B8A6;
+  --color-aviso: #FBE0A6;
+  --color-apagado: #5A6E85;
+
+  --font-titulo: Fraunces, Georgia, "Times New Roman", serif;
+  --font-cuerpo: Manrope, ui-sans-serif, system-ui, sans-serif;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: var(--font-cuerpo);
+  /* Nunca por debajo de 16px: esto se lee bajo el sol, con vista cansada y
+     en un teléfono de gama baja. */
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Todo lo pulsable llega a 44px: el dedo no apunta a un píxel. */
+button, a[role="button"] { min-height: 44px; }
+
+:focus-visible {
+  outline: 2px solid var(--color-acento);
+  outline-offset: 2px;
+}
