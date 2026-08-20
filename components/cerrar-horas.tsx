@@ -3,19 +3,27 @@
 import { useState, useTransition } from "react";
 
 import { cerrar, reabrir } from "@/app/panel/acciones";
-import { fechaLarga, horaEnZona } from "@/lib/horario";
+import { fechaLarga, horaEnZona, horaSuelta } from "@/lib/horario";
 
 /**
- * ABRIR Y CERRAR HORAS.
+ * LOS DÍAS QUE SE CAEN.
  *
- * El horario base corre solo. Aquí sólo se toca la excepción — y la
- * excepción real es «el viernes no estoy», no cerrar horas sueltas. Por eso
- * «Todo el día» es lo primero y el tramo de horas es un extra plegado.
+ * El horario de todas las semanas se edita al lado. Esto es el otro nivel: la
+ * excepción de UNA fecha —un viaje, el dentista—, y la excepción de verdad es
+ * «el viernes no estoy». Por eso «Todo el día» es lo primero y el tramo de
+ * horas es un extra.
+ *
+ * Cerrar aquí mete UNA SOLA FILA para todo el rato, así que reabrirlo también
+ * es de una pieza. Cerrar desde el calendario mete una fila por hora, y por
+ * eso allí sí se reabre hora a hora. Son dos gestos distintos con dos
+ * intenciones distintas, y hacerlos iguales sería peor.
  */
 
 type Cierre = { id: number; inicia_en: string; termina_en: string; nota: string | null };
 
-const HORAS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+/* Las veinticuatro, no de 8 a 17: con el horario en manos de Henry, sus horas
+   ya no son las que estaban escritas aquí. */
+const HORAS = Array.from({ length: 25 }, (_, i) => i);
 
 export function CerrarHoras({ cierres }: { cierres: Cierre[] }) {
   const [enCurso, empezar] = useTransition();
@@ -42,11 +50,11 @@ export function CerrarHoras({ cierres }: { cierres: Cierre[] }) {
   return (
     <aside>
       <h2 className="font-titulo text-[24px] font-semibold leading-[1.2]">
-        Abrir y cerrar horas
+        Días que se caen
       </h2>
-      <p className="mt-2 text-[15px] leading-[1.45] text-tinta-tenue">
-        El horario de siempre corre solo: lunes a viernes de 8 a 5 y sábados de
-        8 a 1. Aquí sólo se marca lo que se sale de eso.
+      <p className="mt-2 text-[16px] leading-[1.45] text-tinta-suave">
+        Un viaje, una cita médica, un día que no. Esto sólo vale para esa
+        fecha; tu horario de todas las semanas no se toca.
       </p>
 
       <div className="mt-5 flex flex-col gap-3 rounded-[20px] border border-white/12 p-5">
@@ -109,7 +117,7 @@ export function CerrarHoras({ cierres }: { cierres: Cierre[] }) {
         </label>
 
         {error ? (
-          <p role="alert" className="text-[15px] text-aviso">{error}</p>
+          <p role="alert" className="text-[16px] text-aviso">{error}</p>
         ) : null}
 
         <button
@@ -127,7 +135,7 @@ export function CerrarHoras({ cierres }: { cierres: Cierre[] }) {
       </p>
 
       {cierres.length === 0 ? (
-        <p className="mt-2 text-[15px] text-tinta-tenue">
+        <p className="mt-2 text-[16px] text-tinta-suave">
           Nada cerrado. Todo el horario está abierto.
         </p>
       ) : (
@@ -138,10 +146,10 @@ export function CerrarHoras({ cierres }: { cierres: Cierre[] }) {
               className="flex items-center justify-between gap-3 rounded-2xl border border-white/12 px-4 py-3"
             >
               <span className="min-w-0">
-                <span className="block text-[15px] first-letter:uppercase">
+                <span className="block text-[16px] first-letter:uppercase">
                   {fechaLarga(new Date(c.inicia_en))}
                 </span>
-                <span className="block text-[14px] text-tinta-tenue">
+                <span className="block text-[15px] text-tinta-tenue">
                   {esDiaCompleto(c)
                     ? "todo el día"
                     : `${horaEnZona(new Date(c.inicia_en))} – ${horaEnZona(new Date(c.termina_en))}`}
@@ -153,7 +161,7 @@ export function CerrarHoras({ cierres }: { cierres: Cierre[] }) {
                   await reabrir(c.id);
                 }}
               >
-                <button className="min-h-11 shrink-0 text-[14px] text-acento underline underline-offset-4">
+                <button className="min-h-11 shrink-0 text-[15px] text-acento underline underline-offset-4">
                   Reabrir
                 </button>
               </form>
@@ -191,7 +199,7 @@ function Selector({
       >
         {HORAS.map((h) => (
           <option key={h} value={h}>
-            {h}:00
+            {horaSuelta(h)}
           </option>
         ))}
       </select>

@@ -1,5 +1,6 @@
 import { clienteServidor, hayBase } from "@/lib/supabase/servidor";
 import { dentroDelHorario, proximosDias, type Dia } from "@/lib/horario";
+import { leerTramos } from "@/lib/tramos";
 
 /**
  * LO QUE LA PANTALLA NECESITA SABER DE LA BASE.
@@ -24,7 +25,11 @@ export async function diasDisponibles(
   ahora: Date = new Date(),
   cuantos = 6,
 ): Promise<DiaConHuecos[]> {
-  const dias: Dia[] = proximosDias(ahora, cuantos);
+  /* Los tramos salen de la base, no de una constante: si Henry parte el
+     martes en «de 8 a 1 y de 3 a 5», la pantalla deja de ofrecer las 13 y
+     las 14 sin que nadie toque el código. */
+  const tramos = await leerTramos();
+  const dias: Dia[] = proximosDias(ahora, cuantos, tramos);
   if (dias.length === 0) return [];
 
   const ocupadas = new Set<number>();
@@ -71,8 +76,9 @@ export type Resultado = { ok: true } | { ok: false; motivo: string };
  */
 export async function apartarCita(datos: DatosCita): Promise<Resultado> {
   const cuando = new Date(datos.iso);
+  const tramos = await leerTramos();
 
-  if (Number.isNaN(cuando.getTime()) || !dentroDelHorario(cuando)) {
+  if (Number.isNaN(cuando.getTime()) || !dentroDelHorario(cuando, tramos)) {
     return { ok: false, motivo: "Esa hora no está dentro del horario de atención." };
   }
   if (cuando.getTime() <= Date.now()) {

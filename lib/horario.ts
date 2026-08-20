@@ -1,17 +1,35 @@
 /**
  * EL HORARIO, EN CÓDIGO.
  *
- * Lunes a viernes de 8:00 a 17:00 y sábados de 8:00 a 13:00, hora de Utah.
- * Las sesiones duran 45 minutos y empiezan en punto, así que la última entre
- * semana empieza a las 16:00 y el sábado a las 12:00.
+ * Las sesiones duran 45 minutos y empiezan en punto, en la hora de Utah.
  *
- * ── Por qué esto está duplicado en la base de datos ──
+ * ── El horario ya no está escrito aquí ──
  *
- * `dentro_del_horario()` en `0001_citas.sql` dice exactamente lo mismo. No es
- * un descuido: este archivo decide QUÉ SE PINTA y aquella función decide QUÉ
- * SE ACEPTA. Cualquiera con la clave pública puede llamar a la API sin pasar
- * por esta pantalla; si el horario viviera sólo aquí, apartar el domingo a
- * las tres de la mañana sería una petición hecha a mano.
+ * Antes estaba: «lunes a viernes de 8 a 17, sábado de 8 a 13», en una
+ * constante. Ahora vive en la tabla `horario` de la base y llega a estas
+ * funciones como una lista de TRAMOS, porque Henry tiene que poder cambiarlo
+ * sin que nadie toque el código.
+ *
+ * Un tramo es `[desdeHora, hastaHora)` — la hora de cierre no se ofrece. Un
+ * día puede tener varios, y ésa es justo la gracia: «de 8 a 1 y de 3 a 5»
+ * son dos tramos con un agujero en medio, que es lo que no se podía decir
+ * con una hora de apertura y otra de cierre.
+ *
+ * ── Por qué el parámetro va al final y tiene valor por defecto ──
+ *
+ * Para que estas funciones sigan siendo puras y comprobables sin base de
+ * datos. Las pruebas pasan los tramos que quieren; el sitio pasa los de la
+ * base. `HORARIO_POR_DEFECTO` es la red de un despliegue sin base conectada,
+ * no la fuente de verdad.
+ *
+ * ── Por qué esto está duplicado en la base ──
+ *
+ * `dentro_del_horario()` en `0002_horario.sql` responde a la misma pregunta.
+ * No es un descuido: este archivo decide QUÉ SE PINTA y aquella función
+ * decide QUÉ SE ACEPTA. Cualquiera con la clave pública puede llamar a la
+ * API sin pasar por esta pantalla; si el horario viviera sólo aquí, apartar
+ * el domingo a las tres de la mañana sería una petición hecha a mano.
+ * Ahora las dos leen los mismos tramos, así que ya no pueden discrepar.
  *
  * ── Por qué no hay librería de fechas ──
  *
@@ -27,16 +45,53 @@ export const ZONA = "America/Denver";
 /** Cuánto dura una sesión. */
 export const MINUTOS_SESION = 45;
 
-/** Horas de inicio, por día de la semana ISO (1 = lunes … 7 = domingo). */
-const HORAS_POR_DIA: Record<number, readonly number[]> = {
-  1: [8, 9, 10, 11, 12, 13, 14, 15, 16],
-  2: [8, 9, 10, 11, 12, 13, 14, 15, 16],
-  3: [8, 9, 10, 11, 12, 13, 14, 15, 16],
-  4: [8, 9, 10, 11, 12, 13, 14, 15, 16],
-  5: [8, 9, 10, 11, 12, 13, 14, 15, 16],
-  6: [8, 9, 10, 11, 12],
-  7: [],
+/**
+ * Un rato abierto de un día de la semana.
+ *
+ * `diaSemana` en ISO: 1 = lunes … 7 = domingo, igual que `extract(isodow)`
+ * en Postgres, para que no haya que traducir en la frontera.
+ */
+export type Tramo = {
+  diaSemana: number;
+  desdeHora: number;
+  hastaHora: number;
 };
+
+/**
+ * El horario con el que arranca la base, y el que se usa si no hay base.
+ *
+ * No es la fuente de verdad: la fuente de verdad es la tabla `horario`. Esto
+ * existe para que un despliegue sin variables configuradas enseñe un horario
+ * creíble en vez de una pantalla vacía, y para que las pruebas tengan algo
+ * con lo que empezar.
+ */
+export const HORARIO_POR_DEFECTO: readonly Tramo[] = [
+  { diaSemana: 1, desdeHora: 8, hastaHora: 17 },
+  { diaSemana: 2, desdeHora: 8, hastaHora: 17 },
+  { diaSemana: 3, desdeHora: 8, hastaHora: 17 },
+  { diaSemana: 4, desdeHora: 8, hastaHora: 17 },
+  { diaSemana: 5, desdeHora: 8, hastaHora: 17 },
+  { diaSemana: 6, desdeHora: 8, hastaHora: 13 },
+];
+
+/**
+ * Las horas de inicio que ofrece un día de la semana, ordenadas.
+ *
+ * Sin repetidos y en orden a propósito: si dos tramos se pisaran —la base lo
+ * impide, pero estas funciones también las llaman las pruebas y el modo sin
+ * base— una hora repetida pintaría dos botones para el mismo hueco.
+ */
+export function horasDelDiaSemana(
+  diaSemana: number,
+  tramos: readonly Tramo[] = HORARIO_POR_DEFECTO,
+): number[] {
+  const horas = new Set<number>();
+  for (const t of tramos) {
+    if (t.diaSemana !== diaSemana) continue;
+    for (let h = t.desdeHora; h < t.hastaHora; h += 1) horas.add(h);
+  }
+  return [...horas].sort((a, b) => a - b);
+}
 
 const PARTES = new Intl.DateTimeFormat("en-CA", {
   timeZone: ZONA,
@@ -111,20 +166,32 @@ export function instanteEnZona(
   return new Date(tentativo - desfase(primera));
 }
 
-/** Los huecos que ofrece un día, en instantes. Vacío si está cerrado. */
-export function huecosDelDia(anio: number, mes: number, dia: number): Date[] {
+/** El día de la semana ISO (1 = lunes … 7 = domingo) de una fecha. */
+export function diaSemanaDe(anio: number, mes: number, dia: number): number {
   const diaJs = new Date(Date.UTC(anio, mes - 1, dia)).getUTCDay();
-  const diaSemana = diaJs === 0 ? 7 : diaJs;
-  return (HORAS_POR_DIA[diaSemana] ?? []).map((h) =>
+  return diaJs === 0 ? 7 : diaJs;
+}
+
+/** Los huecos que ofrece un día, en instantes. Vacío si está cerrado. */
+export function huecosDelDia(
+  anio: number,
+  mes: number,
+  dia: number,
+  tramos: readonly Tramo[] = HORARIO_POR_DEFECTO,
+): Date[] {
+  return horasDelDiaSemana(diaSemanaDe(anio, mes, dia), tramos).map((h) =>
     instanteEnZona(anio, mes, dia, h),
   );
 }
 
 /** ¿Este instante cae dentro del horario? El espejo del portero de la base. */
-export function dentroDelHorario(instante: Date): boolean {
+export function dentroDelHorario(
+  instante: Date,
+  tramos: readonly Tramo[] = HORARIO_POR_DEFECTO,
+): boolean {
   const p = partesEnZona(instante);
   if (p.minuto !== 0) return false;
-  return (HORAS_POR_DIA[p.diaSemana] ?? []).includes(p.hora);
+  return horasDelDiaSemana(p.diaSemana, tramos).includes(p.hora);
 }
 
 export type Dia = {
@@ -137,39 +204,44 @@ export type Dia = {
   huecos: Date[];
 };
 
-function clave(anio: number, mes: number, dia: number): string {
+export function clave(anio: number, mes: number, dia: number): string {
   return `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 }
 
 /**
  * Los próximos días con huecos, a partir de un instante.
  *
- * Devuelve días ABIERTOS: los domingos no se pintan como «sin horas», se
+ * Devuelve días ABIERTOS: los cerrados no se pintan como «sin horas», se
  * saltan. Enseñar un día vacío obliga a tocarlo para descubrir que no hay
  * nada, y esta pantalla existe para ahorrar toques.
  */
-export function proximosDias(desde: Date, cuantos = 6): Dia[] {
+export function proximosDias(
+  desde: Date,
+  cuantos = 6,
+  tramos: readonly Tramo[] = HORARIO_POR_DEFECTO,
+): Dia[] {
   const dias: Dia[] = [];
   const p = partesEnZona(desde);
   let cursor = Date.UTC(p.anio, p.mes - 1, p.dia);
 
   /* Tope de 21 iteraciones: seis días abiertos caben de sobra en tres
-     semanas, y un bucle sin freno en el servidor es un incidente. */
+     semanas, y un bucle sin freno en el servidor es un incidente. Con el
+     horario en manos de Henry esto pasa de precaución a necesidad: si un día
+     cierra la semana entera, sin tope el bucle no pararía nunca. */
   for (let i = 0; i < 21 && dias.length < cuantos; i += 1) {
     const d = new Date(cursor);
     const anio = d.getUTCFullYear();
     const mes = d.getUTCMonth() + 1;
     const dia = d.getUTCDate();
-    const huecos = huecosDelDia(anio, mes, dia).filter((h) => h > desde);
+    const huecos = huecosDelDia(anio, mes, dia, tramos).filter((h) => h > desde);
 
     if (huecos.length > 0) {
-      const diaJs = d.getUTCDay();
       dias.push({
         clave: clave(anio, mes, dia),
         anio,
         mes,
         dia,
-        diaSemana: diaJs === 0 ? 7 : diaJs,
+        diaSemana: diaSemanaDe(anio, mes, dia),
         huecos,
       });
     }
@@ -177,6 +249,82 @@ export function proximosDias(desde: Date, cuantos = 6): Dia[] {
   }
 
   return dias;
+}
+
+/**
+ * Los días de una semana, desde su lunes.
+ *
+ * Los días CERRADOS también salen, al revés que en `proximosDias()`. Es la
+ * diferencia entre las dos pantallas: quien reserva no quiere ver días
+ * vacíos, y Henry sí — un día cerrado es información para él, y además es
+ * donde tiene que tocar para reabrirlo.
+ *
+ * El domingo sólo aparece si tiene tramos: una columna vacía fija robaría
+ * una séptima parte del ancho para no decir nada.
+ */
+export function semanaDesde(
+  lunes: { anio: number; mes: number; dia: number },
+  tramos: readonly Tramo[] = HORARIO_POR_DEFECTO,
+): Dia[] {
+  const dias: Dia[] = [];
+  let cursor = Date.UTC(lunes.anio, lunes.mes - 1, lunes.dia);
+
+  for (let i = 0; i < 7; i += 1) {
+    const d = new Date(cursor);
+    const anio = d.getUTCFullYear();
+    const mes = d.getUTCMonth() + 1;
+    const dia = d.getUTCDate();
+    const diaSemana = diaSemanaDe(anio, mes, dia);
+
+    if (diaSemana !== 7 || horasDelDiaSemana(7, tramos).length > 0) {
+      dias.push({
+        clave: clave(anio, mes, dia),
+        anio,
+        mes,
+        dia,
+        diaSemana,
+        huecos: huecosDelDia(anio, mes, dia, tramos),
+      });
+    }
+    cursor += 24 * 60 * 60 * 1000;
+  }
+
+  return dias;
+}
+
+/** El lunes de la semana en la que cae un instante, en fecha de Utah. */
+export function lunesDe(instante: Date): { anio: number; mes: number; dia: number } {
+  const p = partesEnZona(instante);
+  const utc = Date.UTC(p.anio, p.mes - 1, p.dia) - (p.diaSemana - 1) * 86_400_000;
+  const d = new Date(utc);
+  return { anio: d.getUTCFullYear(), mes: d.getUTCMonth() + 1, dia: d.getUTCDate() };
+}
+
+/** Suma días a una fecha de calendario, sin pasar por instantes. */
+export function sumaDias(
+  fecha: { anio: number; mes: number; dia: number },
+  cuantos: number,
+): { anio: number; mes: number; dia: number } {
+  const d = new Date(Date.UTC(fecha.anio, fecha.mes - 1, fecha.dia) + cuantos * 86_400_000);
+  return { anio: d.getUTCFullYear(), mes: d.getUTCMonth() + 1, dia: d.getUTCDate() };
+}
+
+/**
+ * Todas las horas que abarca el horario, para pintar las filas de la rejilla.
+ *
+ * La rejilla del panel necesita una fila por hora aunque ese día concreto no
+ * la ofrezca: si el lunes abre a las 8 y el sábado a las 10, la fila de las
+ * 8 tiene que existir para que el lunes tenga dónde ponerse.
+ */
+export function franjaDeHoras(
+  tramos: readonly Tramo[] = HORARIO_POR_DEFECTO,
+): number[] {
+  if (tramos.length === 0) return [];
+  const min = Math.min(...tramos.map((t) => t.desdeHora));
+  const max = Math.max(...tramos.map((t) => t.hastaHora));
+  const horas: number[] = [];
+  for (let h = min; h < max; h += 1) horas.push(h);
+  return horas;
 }
 
 /**
@@ -197,11 +345,25 @@ export function horaEnZona(instante: Date, zona: string = ZONA): string {
   return crudo.replace(/^0/, "").replace(/^24:/, "0:");
 }
 
+/** «11:00» a partir del número de hora, sin pasar por un instante. */
+export function horaSuelta(hora: number): string {
+  return `${hora}:00`;
+}
+
 /** «jueves 20 de agosto», en la zona que se le pase. */
 export function fechaLarga(instante: Date, zona: string = ZONA): string {
   return new Intl.DateTimeFormat("es-MX", {
     timeZone: zona,
     weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(instante);
+}
+
+/** «20 de agosto», sin el día de la semana. */
+export function fechaCorta(instante: Date, zona: string = ZONA): string {
+  return new Intl.DateTimeFormat("es-MX", {
+    timeZone: zona,
     day: "numeric",
     month: "long",
   }).format(instante);
@@ -213,4 +375,90 @@ export function diaCorto(instante: Date, zona: string = ZONA): string {
     .format(instante)
     .replace(".", "")
     .toUpperCase();
+}
+
+const NOMBRES_DIA = [
+  "lunes",
+  "martes",
+  "miércoles",
+  "jueves",
+  "viernes",
+  "sábado",
+  "domingo",
+];
+
+/** «lunes», «martes»… para la pantalla del horario. */
+export function nombreDiaSemana(diaSemana: number): string {
+  return NOMBRES_DIA[diaSemana - 1] ?? "";
+}
+
+const PLURALES = [
+  "lunes",
+  "martes",
+  "miércoles",
+  "jueves",
+  "viernes",
+  "sábados",
+  "domingos",
+];
+
+/**
+ * El horario dicho en una frase: «De lunes a viernes, de 8:00 a 13:00 y de
+ * 15:00 a 17:00. Los sábados, de 8:00 a 13:00.»
+ *
+ * Existe porque ese texto estaba escrito a mano al pie de la pantalla de
+ * reserva, y en cuanto Henry cambie sus horas pasaría a ser una promesa
+ * falsa publicada. Un horario que se puede cambiar tiene que contarse solo.
+ *
+ * Los días con los MISMOS tramos se agrupan, y si además son seguidos se
+ * dicen como un rango. Así «lunes, martes, miércoles, jueves y viernes» no
+ * ocupa una línea entera para decir «de lunes a viernes».
+ */
+export function describirHorario(
+  tramos: readonly Tramo[] = HORARIO_POR_DEFECTO,
+): string {
+  const firmas = new Map<number, string>();
+  for (let d = 1; d <= 7; d += 1) {
+    const suyos = tramos
+      .filter((t) => t.diaSemana === d)
+      .sort((a, b) => a.desdeHora - b.desdeHora)
+      .map((t) => `${t.desdeHora}-${t.hastaHora}`)
+      .join(",");
+    if (suyos) firmas.set(d, suyos);
+  }
+
+  if (firmas.size === 0) return "";
+
+  /* Los días seguidos con la misma firma se juntan en un bloque. */
+  const bloques: { dias: number[]; firma: string }[] = [];
+  for (const [dia, firma] of [...firmas.entries()].sort((a, b) => a[0] - b[0])) {
+    const ultimo = bloques.at(-1);
+    if (ultimo && ultimo.firma === firma && ultimo.dias.at(-1) === dia - 1) {
+      ultimo.dias.push(dia);
+    } else {
+      bloques.push({ dias: [dia], firma });
+    }
+  }
+
+  return bloques
+    .map((b) => `${nombresDe(b.dias)}, ${horasDe(b.firma)}.`)
+    .join(" ");
+}
+
+function nombresDe(dias: number[]): string {
+  if (dias.length === 1) return `Los ${PLURALES[dias[0] - 1]}`;
+  if (dias.length === 2) {
+    return `Los ${PLURALES[dias[0] - 1]} y los ${PLURALES[dias[1] - 1]}`;
+  }
+  /* Tres o más seguidos: un rango. «De lunes a viernes» usa el singular. */
+  return `De ${NOMBRES_DIA[dias[0] - 1]} a ${NOMBRES_DIA[dias.at(-1)! - 1]}`;
+}
+
+function horasDe(firma: string): string {
+  const partes = firma.split(",").map((p) => {
+    const [d, h] = p.split("-").map(Number);
+    return `de ${horaSuelta(d)} a ${horaSuelta(h)}`;
+  });
+  if (partes.length === 1) return partes[0];
+  return `${partes.slice(0, -1).join(", ")} y ${partes.at(-1)}`;
 }

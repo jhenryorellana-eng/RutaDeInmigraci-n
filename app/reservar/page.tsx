@@ -2,7 +2,9 @@ import Link from "next/link";
 
 import { FormularioReserva } from "@/components/formulario-reserva";
 import { diasDisponibles } from "@/lib/citas";
+import { describirHorario } from "@/lib/horario";
 import { hayBase } from "@/lib/supabase/servidor";
+import { leerTramos } from "@/lib/tramos";
 
 /**
  * HOJA 2 — APARTAR.
@@ -21,7 +23,7 @@ import { hayBase } from "@/lib/supabase/servidor";
 export const dynamic = "force-dynamic";
 
 export default async function Reservar() {
-  const dias = await diasDisponibles();
+  const [dias, tramos] = await Promise.all([diasDisponibles(), leerTramos()]);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[520px] flex-col px-6 pb-7 pt-6">
@@ -63,10 +65,12 @@ export default async function Reservar() {
         <FormularioReserva dias={dias} conectada={hayBase} />
       )}
 
+      {/* El horario se cuenta solo desde los tramos de la base: escrito a
+          mano, cada cambio de Henry lo convertiría en una promesa falsa que
+          nadie se acordaría de tocar. */}
       <p className="mt-auto pt-8 text-[14px] leading-[1.5] text-tinta-tenue">
-        Lunes a viernes de 8:00 a 17:00 y sábados de 8:00 a 13:00, hora de
-        Utah. Henry no es abogado y esto no es asesoría legal: cuando tu caso
-        necesite uno, te lo dirá.
+        {describirHorario(tramos)} Hora de Utah. Henry no es abogado y esto no
+        es asesoría legal: cuando tu caso necesite uno, te lo dirá.
       </p>
     </main>
   );
