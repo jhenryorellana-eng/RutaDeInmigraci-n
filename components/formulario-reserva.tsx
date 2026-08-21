@@ -83,7 +83,7 @@ export function FormularioReserva({
   }
 
   return (
-    <div className="mt-6 flex flex-1 flex-col">
+    <div className="mt-6 flex flex-1 flex-col lg:mt-8 lg:flex-none">
       {/* ── Lo ya resuelto, encogido ── */}
       {diaElegido && dia ? (
         <Resuelto
@@ -105,10 +105,10 @@ export function FormularioReserva({
       {/* ── Paso 1 · el día ── */}
       {paso === "dia" ? (
         <>
-          <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em]">
+          <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:mt-7 lg:text-[40px] lg:leading-[1.12]">
             ¿Qué día nos vemos?
           </h1>
-          <div className="mt-5 grid grid-cols-3 gap-2.5">
+          <div className="mt-5 grid grid-cols-3 gap-2.5 lg:mt-[18px] lg:grid-cols-4">
             {dias.map((d) => {
               const primero = new Date(d.huecos[0].iso);
               const libres = d.huecos.filter((h) => h.libre).length;
@@ -149,7 +149,7 @@ export function FormularioReserva({
           <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em]">
             ¿A qué hora nos vemos?
           </h1>
-          <div className="mt-5 grid grid-cols-2 gap-2.5">
+          <div className="mt-5 grid grid-cols-2 gap-2.5 lg:mt-[18px] lg:grid-cols-3">
             {dia.huecos.map((h) => {
               const cuando = new Date(h.iso);
               return (
@@ -195,7 +195,7 @@ export function FormularioReserva({
             ¿Y tú quién eres?
           </h1>
 
-          <div className="mt-5 flex flex-col gap-2.5">
+          <div className="mt-5 flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:gap-2.5">
             <Campo
               etiqueta="Tu nombre"
               valor={nombre}
