@@ -97,6 +97,19 @@ Las dos salen de **Project settings → API** en Supabase. Son las públicas: la
 salta el RLS entero, que es lo único que impide leer los datos de todas las
 personas que han apartado una cita.
 
+La clave pública admite sus **dos nombres**, y da igual cuál uses:
+
+| Variable | Qué es |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | la nueva, `sb_publishable_…` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | la de siempre, un JWT que empieza por `eyJ` |
+
+Se aceptan las dos a propósito. El panel de Supabase ya ofrece la nueva con
+ese nombre, así que copiarla tal cual es lo que cualquiera haría al
+desplegar — y si sólo valiera el nombre viejo, el fallo sería de los peores:
+el sitio **arranca, se ve entero y no conecta con nada**, y eso no se
+descubre hasta que alguien intenta apartar una hora.
+
 ### 3 · La cuenta de Henry
 
 No hay registro público, y es a propósito: un alta abierta en una agenda con
@@ -128,8 +141,8 @@ npm run typecheck
 
 1. Sube el repo a GitHub.
 2. En Vercel, **Add New → Project**, elige el repo.
-3. Pon `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en
-   *Environment Variables*.
+3. Pon `NEXT_PUBLIC_SUPABASE_URL` y la clave pública en *Environment
+   Variables* — con cualquiera de sus dos nombres, los dos valen.
 4. Desplegar.
 
 Sin variables el sitio **sigue en pie**: enseña el horario y avisa de que la
