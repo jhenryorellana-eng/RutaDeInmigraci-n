@@ -24,16 +24,16 @@ export type Enlace = {
 
 export const ENLACES: Enlace[] = [
   {
-    titulo: "UsaLatino Prime",
-    etiqueta: "Comunidad",
+    titulo: "Comunidad ANDEX",
+    etiqueta: "Migración",
     descripcion: "Tu camino seguro hacia el sueño americano.",
     href: "https://andex.usalatinoprime.com/",
     tono: "ambar",
     icono: "estrella",
   },
   {
-    titulo: "StarbizAcademy",
-    etiqueta: "Bootcamp",
+    titulo: "Conoce el Bootcamp",
+    etiqueta: "Emprendimiento",
     descripcion: "Emprendimiento, liderazgo y transformación familiar.",
     href: "https://comunidad.starbizacademy.com/bootcamp",
     tono: "cian",

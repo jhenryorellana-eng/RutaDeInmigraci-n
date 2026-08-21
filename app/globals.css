@@ -55,3 +55,76 @@ button, a[role="button"] { min-height: 44px; }
   outline: 2px solid var(--color-acento);
   outline-offset: 2px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   LA PARED DE ENLACES · el neón
+   ═══════════════════════════════════════════════════════════
+
+   Todo el resplandor se hace con `radial-gradient` y `box-shadow`, y NUNCA
+   con `filter: blur()`. Un blur grande obliga al teléfono a rasterizar la
+   capa entera y volver a componerla en cada scroll; en un Android de gama
+   media —que es con lo que este público abre los enlaces— eso se nota en
+   los dedos. Un degradado y una sombra los pinta la GPU sin pensar.
+
+   Los colores salen todos de los tokens de arriba: aquí no hay ni un hex. */
+
+.pared-neon {
+  background:
+    radial-gradient(58% 38% at 12% 2%,
+      color-mix(in srgb, var(--color-acento) 16%, transparent), transparent 72%),
+    radial-gradient(52% 34% at 92% 14%,
+      color-mix(in srgb, var(--color-violeta) 15%, transparent), transparent 72%),
+    radial-gradient(64% 30% at 50% 62%,
+      color-mix(in srgb, var(--color-cian) 10%, transparent), transparent 74%),
+    radial-gradient(80% 34% at 50% 104%,
+      color-mix(in srgb, var(--color-acento) 14%, transparent), transparent 72%),
+    var(--color-noche);
+}
+
+/* El nombre, encendido. Dos halos: uno cerrado que le da cuerpo y otro
+   abierto que tiñe el aire alrededor. */
+.neon-nombre {
+  text-shadow:
+    0 0 18px color-mix(in srgb, var(--color-cian) 34%, transparent),
+    0 0 46px color-mix(in srgb, var(--color-violeta) 26%, transparent);
+}
+
+/* El tubo de luz que corre por el borde de arriba de cada tarjeta: brilla en
+   el centro y se apaga hacia los extremos, como uno de verdad. */
+.tubo-neon {
+  background: linear-gradient(
+    to right,
+    transparent,
+    currentColor 28%,
+    currentColor 72%,
+    transparent
+  );
+  box-shadow: 0 0 12px currentColor;
+}
+
+/* El aro del retrato, encendido por detrás. */
+.halo-aro {
+  box-shadow:
+    0 0 26px color-mix(in srgb, var(--color-cian) 40%, transparent),
+    0 0 62px color-mix(in srgb, var(--color-violeta) 26%, transparent);
+}
+
+/* Cada tarjeta descansa sobre su propio charco de luz. `currentColor` para
+   que el tono lo ponga la tarjeta y esta regla valga para las tres. */
+.charco-neon {
+  box-shadow: 0 14px 44px -20px currentColor;
+}
+.charco-neon:hover {
+  box-shadow: 0 16px 54px -16px currentColor;
+}
+
+/* Quien ha pedido menos movimiento no quiere que nada lata. */
+@media (prefers-reduced-motion: reduce) {
+  .late-neon { animation: none !important; }
+}
+
+@keyframes respirar {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1; }
+}
+.late-neon { animation: respirar 4.5s ease-in-out infinite; }
