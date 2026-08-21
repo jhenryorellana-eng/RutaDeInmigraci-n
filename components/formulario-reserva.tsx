@@ -158,7 +158,7 @@ export function FormularioReserva({
       {/* ── Paso 2 · la hora ── */}
       {paso === "hora" && dia ? (
         <>
-          <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em]">
+          <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:mt-7 lg:text-[40px] lg:leading-[1.12]">
             ¿A qué hora nos vemos?
           </h1>
           <div className="mt-5 grid grid-cols-2 gap-2.5 lg:mt-[18px] lg:grid-cols-3">
@@ -203,8 +203,8 @@ export function FormularioReserva({
       {/* ── Paso 3 · quién eres ── */}
       {paso === "datos" && horaElegida ? (
         <>
-          <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em]">
-            ¿Con quién nos vemos?
+          <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:mt-7 lg:text-[40px] lg:leading-[1.12]">
+            Llena tus datos
           </h1>
 
           <div className="mt-5 flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:gap-2.5">
