@@ -17,8 +17,8 @@ export type Enlace = {
   descripcion: string;
   href: string;
   interno?: boolean;
-  /** El color que trae esa marca. Sale de `globals.css`, no de un hex suelto. */
-  tono: "ambar" | "cian" | "teal";
+  /** Su temperatura, no su color: sale de `globals.css`, nunca de un hex suelto. */
+  tono: "arena" | "acero" | "teal";
   icono: "estrella" | "cohete" | "ruta";
 };
 
@@ -38,7 +38,7 @@ export const ENLACES: Enlace[] = [
     etiqueta: "Migración",
     descripcion: "Tu camino seguro hacia el sueño americano.",
     href: "https://andex.usalatinoprime.com/",
-    tono: "ambar",
+    tono: "arena",
     icono: "estrella",
   },
   {
@@ -46,7 +46,7 @@ export const ENLACES: Enlace[] = [
     etiqueta: "Emprendimiento",
     descripcion: "Emprendimiento, liderazgo y transformación familiar.",
     href: "https://comunidad.starbizacademy.com/bootcamp",
-    tono: "cian",
+    tono: "acero",
     icono: "cohete",
   },
 ];

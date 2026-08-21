@@ -12,20 +12,30 @@ import { WHATSAPP_HENRY } from "@/lib/pago";
  * de una biografía de Instagram o de un mensaje, con el pulgar en el borde
  * de la pantalla y ganas de tocar UNA cosa.
  *
+ * ── Serio sin ser soso ──
+ *
+ * La primera versión era neón de rótulo: cuatro focos de color, un charco de
+ * luz bajo cada tarjeta y el nombre encendido. Llamaba la atención sin decir
+ * nada, y al lado de eso los tres proyectos parecían lo de menos.
+ *
+ * Lo que sostiene ahora la pantalla no es el brillo, son tres cosas que no
+ * gritan:
+ *
+ *   · el NOMBRE en la serif del sitio, que es lo que le da edad y oficio a
+ *     una pantalla — una sans en negrita es lo que hace todo el mundo;
+ *   · UNA luz arriba, blanca, que da profundidad sin teñir nada;
+ *   · el color reducido a tres detalles por tarjeta —un filo, un icono y un
+ *     punto— sobre fondos que siguen siendo grises.
+ *
+ * Y los acentos dejan de ser colores para ser TEMPERATURAS: la arena es
+ * cálida, el acero frío, el teal es el de la marca. A media distancia
+ * parecen tres grises; de cerca, cada tarjeta tiene carácter propio.
+ *
  * ── Por qué es negra y no azul como el resto del sitio ──
  *
  * Porque no es una pantalla de este sitio: es la puerta a tres proyectos
- * distintos, y uno de ellos es éste. Con el azul de aquí, «Tu ruta del
- * inmigrante» parecería la casa y los otros dos, invitados. El negro no tira
- * de ninguno de los tres y deja que cada tarjeta traiga su propio color.
- *
- * ── El neón, y lo que cuesta ──
- *
- * Todo el resplandor sale de `radial-gradient` y `box-shadow`, definidos en
- * `globals.css`. Ni un `filter: blur()`: un desenfoque grande obliga al
- * teléfono a rasterizar la capa entera y recomponerla en cada scroll, y este
- * público abre los enlaces en Android de gama media. Un degradado y una
- * sombra los pinta la GPU sin despeinarse.
+ * distintos, y uno de ellos es éste. Con el azul de aquí, la sesión con
+ * Henry parecería la casa y los otros dos, invitados.
  *
  * ── Lo que NO tiene, aunque la referencia sí ──
  *
@@ -33,35 +43,34 @@ import { WHATSAPP_HENRY } from "@/lib/pago";
  * direcciones, y un icono de red que no lleva a ninguna parte es peor que no
  * ponerlo: quien lo toca se queda en la misma pantalla creyendo que el sitio
  * está roto. En su lugar va el WhatsApp, que es el único contacto de Henry
- * que aquí consta de verdad. Cuando lleguen las redes, se añaden.
- *
- * Tampoco lleva el punto verde de «en línea» de la referencia. Sugiere que
- * está disponible ahora mismo, y nadie lo está comprobando.
+ * que aquí consta de verdad.
  */
 
 export const metadata: Metadata = {
   title: "Henry Orellana D. · Todos sus proyectos",
   description:
-    "Comunidad, bootcamp de emprendimiento y sesión uno a uno para armar tu ruta del inmigrante.",
+    "Sesión personalizada, comunidad y bootcamp de emprendimiento con Henry Orellana.",
 };
 
 export default function Links() {
   return (
     <>
-      {/* El fondo con sus cuatro focos, fijo: el `body` es azul para el resto
-          del sitio y aquí se tapa entero, también al hacer scroll. */}
-      <div aria-hidden="true" className="pared-neon fixed inset-0 -z-10" />
+      {/* El fondo, fijo: el `body` es azul para el resto del sitio y aquí se
+          tapa entero, también al hacer scroll. */}
+      <div aria-hidden="true" className="pared-luz fixed inset-0 -z-10" />
 
-      <main className="mx-auto flex min-h-dvh w-full max-w-[34rem] flex-col items-center px-6 pb-12 pt-14 text-center">
-        {/* ── El retrato, con su aro encendido ──
+      <main className="mx-auto flex min-h-dvh w-full max-w-[32rem] flex-col items-center px-6 pb-12 pt-16 text-center">
+        {/* ── El retrato ──
+
+            Un aro de un pelo, monocromo. El arcoíris de antes competía con
+            la cara que rodeaba.
 
             Tres capas y no un `ring`: el anillo de Tailwind se dibuja HACIA
-            FUERA del borde, así que tapaba justo el aro de color que venía
-            detrás. Medido: el aro salía pintado de 138 px y el anillo negro
-            de 5 px lo cubría entero. */}
-        <div className="halo-aro late-neon rounded-full bg-[conic-gradient(from_180deg,var(--color-acento),var(--color-cian),var(--color-violeta),var(--color-aviso),var(--color-acento))] p-[3px]">
-          <div className="rounded-full bg-noche p-[4px]">
-            <div className="relative size-[118px] overflow-hidden rounded-full sm:size-[130px]">
+            FUERA del borde, así que tapaba el aro que venía detrás. Medido:
+            el aro salía pintado de 138 px y el anillo negro lo cubría. */}
+        <div className="rounded-full bg-[linear-gradient(160deg,color-mix(in_srgb,white_28%,transparent),color-mix(in_srgb,white_6%,transparent))] p-px">
+          <div className="rounded-full bg-noche p-[5px]">
+            <div className="relative size-[112px] overflow-hidden rounded-full sm:size-[124px]">
               <Image
                 src="/henry-retrato.jpg"
                 alt="Henry Orellana Domínguez"
@@ -74,37 +83,25 @@ export default function Links() {
           </div>
         </div>
 
-        <span className="mt-7 inline-flex items-center gap-2 rounded-full border border-acento/30 bg-noche-panel/80 px-4 py-2 text-[13px] font-bold uppercase tracking-[0.14em] text-tinta-suave shadow-[0_0_22px_-8px_var(--color-acento)]">
-          <svg
-            aria-hidden="true"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-acento"
-          >
-            <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" />
-          </svg>
+        <span className="mt-7 text-[12px] font-bold uppercase tracking-[0.22em] text-tinta-tenue">
           Orellana Group
         </span>
 
-        <h1 className="neon-nombre mt-5 text-[38px] font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-[46px]">
+        {/* La serif del sitio. Es lo único que hace que esta pantalla no
+            parezca la plantilla que usa todo el mundo. */}
+        <h1 className="mt-3 font-titulo text-[40px] font-semibold leading-[1.04] tracking-[-0.022em] sm:text-[48px]">
           Henry Orellana D.
         </h1>
 
-        <p className="mt-3 text-[17px] font-bold text-tinta-suave sm:text-[18px]">
+        <p className="mt-4 text-[16px] text-tinta-suave">
           Fundador y CEO · Orellana Group
         </p>
-        <p className="mt-1.5 text-[16px] leading-[1.5] text-tinta-tenue sm:text-[17px]">
+        <p className="mt-1 text-[16px] leading-[1.5] text-tinta-tenue">
           Transformando familias, empoderando líderes
         </p>
 
         {/* ── Los tres sitios ── */}
-        <div className="mt-10 flex w-full flex-col gap-5">
+        <div className="mt-11 flex w-full flex-col gap-3">
           {ENLACES.map((e) => (
             <Tarjeta key={e.href} enlace={e} />
           ))}
@@ -115,62 +112,33 @@ export default function Links() {
           href={`https://wa.me/${WHATSAPP_HENRY}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-9 flex min-h-[54px] items-center justify-center gap-2.5 rounded-full border border-acento/35 px-7 text-[16px] font-bold text-tinta-suave shadow-[0_0_26px_-12px_var(--color-acento)] transition-shadow hover:shadow-[0_0_34px_-8px_var(--color-acento)]"
+          className="mt-9 flex min-h-[52px] items-center justify-center gap-2.5 rounded-full border border-white/12 px-7 text-[16px] font-bold text-tinta-suave transition-colors hover:border-white/28"
         >
-          <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.87 9.87 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.38.11-.5.11-.11.25-.29.37-.44.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.47c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.11-.22-.17-.47-.29Z" />
           </svg>
           Escribirle por WhatsApp
         </a>
 
-        {/* ── El pie, encendido ── */}
-        <div className="mt-auto flex w-full flex-col items-center pt-12">
-          <span
-            aria-hidden="true"
-            className="tubo-neon late-neon h-px w-40 text-violeta"
-          />
-          <p className="mt-5 text-[15px] text-tinta-tenue/70">
-            © {new Date().getFullYear()} Orellana Group
-          </p>
-        </div>
+        <p className="mt-auto pt-14 text-[14px] text-tinta-tenue/60">
+          © {new Date().getFullYear()} Orellana Group
+        </p>
       </main>
     </>
   );
 }
 
-/* Cada tono trae su borde, su fondo y su luz. Escrito así, y no componiendo
-   la clase con una plantilla, porque Tailwind sólo genera las clases que
-   encuentra ESCRITAS ENTERAS en el código: una clase armada con `bg-${tono}`
-   no existiría en la hoja de estilos y el color no saldría.
+/* Cada temperatura trae su filo, su icono y su punto. Escrito así, y no
+   componiendo la clase con una plantilla, porque Tailwind sólo genera las
+   clases que encuentra ESCRITAS ENTERAS en el código: una clase armada con
+   `text-${tono}` no existiría en la hoja de estilos y el color no saldría.
 
-   `texto` pone el `currentColor` del que beben el tubo de luz de arriba y el
-   charco de abajo — por eso el título y la descripción llevan su color
-   escrito, o heredarían el de la luz. */
+   `texto` pone el `currentColor` del que bebe el filo de arriba — por eso el
+   título y la descripción llevan su color escrito, o heredarían el del filo. */
 const TONOS = {
-  ambar: {
-    texto: "text-aviso",
-    tarjeta: "border-aviso/25 hover:border-aviso/55",
-    halo: "bg-gradient-to-br from-aviso/[0.14] via-aviso/[0.04] to-transparent",
-    icono: "bg-aviso/15 text-aviso shadow-[0_0_28px_-10px_var(--color-aviso)]",
-    etiqueta: "bg-aviso/15 text-aviso",
-    flecha: "border-aviso/35 text-aviso",
-  },
-  cian: {
-    texto: "text-cian",
-    tarjeta: "border-cian/25 hover:border-cian/55",
-    halo: "bg-gradient-to-br from-cian/[0.14] via-cian/[0.04] to-transparent",
-    icono: "bg-cian/15 text-cian shadow-[0_0_28px_-10px_var(--color-cian)]",
-    etiqueta: "bg-cian/15 text-cian",
-    flecha: "border-cian/35 text-cian",
-  },
-  teal: {
-    texto: "text-acento",
-    tarjeta: "border-acento/25 hover:border-acento/55",
-    halo: "bg-gradient-to-br from-acento/[0.14] via-acento/[0.04] to-transparent",
-    icono: "bg-acento/15 text-acento shadow-[0_0_28px_-10px_var(--color-acento)]",
-    etiqueta: "bg-acento/15 text-acento",
-    flecha: "border-acento/35 text-acento",
-  },
+  arena: { texto: "text-arena", icono: "text-arena", punto: "bg-arena" },
+  acero: { texto: "text-acero", icono: "text-acero", punto: "bg-acero" },
+  teal: { texto: "text-acento", icono: "text-acento", punto: "bg-acento" },
 } as const;
 
 function Tarjeta({ enlace }: { enlace: Enlace }) {
@@ -178,41 +146,39 @@ function Tarjeta({ enlace }: { enlace: Enlace }) {
 
   const dentro = (
     <>
-      <div aria-hidden="true" className={`absolute inset-0 ${t.halo}`} />
+      {/* El filo de luz: un pelo de color que se apaga hacia los lados y se
+          enciende del todo al pasar por encima. Es todo el acento que lleva
+          la tarjeta — el fondo se queda gris. */}
+      <span aria-hidden="true" className="filo-luz absolute inset-x-8 top-0 h-px" />
 
-      {/* El tubo de luz del borde de arriba: brilla en el centro y se apaga
-          hacia los extremos, como uno de verdad. */}
-      <span aria-hidden="true" className="tubo-neon absolute inset-x-6 top-0 h-px" />
-
-      <div className="relative flex items-start gap-4">
+      <div className="flex items-center gap-4">
         <span
-          className={`flex size-[60px] shrink-0 items-center justify-center rounded-[18px] ${t.icono}`}
+          className={`flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] ${t.icono}`}
         >
           <Icono cual={enlace.icono} />
         </span>
 
         <span className="min-w-0 flex-1">
-          <span className="block text-[20px] font-extrabold leading-[1.2] tracking-[-0.02em] text-tinta sm:text-[22px]">
+          <span className="block text-[18px] font-bold leading-[1.25] tracking-[-0.015em] text-tinta">
             {enlace.titulo}
           </span>
-          <span
-            className={`mt-2 inline-block rounded-full px-3 py-1 text-[13px] font-bold ${t.etiqueta}`}
-          >
-            {enlace.etiqueta}
+          <span className="mt-1.5 flex items-center gap-2">
+            <span aria-hidden="true" className={`size-1.5 shrink-0 rounded-full ${t.punto}`} />
+            <span className="text-[14px] font-medium text-tinta-tenue">{enlace.etiqueta}</span>
           </span>
         </span>
 
         <span
           aria-hidden="true"
-          className={`flex size-9 shrink-0 items-center justify-center rounded-full border ${t.flecha}`}
+          className="shrink-0 text-tinta-tenue transition-transform group-hover:translate-x-0.5"
         >
           <svg
-            width="15"
-            height="15"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="3"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -221,7 +187,7 @@ function Tarjeta({ enlace }: { enlace: Enlace }) {
         </span>
       </div>
 
-      <p className="relative mt-3.5 text-[16px] leading-[1.5] text-tinta-suave">
+      <p className="mt-3 text-[15px] leading-[1.5] text-tinta-tenue">
         {enlace.descripcion}
       </p>
     </>
@@ -230,7 +196,7 @@ function Tarjeta({ enlace }: { enlace: Enlace }) {
   /* El de este mismo sitio va por `Link`, que no recarga la página entera.
      Los de fuera, por `<a>` con `noopener`: sin él, la pestaña que se abre
      puede tocar `window.opener` y llevarse esta a otra dirección. */
-  const clases = `charco-neon relative block overflow-hidden rounded-[24px] border bg-noche-panel/90 p-5 text-left transition-colors ${t.texto} ${t.tarjeta}`;
+  const clases = `group relative block overflow-hidden rounded-2xl border border-white/[0.08] bg-noche-panel/70 px-5 py-4 text-left transition-colors hover:border-white/20 ${t.texto}`;
 
   return enlace.interno ? (
     <Link href={enlace.href} className={clases}>
@@ -245,12 +211,12 @@ function Tarjeta({ enlace }: { enlace: Enlace }) {
 
 function Icono({ cual }: { cual: Enlace["icono"] }) {
   const comun = {
-    width: 28,
-    height: 28,
+    width: 20,
+    height: 20,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 2,
+    strokeWidth: 1.8,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
     "aria-hidden": true,
