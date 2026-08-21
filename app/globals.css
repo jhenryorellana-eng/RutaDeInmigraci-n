@@ -19,6 +19,17 @@
   --color-aviso: #FBE0A6;
   --color-apagado: #5A6E85;
 
+  /* ── La pared de enlaces (/links) ──
+     Vive en negro y no en el azul del resto del sitio, a propósito: es la
+     puerta a TRES proyectos distintos, no una pantalla de éste. El negro no
+     tira de ninguno de los tres y deja que cada tarjeta traiga su color.
+     Todos medidos contra #08090C: ámbar 17.2:1, cian 9.2:1, violeta 5.9:1
+     y teal 7.9:1 — los cuatro por encima de 4.5. */
+  --color-noche: #08090C;
+  --color-noche-panel: #12141A;
+  --color-cian: #38BDF8;
+  --color-violeta: #8B7CF6;
+
   --font-titulo: Fraunces, Georgia, "Times New Roman", serif;
   --font-cuerpo: Manrope, ui-sans-serif, system-ui, sans-serif;
 }
