@@ -43,7 +43,7 @@ export const WHATSAPP_HENRY = "18019413479";
 /** Lo que cuesta la sesión. El precio se escribe AQUÍ y en ningún otro
  *  sitio: cuando estaba repetido por las pantallas, cambiarlo era buscar
  *  cuatro literales sueltos y rezar por no dejarse uno. */
-export const PRECIO_USD = 50;
+export const PRECIO_USD = 150;
 
 /** Donde la pantalla de reserva deja la cita para la de pago. */
 export const CLAVE_CITA = "ruta_cita_apartada";
