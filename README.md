@@ -222,6 +222,29 @@ formulario público acabaría ejecutándose en el ordenador de Henry.
 La semana viaja por la URL como `?s=1`, y eso **no** rompe la regla de abajo:
 es navegación, no un dato de nadie. No lleva nombres, ni correos, ni ids.
 
+### El pago, y por qué va después de apartar
+
+Se cobra por **Zelle**, a mano. Los datos están en `lib/pago.ts` y en ningún
+otro sitio.
+
+Aquí **no se pide ni un dato financiero**: sólo se enseña a dónde mandar el
+dinero. El pago ocurre entero dentro del banco de cada uno, así que no hace
+falta pasarela para empezar a cobrar y el producto no entra en el alcance de
+PCI DSS.
+
+El orden es **apartar primero, pagar después**, y es deliberado: pagar a mano
+tarda —abrir la app del banco, buscar Zelle, teclear un número— y si la hora
+no estuviera ya guardada, alguien podría quedarse sin ella mientras paga por
+ella.
+
+Los datos de Zelle **hay que verificarlos con Henry antes de tocarlos**. Un
+dígito mal manda el dinero de otra persona a un desconocido, y Zelle es de
+los pagos que no se pueden revertir.
+
+El mensaje de WhatsApp lleva el día y la hora **de Utah a secas**: la
+pantalla enseña también la hora local porque a quien reserva le hace falta,
+pero ese mensaje lo lee Henry, que no sabe dónde está esa persona.
+
 ### Nada del usuario viaja por la URL
 
 Ni el correo, ni el nombre, ni la nacionalidad. Una dirección queda en el
@@ -232,9 +255,11 @@ cualquier proxy por el que pase. Con este público eso es un riesgo real.
 
 ## Pendiente, y conviene tenerlo a la vista
 
-- **El cobro de los $150 no está conectado.** La reserva funciona y no cobra.
-  Cuando existan las credenciales de Stripe se enciende el paso de pago antes
-  de confirmar; el hueco está previsto en `lib/citas.ts`.
+- **El pago se comprueba a mano.** Se cobra por Zelle: la pantalla de gracias
+  enseña los datos y un botón para mandarle la captura por WhatsApp. El sitio
+  **no ve el banco de nadie**, así que no sabe si se ha pagado — lo confirma
+  Henry, y la pantalla lo dice con esas palabras en vez de dar a entender que
+  el sistema se entera. La hora queda apartada aunque no se pague.
 - **No se manda ningún correo.** Ni la confirmación ni el recordatorio. La
   pantalla de gracias ya lo promete y el formulario dice que por ahí llega el
   enlace de la sesión, así que esto es lo primero que hay que resolver antes

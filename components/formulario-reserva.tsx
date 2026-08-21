@@ -7,6 +7,7 @@ import { PAISES } from "@/lib/paises";
 import { diaCorto, fechaLarga, horaEnZona } from "@/lib/horario";
 import type { DiaConHuecos } from "@/lib/citas";
 import { reservar } from "@/app/reservar/accion";
+import { CLAVE_CITA } from "@/lib/pago";
 
 /**
  * UNA COSA A LA VEZ.
@@ -77,8 +78,19 @@ export function FormularioReserva({
         nacionalidad: pais,
         enEeuu,
       });
-      if (r.ok) router.push("/gracias");
-      else setError(r.motivo);
+      if (r.ok) {
+        /* La cita viaja a la pantalla de pago por `sessionStorage`, NO por la
+           URL: una dirección se queda en el historial del teléfono y en el
+           portapapeles de quien la copie. Y si el almacenamiento está
+           bloqueado, la pantalla de pago sigue funcionando sin la hora — que
+           es un adorno, mientras que los datos del banco no lo son. */
+        try {
+          sessionStorage.setItem(CLAVE_CITA, describirCita(horaElegida, zonaVisitante));
+        } catch {
+          /* modo privado */
+        }
+        router.push("/gracias");
+      } else setError(r.motivo);
     });
   }
 
@@ -208,7 +220,7 @@ export function FormularioReserva({
               onCambio={setCorreo}
               tipo="email"
               autoComplete="email"
-              ayuda="Ahí te llega el enlace de la videollamada."
+              ayuda="Para que Henry pueda escribirte si hace falta."
             />
 
             <label className="flex min-h-[56px] items-center rounded-2xl bg-white/[0.07] px-4">
@@ -292,6 +304,33 @@ export function FormularioReserva({
       ) : null}
     </div>
   );
+}
+
+/**
+ * «viernes 21 de agosto a las 10:00 de Utah (11:00 donde estás)».
+ *
+ * La hora de Utah es la que Henry tiene en la cabeza y la que va a leer en su
+ * panel; la local es la que hay que poner en el despertador. Sólo se dicen
+ * las dos cuando de verdad son distintas: repetir la misma hora dos veces
+ * hace dudar de si el sitio se ha equivocado.
+ */
+function describirCita(iso: string, zonaVisitante: string): string {
+  const cuando = new Date(iso);
+  const enUtah = horaEnZona(cuando);
+  const enSuCasa = horaEnZona(cuando, zonaVisitante);
+  const fecha = fechaLarga(cuando);
+
+  /* Dos formas de la misma cita, y cada una va a un sitio: la larga se pinta
+     en pantalla, la de Utah se manda por WhatsApp. Van juntas en un JSON en
+     vez de en dos claves para que no puedan quedar descolgadas la una de la
+     otra si alguien limpia media sesión. */
+  return JSON.stringify({
+    completa:
+      enUtah === enSuCasa
+        ? `${fecha} a las ${enUtah}`
+        : `${fecha} a las ${enUtah} de Utah (${enSuCasa} donde estás)`,
+    utah: `${fecha} a las ${enUtah}`,
+  });
 }
 
 function Resuelto({ texto, onCambiar }: { texto: string; onCambiar: () => void }) {

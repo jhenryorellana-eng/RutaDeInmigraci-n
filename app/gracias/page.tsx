@@ -1,14 +1,25 @@
 import Link from "next/link";
 
+import { PagoZelle } from "@/components/pago-zelle";
+
 /**
- * HOJA 3 — LISTO.
+ * HOJA 3 — APARTADA, Y AHORA EL PAGO.
  *
- * Corta a propósito. Lo único que hace falta después de apartar es saber que
- * quedó apartado y qué va a pasar ahora.
+ * La hora ya está guardada cuando se llega aquí, y eso se dice primero: es
+ * lo que quita la angustia. Después viene lo que falta, que es pagar.
  *
- * Lo que NO dice: la hora exacta. Esta pantalla se puede abrir de vuelta
- * desde el historial, y repetir ahí los datos de la cita sería enseñárselos
- * a quien tome el teléfono prestado. Van al correo, que es de quien reservó.
+ * ── Por qué el pago va DESPUÉS de apartar y no antes ──
+ *
+ * Porque el pago es a mano y tarda: hay que abrir la app del banco, buscar
+ * Zelle, teclear un número. Si la hora no estuviera ya guardada, alguien
+ * podría quedarse sin ella mientras paga por ella. Se aparta primero, se
+ * paga después, y Henry confirma.
+ *
+ * ── Lo que ya no dice esta pantalla ──
+ *
+ * «Te mandé un correo con el enlace de la videollamada». No se manda ningún
+ * correo —no está montado— y esa frase llevaba semanas prometiendo algo que
+ * no llegaba. Ahora el aviso va por donde de verdad va a ocurrir: WhatsApp.
  */
 export default function Gracias() {
   return (
@@ -31,27 +42,19 @@ export default function Gracias() {
         </svg>
       </span>
 
-      <h1 className="mt-6 font-titulo text-[38px] font-semibold leading-[1.08] tracking-[-0.02em] lg:mt-8 lg:text-[56px]">
+      <h1 className="mt-6 font-titulo text-[38px] font-semibold leading-[1.08] tracking-[-0.02em] lg:mt-8 lg:text-[52px]">
         Tu hora quedó apartada.
       </h1>
 
-      <p className="mx-auto mt-4 max-w-[36ch] text-[17px] leading-[1.55] text-tinta-suave lg:max-w-[44ch] lg:text-[19px]">
-        Te mandé un correo con el día, la hora y el enlace de la videollamada.
-        Si no lo ves, mira en «no deseado» antes de escribirme.
-      </p>
+      <PagoZelle />
 
-      <p className="mx-auto mt-4 max-w-[36ch] text-[17px] leading-[1.55] text-tinta-suave lg:max-w-[44ch] lg:text-[19px]">
-        Si algo te sale y no puedes venir, avísame y libero la hora para
-        alguien más.
-      </p>
-
-      <p className="mt-6 text-[15px] font-bold text-tinta-tenue">
+      <p className="mt-7 text-[15px] font-bold text-tinta-tenue">
         Henry Orellana · Fundador de ANDEX
       </p>
 
       <Link
         href="/"
-        className="mx-auto mt-8 inline-flex min-h-[52px] items-center justify-center rounded-full border border-white/25 px-7 text-[16px] font-bold"
+        className="mx-auto mt-5 inline-flex min-h-[52px] items-center justify-center rounded-full border border-white/25 px-7 text-[16px] font-bold"
       >
         Volver al inicio
       </Link>
