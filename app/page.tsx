@@ -43,8 +43,21 @@ export default function Portada() {
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-[520px] flex-col overflow-hidden bg-panel lg:max-w-none lg:bg-fondo">
       {/* El retrato: a sangre por arriba en el teléfono, mitad derecha en
-          escritorio. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 select-none lg:inset-y-0 lg:left-auto lg:right-0 lg:w-[46%]">
+          escritorio.
+
+          ── Por qué en el teléfono ocupa «lo que sobre» y no su alto natural ──
+
+          Antes la imagen se pintaba a su altura natural —el ancho por 1,5— y
+          el bloque de texto le caía encima donde cayera. En una pantalla
+          holgada quedaba bien; en un iPhone con la barra de Safari comiendo
+          alto, el texto llegaba hasta el CUELLO y la foto parecía cortada a
+          machete. El encuadre dependía del móvil de cada uno.
+
+          Ahora la foto es una caja `flex-1` que ocupa exactamente el hueco que
+          deja el texto, con `object-cover`: sea cual sea ese hueco, se recorta
+          por donde decimos nosotros y siempre se ve la cara y los hombros. El
+          `min-h` es el suelo para que en una pantalla muy corta no desaparezca. */}
+      <div className="pointer-events-none relative min-h-[20dvh] w-full flex-1 select-none overflow-hidden lg:absolute lg:inset-y-0 lg:left-auto lg:right-0 lg:w-[46%] lg:flex-none">
         <Image
           src="/henry-retrato.jpg"
           alt="Henry Orellana, fundador de ANDEX"
@@ -52,14 +65,19 @@ export default function Portada() {
           height={1653}
           priority
           sizes="(min-width: 1024px) 46vw, 100vw"
-          className="w-full lg:h-full lg:object-cover lg:object-[50%_16%]"
+          /* `absolute` y no un bloque normal: si la imagen ocupa sitio en el
+             flujo, su alto natural —el ancho por 1,5— manda sobre la caja y la
+             estira, que es justo lo que descuadraba la portada en el teléfono.
+             Sacándola del flujo, la caja mide lo que le toca y la imagen la
+             rellena. */
+          className="absolute inset-0 size-full object-cover object-[50%_14%] lg:object-[50%_16%]"
         />
 
         {/* El desvanecido del pie, sólo en el teléfono: en escritorio la
             costura es vertical y la hacen los dos velos de abajo. */}
         <div
           aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-b from-transparent to-panel lg:hidden"
+          className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-panel lg:hidden"
         />
 
         {/* El velo que funde la foto con el panel por su borde izquierdo.
@@ -75,7 +93,7 @@ export default function Portada() {
         />
       </div>
 
-      <header className="relative flex items-baseline justify-between px-6 pt-7 lg:absolute lg:inset-x-0 lg:z-10 lg:px-14 lg:pt-8">
+      <header className="absolute inset-x-0 top-0 z-10 flex items-baseline justify-between px-6 pt-7 lg:px-14 lg:pt-8">
         <span className="text-[17px] font-extrabold tracking-tight text-white [text-shadow:0_1px_12px_rgba(16,26,40,.55)] lg:text-[20px]">
           ANDEX
         </span>
@@ -84,11 +102,11 @@ export default function Portada() {
         </span>
       </header>
 
-      {/* El panel donde habla. `mt-auto` lo pega abajo sin fijar una altura:
-          en pantallas cortas sube y la foto se recorta por arriba, que es lo
-          que se puede perder sin que se pierda el mensaje. En escritorio
-          deja de pegarse abajo y se centra en la mitad izquierda. */}
-      <div className="relative mt-auto bg-gradient-to-b from-transparent via-panel to-fondo px-6 pb-7 pt-12 [--tw-gradient-via-position:46px] lg:mt-0 lg:flex lg:max-w-[45rem] lg:flex-1 lg:flex-col lg:justify-center lg:bg-none lg:px-14 lg:pb-0 lg:pt-0">
+      {/* El panel donde habla. En el teléfono va DESPUÉS de la foto en el
+          flujo, no encima: así su altura manda y la foto se adapta a lo que
+          quede, en vez de al revés. En escritorio se centra en la mitad
+          izquierda y la foto vuelve a ser absoluta a la derecha. */}
+      <div className="relative shrink-0 bg-gradient-to-b from-panel to-fondo px-6 pb-7 pt-6 lg:flex lg:max-w-[45rem] lg:flex-1 lg:shrink lg:flex-col lg:justify-center lg:bg-none lg:px-14 lg:pb-0 lg:pt-0">
         <p className="font-titulo text-[27px] leading-[1.18] text-pregunta lg:text-[34px] lg:leading-[1.2]">
           ¿Sabes cuál es tu siguiente trámite?
         </p>
