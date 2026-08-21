@@ -19,13 +19,18 @@ import Link from "next/link";
  * porque `hidden` esconde pero no impide la descarga, y este público abre
  * esto con datos contados.
  *
- * ── Por qué el panel es `--color-panel` ──
+ * ── Cómo se une la foto con el panel ──
  *
- * Ese tono es el color medio del borde inferior del retrato —su camisa—
- * medido sobre el archivo. Por eso la fotografía y el panel se unen sin
- * canto, sin línea y sin un degradado que delate el corte: la foto termina
- * justo donde él empieza a hablar. En escritorio la costura es vertical y la
- * hace el velo horizontal sobre el borde izquierdo de la foto.
+ * Con un desvanecido, y no porque los colores coincidan. El retrato anterior
+ * terminaba en su camisa, medida en #1A273F, casi igual que el panel: ahí la
+ * costura era invisible sin hacer nada. Éste termina en el mueble del fondo,
+ * medido en #393132, y a ninguna altura del archivo hay una franja que se
+ * acerque al azul del panel — se comprobó cortando de diez en diez por ciento.
+ *
+ * Así que la unión la hace un velo que va de transparente al color del panel
+ * sobre el tercio inferior de la foto. Cuesta un div y funciona con cualquier
+ * fotografía que venga después, en vez de depender de que el fondo del
+ * estudio case por casualidad.
  *
  * ── Lo que NO se promete ──
  *
@@ -41,13 +46,20 @@ export default function Portada() {
           escritorio. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 select-none lg:inset-y-0 lg:left-auto lg:right-0 lg:w-[46%]">
         <Image
-          src="/henry.jpg"
+          src="/henry-retrato.jpg"
           alt="Henry Orellana, fundador de ANDEX"
-          width={700}
-          height={853}
+          width={1100}
+          height={1653}
           priority
           sizes="(min-width: 1024px) 46vw, 100vw"
-          className="w-full lg:h-full lg:object-cover lg:object-[50%_18%]"
+          className="w-full lg:h-full lg:object-cover lg:object-[50%_16%]"
+        />
+
+        {/* El desvanecido del pie, sólo en el teléfono: en escritorio la
+            costura es vertical y la hacen los dos velos de abajo. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-b from-transparent to-panel lg:hidden"
         />
 
         {/* El velo que funde la foto con el panel por su borde izquierdo.

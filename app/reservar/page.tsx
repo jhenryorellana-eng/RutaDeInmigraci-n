@@ -37,12 +37,12 @@ export default async function Reservar() {
           de cualquier otro sistema de reservas. */}
       <aside className="relative hidden overflow-hidden lg:block">
         <Image
-          src="/henry.jpg"
+          src="/henry-retrato.jpg"
           alt=""
-          width={700}
-          height={853}
-          sizes="30rem"
-          className="absolute inset-0 size-full object-cover object-[50%_22%]"
+          width={1100}
+          height={1653}
+          sizes="34vw"
+          className="absolute inset-0 size-full object-cover object-[50%_18%]"
         />
         <div
           aria-hidden="true"
@@ -88,11 +88,15 @@ export default async function Reservar() {
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </Link>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/henry.jpg"
+        {/* Por `next/image` y no por un `<img>` suelto: esto son 38 píxeles y
+            el archivo pesa 120 KB. Sin optimizar, el teléfono se descargaba
+            el retrato entero para pintar un círculo del tamaño de una uña. */}
+        <Image
+          src="/henry-retrato.jpg"
           alt=""
-          className="size-[38px] shrink-0 rounded-full object-cover [object-position:50%_22%]"
+          width={76}
+          height={76}
+          className="size-[38px] shrink-0 rounded-full object-cover [object-position:50%_14%]"
         />
         <span className="text-[15px] text-tinta-tenue">45 min con Henry · $150</span>
       </div>
