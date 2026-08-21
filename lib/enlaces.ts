@@ -24,6 +24,16 @@ export type Enlace = {
 
 export const ENLACES: Enlace[] = [
   {
+    titulo: "Sesión Personalizada con Henry",
+    etiqueta: "La ruta del inmigrante",
+    descripcion:
+      "45 minutos para saber qué trámite te toca ahora, cuál viene después y cuáles no necesitas.",
+    href: "/",
+    interno: true,
+    tono: "teal",
+    icono: "ruta",
+  },
+  {
     titulo: "Comunidad ANDEX",
     etiqueta: "Migración",
     descripcion: "Tu camino seguro hacia el sueño americano.",
@@ -38,15 +48,5 @@ export const ENLACES: Enlace[] = [
     href: "https://comunidad.starbizacademy.com/bootcamp",
     tono: "cian",
     icono: "cohete",
-  },
-  {
-    titulo: "Tu ruta del inmigrante",
-    etiqueta: "Uno a uno con Henry",
-    descripcion:
-      "45 minutos para saber qué trámite te toca ahora, cuál viene después y cuáles no necesitas.",
-    href: "/",
-    interno: true,
-    tono: "teal",
-    icono: "ruta",
   },
 ];
