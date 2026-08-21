@@ -7,7 +7,7 @@ import { PAISES } from "@/lib/paises";
 import { diaCorto, fechaLarga, horaEnZona } from "@/lib/horario";
 import type { DiaConHuecos } from "@/lib/citas";
 import { reservar } from "@/app/reservar/accion";
-import { CLAVE_CITA } from "@/lib/pago";
+import { CLAVE_CITA, PRECIO_USD } from "@/lib/pago";
 
 /**
  * UNA COSA A LA VEZ.
@@ -281,7 +281,7 @@ export function FormularioReserva({
             className="mt-6 flex min-h-[60px] w-full items-center justify-between rounded-full bg-acento px-7 text-[18px] font-extrabold tracking-[-0.02em] text-fondo transition-opacity disabled:opacity-40"
           >
             <span>{enCurso ? "Apartando…" : "Apartar mi hora"}</span>
-            <span>$150</span>
+            <span>{`$${PRECIO_USD}`}</span>
           </button>
         </>
       ) : null}

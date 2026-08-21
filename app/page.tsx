@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { PRECIO_USD } from "@/lib/pago";
+
 /**
  * HOJA 1 — LA PREGUNTA Y SU RESPUESTA.
  *
@@ -128,7 +130,7 @@ export default function Portada() {
         <div className="mt-5 flex items-center gap-4 border-t border-white/15 pt-4 lg:mt-8 lg:gap-[26px] lg:pt-6">
           <Dato cifra="45 min" pie="uno a uno" />
           <span aria-hidden="true" className="h-8 w-px bg-white/15 lg:h-10" />
-          <Dato cifra="$150" pie="pago único" />
+          <Dato cifra={`$${PRECIO_USD}`} pie="pago único" />
           <span aria-hidden="true" className="h-8 w-px bg-white/15 lg:h-10" />
           <Dato cifra="1 plan" pie="estructurado" />
         </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormularioReserva } from "@/components/formulario-reserva";
 import { diasDisponibles } from "@/lib/citas";
 import { describirHorario } from "@/lib/horario";
+import { PRECIO_USD } from "@/lib/pago";
 import { hayBase } from "@/lib/supabase/servidor";
 import { leerTramos } from "@/lib/tramos";
 
@@ -98,7 +99,7 @@ export default async function Reservar() {
           height={76}
           className="size-[38px] shrink-0 rounded-full object-cover [object-position:50%_14%]"
         />
-        <span className="text-[15px] text-tinta-tenue">45 min con Henry · $150</span>
+        <span className="text-[15px] text-tinta-tenue">{`45 min con Henry · $${PRECIO_USD}`}</span>
       </div>
 
       {/* En escritorio el precio va arriba a la derecha, donde el artboard:
@@ -108,7 +109,7 @@ export default async function Reservar() {
         <Link href="/" className="text-[16px] text-tinta-tenue underline underline-offset-4">
           Volver
         </Link>
-        <span className="text-[20px] font-extrabold text-tinta-tenue">$150</span>
+        <span className="text-[20px] font-extrabold text-tinta-tenue">{`$${PRECIO_USD}`}</span>
       </div>
 
       {dias.length === 0 ? (
