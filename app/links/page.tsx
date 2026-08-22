@@ -159,7 +159,7 @@ function Tarjeta({ enlace }: { enlace: Enlace }) {
         <span
           className={
             enlace.logoSobreBlanco
-              ? "flex size-11 shrink-0 items-center justify-center rounded-xl bg-tinta p-1.5"
+              ? "flex size-11 shrink-0 items-center justify-center rounded-xl bg-tinta"
               : enlace.logo
                 ? "flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05]"
                 : `flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] ${t.icono}`
@@ -177,7 +177,12 @@ function Tarjeta({ enlace }: { enlace: Enlace }) {
                  pasaba, comprobado: `complete: false` y `naturalWidth: 0`
                  incluso con la tarjeta a la vista. */
               loading="eager"
-              className={enlace.logoSobreBlanco ? "size-full object-contain" : "size-9 object-contain"}
+              /* `object-contain` sobre un lienzo que ya trae su propio aire:
+                 el símbolo entra entero, sea alto y estrecho —el de
+                 UsaLatino Prime es 1387x1997 con su curva— o casi cuadrado.
+                 Antes se recortaba a un cuadrado a ojo y eso cortaba lo que
+                 sobresalía. */
+              className="size-9 object-contain"
             />
           ) : (
             <Icono cual={enlace.icono} />

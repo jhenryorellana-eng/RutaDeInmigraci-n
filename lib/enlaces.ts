@@ -65,7 +65,7 @@ export const ENLACES: Enlace[] = [
     href: "https://www.usalatinoprime.com/",
     tono: "malva",
     icono: "sello",
-    logo: "/logo-usalatinoprime.png",
+    logo: "/marca-usalatinoprime.png",
     logoSobreBlanco: true,
   },
   {
@@ -75,6 +75,6 @@ export const ENLACES: Enlace[] = [
     href: "https://comunidad.starbizacademy.com/bootcamp",
     tono: "acero",
     icono: "cohete",
-    logo: "/logo-starbiz.png",
+    logo: "/marca-starbiz.png",
   },
 ];
