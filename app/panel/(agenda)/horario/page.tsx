@@ -1,4 +1,5 @@
 import { CerrarHoras } from "@/components/cerrar-horas";
+import { AvisoMovil } from "@/components/panel/aviso-movil";
 import { EditorHorario } from "@/components/panel/editor-horario";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { leerTramosConId } from "@/lib/tramos";
@@ -46,6 +47,10 @@ export default async function PantallaHorario() {
             apartó las 4 de un jueves, esa hora se queda suya aunque cierres la
             tarde entera.
           </p>
+        </div>
+
+        <div className="mt-7">
+          <AvisoMovil clavePublica={process.env.NEXT_PUBLIC_VAPID_PUBLICA ?? ""} />
         </div>
 
         <div className="mt-7">

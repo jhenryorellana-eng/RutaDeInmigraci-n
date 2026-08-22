@@ -126,7 +126,49 @@ values ('el-uuid-del-usuario');
 
 Sin ese `insert`, la cuenta entra pero no ve nada — y así debe ser.
 
-### 4 · Correr
+### 4 · Los avisos al teléfono
+
+La agenda se puede instalar en el teléfono y avisar cuando alguien aparta una
+hora. Quien manda el aviso NO es este sitio, sino una Edge Function que corre
+dentro de Supabase, y es a propósito: para avisar hay que leer las
+suscripciones sin sesión —quien reserva no ha iniciado sesión— y eso desde
+aquí exigiría la `service_role`, que en este proyecto no se usa. Dentro de la
+función, esa llave la inyecta Supabase en el entorno: no pasa por el repo, ni
+por Vercel, ni por el navegador de nadie.
+
+Hace falta configurar cuatro secretos en **Edge Functions → avisar-cita →
+Secrets**:
+
+| Secreto | Qué es |
+|---|---|
+| `VAPID_PUBLICA` | la misma que `NEXT_PUBLIC_VAPID_PUBLICA` |
+| `VAPID_PRIVADA` | su pareja. **Nunca** en el repo ni en Vercel |
+| `VAPID_CONTACTO` | `mailto:` con un correo real, que es lo que pide el estándar |
+| `AVISO_SECRETO` | el mismo que lleva el trigger de `0005_avisar.sql` |
+
+Las dos llaves VAPID se generan de una vez:
+
+```bash
+node -e "console.log(require('web-push').generateVAPIDKeys())"
+```
+
+La **pública** va también en `.env.local` y en Vercel como
+`NEXT_PUBLIC_VAPID_PUBLICA`: con ella sólo se puede *pedir* una suscripción,
+nunca mandar un aviso, así que puede vivir en el navegador. La **privada** es
+la que firma, y sólo la conoce la función.
+
+Con eso, Henry entra al panel, va a **Mi horario** y le da a *Activar*.
+
+**En iPhone hay un paso previo**: Safari sólo deja avisar si la web está
+instalada en la pantalla de inicio (compartir → «Añadir a inicio»). Desde una
+pestaña normal no aparece ni el botón, y la pantalla lo explica en vez de
+dejar a alguien tocando algo que nunca va a funcionar.
+
+Lo que el aviso dice: el nombre y la hora. **No** el correo ni el teléfono —
+una notificación se lee en la pantalla de bloqueo, a la vista de cualquiera
+que tenga el teléfono delante.
+
+### 5 · Correr
 
 ```bash
 npm install
@@ -266,7 +308,10 @@ cualquier proxy por el que pase. Con este público eso es un riesgo real.
   de publicar.
 - **Por dónde se hace la sesión está sin decidir.** El panel no lanza ninguna
   llamada —es una agenda, no un centro de operaciones— pero en algún sitio
-  tiene que salir el enlace o el teléfono, y hoy no sale en ninguno.
+  tiene que salir el enlace, y hoy no sale en ninguno. Lo que sí hay es el
+  WhatsApp de cada persona, con un botón en el panel que abre su
+  conversación: por ahí llega el comprobante del pago y por ahí puede ir el
+  enlace mientras no haya correos.
 - **El panel no se ha visto contra datos reales.** Los tipos pasan, las 43
   pruebas del horario pasan y las rutas responden, pero la base todavía no
   existe: en cuanto esté creada hay que abrirlo y mirarlo, que es donde se
