@@ -18,13 +18,13 @@ export type Enlace = {
   href: string;
   interno?: boolean;
   /** Su temperatura, no su color: sale de `globals.css`, nunca de un hex suelto. */
-  tono: "arena" | "acero" | "teal";
-  icono: "estrella" | "cohete" | "ruta";
+  tono: "arena" | "malva" | "acero" | "teal";
+  icono: "estrella" | "sello" | "cohete" | "ruta";
 };
 
 export const ENLACES: Enlace[] = [
   {
-    titulo: "Sesión Personalizada con Henry",
+    titulo: "Asesoría personalizada",
     etiqueta: "La ruta del inmigrante",
     descripcion:
       "45 minutos para saber qué trámite te toca ahora, cuál viene después y cuáles no necesitas.",
@@ -34,15 +34,23 @@ export const ENLACES: Enlace[] = [
     icono: "ruta",
   },
   {
-    titulo: "Comunidad ANDEX",
-    etiqueta: "Migración",
+    titulo: "Comunidad Andex",
+    etiqueta: "Familias",
     descripcion: "Tu camino seguro hacia el sueño americano.",
     href: "https://andex.usalatinoprime.com/",
     tono: "arena",
     icono: "estrella",
   },
   {
-    titulo: "Conoce el Bootcamp",
+    titulo: "Servicio Migratorio",
+    etiqueta: "Trámites",
+    descripcion: "Los trámites migratorios, con el equipo de UsaLatino Prime.",
+    href: "https://www.usalatinoprime.com/",
+    tono: "malva",
+    icono: "sello",
+  },
+  {
+    titulo: "Bootcamp para Jóvenes",
     etiqueta: "Emprendimiento",
     descripcion: "Emprendimiento, liderazgo y transformación familiar.",
     href: "https://comunidad.starbizacademy.com/bootcamp",

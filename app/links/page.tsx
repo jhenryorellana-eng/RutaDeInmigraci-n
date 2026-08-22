@@ -8,7 +8,7 @@ import { WHATSAPP_HENRY } from "@/lib/pago";
 /**
  * LA PARED DE ENLACES.
  *
- * Una puerta a los tres proyectos de Henry. Nada más: quien llega aquí viene
+ * Una puerta a los cuatro sitios de Henry. Nada más: quien llega aquí viene
  * de una biografía de Instagram o de un mensaje, con el pulgar en el borde
  * de la pantalla y ganas de tocar UNA cosa.
  *
@@ -16,7 +16,7 @@ import { WHATSAPP_HENRY } from "@/lib/pago";
  *
  * La primera versión era neón de rótulo: cuatro focos de color, un charco de
  * luz bajo cada tarjeta y el nombre encendido. Llamaba la atención sin decir
- * nada, y al lado de eso los tres proyectos parecían lo de menos.
+ * nada, y al lado de eso los proyectos parecían lo de menos.
  *
  * Lo que sostiene ahora la pantalla no es el brillo, son tres cosas que no
  * gritan:
@@ -33,9 +33,9 @@ import { WHATSAPP_HENRY } from "@/lib/pago";
  *
  * ── Por qué es negra y no azul como el resto del sitio ──
  *
- * Porque no es una pantalla de este sitio: es la puerta a tres proyectos
+ * Porque no es una pantalla de este sitio: es la puerta a varios proyectos
  * distintos, y uno de ellos es éste. Con el azul de aquí, la sesión con
- * Henry parecería la casa y los otros dos, invitados.
+ * Henry parecería la casa y los demás, invitados.
  *
  * ── Lo que NO tiene, aunque la referencia sí ──
  *
@@ -49,7 +49,7 @@ import { WHATSAPP_HENRY } from "@/lib/pago";
 export const metadata: Metadata = {
   title: "Henry Orellana D. · Todos sus proyectos",
   description:
-    "Sesión personalizada, comunidad y bootcamp de emprendimiento con Henry Orellana.",
+    "Sesión personalizada, servicios migratorios, comunidad y bootcamp de emprendimiento con Henry Orellana.",
 };
 
 export default function Links() {
@@ -100,7 +100,7 @@ export default function Links() {
           Transformando familias, empoderando líderes
         </p>
 
-        {/* ── Los tres sitios ── */}
+        {/* ── Los cuatro sitios ── */}
         <div className="mt-11 flex w-full flex-col gap-3">
           {ENLACES.map((e) => (
             <Tarjeta key={e.href} enlace={e} />
@@ -137,6 +137,7 @@ export default function Links() {
    título y la descripción llevan su color escrito, o heredarían el del filo. */
 const TONOS = {
   arena: { texto: "text-arena", icono: "text-arena", punto: "bg-arena" },
+  malva: { texto: "text-malva", icono: "text-malva", punto: "bg-malva" },
   acero: { texto: "text-acero", icono: "text-acero", punto: "bg-acero" },
   teal: { texto: "text-acento", icono: "text-acento", punto: "bg-acento" },
 } as const;
@@ -226,6 +227,15 @@ function Icono({ cual }: { cual: Enlace["icono"] }) {
     return (
       <svg {...comun}>
         <path d="m12 2.6 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9L12 2.6Z" />
+      </svg>
+    );
+  }
+
+  if (cual === "sello") {
+    return (
+      <svg {...comun}>
+        <path d="M5 21h14M6 17.5h12a1 1 0 0 1 1 1V21H5v-2.5a1 1 0 0 1 1-1Z" />
+        <path d="M9 17.5v-2.2c0-.7-.3-1.3-.8-1.8A4.2 4.2 0 0 1 7 10.4a5 5 0 0 1 10 0c0 1.2-.5 2.3-1.2 3.1-.5.5-.8 1.1-.8 1.8v2.2" />
       </svg>
     );
   }

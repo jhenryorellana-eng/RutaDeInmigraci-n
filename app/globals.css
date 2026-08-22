@@ -23,8 +23,8 @@
      Vive en negro y no en el azul del resto del sitio, a propósito: es la
      puerta a TRES proyectos distintos, no una pantalla de éste. El negro no
      tira de ninguno de los tres y deja que cada tarjeta traiga su color.
-     Medidos contra #0B0C0E: arena 11.3:1, acero 9.1:1 y teal 7.9:1 — los
-     tres muy por encima de 4.5. */
+     Medidos contra #0B0C0E: arena 11.3:1, acero 9.1:1, malva 9.1:1 y teal
+     7.9:1 — los cuatro muy por encima de 4.5. */
   --color-noche: #0B0C0E;
   --color-noche-panel: #131519;
   /* Dos neutros con temperatura, no dos colores: la arena es cálida y el
@@ -32,6 +32,7 @@
      violeta de neón, que gritaban desde el otro lado de la habitación. */
   --color-arena: #D6C3A0;
   --color-acero: #9DB4CE;
+  --color-malva: #B5AECD;
 
   --font-titulo: Fraunces, Georgia, "Times New Roman", serif;
   --font-cuerpo: Manrope, ui-sans-serif, system-ui, sans-serif;
