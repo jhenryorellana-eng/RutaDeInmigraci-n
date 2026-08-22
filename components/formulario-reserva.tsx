@@ -43,6 +43,7 @@ export function FormularioReserva({
 
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [pais, setPais] = useState("");
   const [enEeuu, setEnEeuu] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +78,11 @@ export function FormularioReserva({
         correo,
         nacionalidad: pais,
         enEeuu,
+        whatsapp,
+        /* La zona del navegador viaja con la reserva para que el panel pueda
+           enseñar la hora de esa persona además de la de Utah. Nunca se
+           deduce de la IP: una IP puede ser la de una VPN. */
+        zonaHoraria: zonaVisitante,
       });
       if (r.ok) {
         /* La cita viaja a la pantalla de pago por `sessionStorage`, NO por la
@@ -220,7 +226,14 @@ export function FormularioReserva({
               onCambio={setCorreo}
               tipo="email"
               autoComplete="email"
-              ayuda="Para que Henry pueda escribirte si hace falta."
+            />
+            <Campo
+              etiqueta="Tu WhatsApp"
+              valor={whatsapp}
+              onCambio={setWhatsapp}
+              tipo="tel"
+              autoComplete="tel"
+              ayuda="Con el código de país, así: +1 801 941 3479. Por ahí le mandas el comprobante y él te manda el enlace."
             />
 
             <label className="flex min-h-[56px] items-center rounded-2xl bg-white/[0.07] px-4">
@@ -277,7 +290,7 @@ export function FormularioReserva({
           <button
             type="button"
             onClick={enviar}
-            disabled={enCurso || !nombre || !correo || !pais || enEeuu === null}
+            disabled={enCurso || !nombre || !correo || !whatsapp || !pais || enEeuu === null}
             className="mt-6 flex min-h-[60px] w-full items-center justify-between rounded-full bg-acento px-7 text-[18px] font-extrabold tracking-[-0.02em] text-fondo transition-opacity disabled:opacity-40"
           >
             <span>{enCurso ? "Apartando…" : "Apartar mi hora"}</span>
@@ -297,8 +310,8 @@ export function FormularioReserva({
           </span>
           <span className="text-[16px] text-tinta-tenue">
             {paso === "dia"
-              ? "Después: la hora, y tu nombre, correo y de dónde eres."
-              : "Después sólo te pido tu nombre, tu correo y de dónde eres."}
+              ? "Después: la hora, y tus datos para que Henry te escriba."
+              : "Después sólo te pido tu nombre, tu WhatsApp, tu correo y de dónde eres."}
           </span>
         </div>
       ) : null}

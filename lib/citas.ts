@@ -62,7 +62,20 @@ export type DatosCita = {
   correo: string;
   nacionalidad: string;
   enEeuu: boolean;
+  /** Con código de país. Se guarda en dígitos, que es lo que quiere `wa.me`. */
+  whatsapp: string;
+  /**
+   * La zona del navegador de quien reserva, para que el panel pueda enseñar
+   * su hora además de la de Utah. Sale del navegador, NUNCA de la IP: una IP
+   * puede ser la de una VPN o la de la biblioteca del pueblo de al lado.
+   */
+  zonaHoraria?: string;
 };
+
+/** Sólo dígitos, igual que hace el trigger en la base. */
+export function soloDigitos(texto: string): string {
+  return texto.replace(/\D/g, "");
+}
 
 export type Resultado = { ok: true } | { ok: false; motivo: string };
 
@@ -88,10 +101,22 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
     return { ok: false, motivo: "Escribe tu nombre." };
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo.trim())) {
-    return { ok: false, motivo: "Revisa tu correo: ahí te llega el enlace de la llamada." };
+    return { ok: false, motivo: "Revisa tu correo." };
   }
   if (!/^[A-Za-z]{2}$/.test(datos.nacionalidad)) {
     return { ok: false, motivo: "Elige tu nacionalidad." };
+  }
+
+  /* El número es lo que cierra la sesión: por ahí manda el comprobante y por
+     ahí le llega el enlace. Sin él, esa persona no tiene cómo llegar a
+     Henry ni Henry a ella. Ocho dígitos es lo más corto que existe con
+     código de país; quince, el techo del estándar E.164. */
+  const numero = soloDigitos(datos.whatsapp ?? "");
+  if (numero.length < 8 || numero.length > 15) {
+    return {
+      ok: false,
+      motivo: "Escribe tu WhatsApp con el código de país, por ejemplo +1 801 941 3479.",
+    };
   }
 
   if (!hayBase) {
@@ -108,6 +133,8 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
     correo: datos.correo.trim().toLowerCase(),
     nacionalidad: datos.nacionalidad.toUpperCase(),
     en_eeuu: datos.enEeuu,
+    whatsapp: numero,
+    zona_horaria: datos.zonaHoraria?.slice(0, 64) || null,
   });
 
   if (error) {

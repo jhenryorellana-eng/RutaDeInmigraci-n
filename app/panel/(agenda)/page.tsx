@@ -3,6 +3,8 @@ import {
   clave,
   diaCorto,
   franjaDeHoras,
+  horaDeQuienReserva,
+  horaEnZona,
   horasDelDiaSemana,
   instanteEnZona,
   lunesDe,
@@ -43,6 +45,8 @@ type Cita = {
   nombre: string;
   nacionalidad: string;
   en_eeuu: boolean;
+  whatsapp: string | null;
+  zona_horaria: string | null;
 };
 
 type Cierre = { id: number; inicia_en: string; termina_en: string };
@@ -76,7 +80,7 @@ export default async function PantallaCalendario({
   const [{ data: citas }, { data: cierres }] = await Promise.all([
     supabase
       .from("citas")
-      .select("id, inicia_en, nombre, nacionalidad, en_eeuu")
+      .select("id, inicia_en, nombre, nacionalidad, en_eeuu, whatsapp, zona_horaria")
       .gte("inicia_en", desde.toISOString())
       .lt("inicia_en", hasta.toISOString())
       .neq("estado", "cancelada")
@@ -124,6 +128,12 @@ export default async function PantallaCalendario({
           nombre: cita.nombre,
           pais: nombrePais(cita.nacionalidad),
           enEeuu: cita.en_eeuu,
+          hora: horaEnZona(t),
+          /* La hora que ve ESA persona. `null` cuando coincide con la de
+             Utah: repetir la misma hora dos veces hace dudar de si el sitio
+             se equivocó. */
+          horaSuya: horaDeQuienReserva(t, cita.zona_horaria),
+          whatsapp: cita.whatsapp,
         };
       }
 

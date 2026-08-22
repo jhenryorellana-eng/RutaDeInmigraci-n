@@ -1,5 +1,5 @@
 import { TablaPersonas, type Persona } from "@/components/panel/tabla-personas";
-import { diaCorto, horaEnZona, partesEnZona, ZONA } from "@/lib/horario";
+import { diaCorto, horaDeQuienReserva, horaEnZona, partesEnZona, ZONA } from "@/lib/horario";
 import { nombrePais } from "@/lib/paises";
 import { clienteServidor } from "@/lib/supabase/servidor";
 
@@ -34,6 +34,8 @@ type Fila = {
   en_eeuu: boolean;
   estado: string;
   creado_en: string;
+  whatsapp: string | null;
+  zona_horaria: string | null;
 };
 
 export default async function PantallaPersonas() {
@@ -41,9 +43,12 @@ export default async function PantallaPersonas() {
 
   const { data, count } = await supabase
     .from("citas")
-    .select("id, inicia_en, nombre, correo, nacionalidad, en_eeuu, estado, creado_en", {
-      count: "exact",
-    })
+    .select(
+      "id, inicia_en, nombre, correo, nacionalidad, en_eeuu, estado, creado_en, whatsapp, zona_horaria",
+      {
+        count: "exact",
+      },
+    )
     .order("inicia_en", { ascending: false })
     .limit(MAXIMO);
 
@@ -58,6 +63,11 @@ export default async function PantallaPersonas() {
       pais: nombrePais(f.nacionalidad),
       enEeuu: f.en_eeuu,
       cuando: `${diaCorto(cuando)} ${partesEnZona(cuando).dia} · ${horaEnZona(cuando)}`,
+      /* La hora que ve ESA persona en su teléfono. Sale `null` cuando está a
+         la misma hora que Utah: repetir «14:00 · 14:00» hace dudar de si el
+         sitio se equivocó. */
+      horaSuya: horaDeQuienReserva(cuando, f.zona_horaria),
+      whatsapp: f.whatsapp,
       apartoEl: diaYMes(new Date(f.creado_en)),
       cancelada: f.estado === "cancelada",
       pasada: cuando.getTime() < ahora,

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { Navegacion } from "@/components/panel/navegacion";
+import { RegistrarApp } from "@/components/panel/registrar-app";
 import { clienteServidor, hayBase } from "@/lib/supabase/servidor";
 
 /**
@@ -65,6 +66,7 @@ export default async function LayoutAgenda({ children }: { children: ReactNode }
 
   return (
     <div className="mx-auto w-full max-w-[1500px] px-4 pb-28 sm:px-6 md:pb-10">
+      <RegistrarApp />
       <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-white/15 py-4">
         <div className="flex items-center gap-6">
           <span className="text-[19px] font-extrabold tracking-tight">

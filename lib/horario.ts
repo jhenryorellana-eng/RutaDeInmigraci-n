@@ -345,6 +345,31 @@ export function horaEnZona(instante: Date, zona: string = ZONA): string {
   return crudo.replace(/^0/, "").replace(/^24:/, "0:");
 }
 
+/**
+ * La hora en la zona de quien reservó, para el panel de Henry.
+ *
+ * Devuelve `null` cuando no hay nada que añadir: si no se guardó la zona, si
+ * el dato no es una zona válida, o si esa persona está a la misma hora que
+ * Utah. Repetir «11:00 · 11:00» hace dudar de si el sitio se equivocó, y
+ * ésa es justo la duda que esta función existe para evitar.
+ *
+ * El `try` no es paranoia: la zona la manda un navegador, y `Intl` lanza una
+ * excepción con cualquier cadena que no reconozca. Sin él, un dato raro en
+ * una fila tumbaría la pantalla entera del panel.
+ */
+export function horaDeQuienReserva(
+  instante: Date,
+  zona: string | null | undefined,
+): string | null {
+  if (!zona || zona === ZONA) return null;
+  try {
+    const suya = horaEnZona(instante, zona);
+    return suya === horaEnZona(instante) ? null : suya;
+  } catch {
+    return null;
+  }
+}
+
 /** «11:00» a partir del número de hora, sin pasar por un instante. */
 export function horaSuelta(hora: number): string {
   return `${hora}:00`;

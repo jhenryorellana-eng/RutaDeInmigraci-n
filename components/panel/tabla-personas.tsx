@@ -24,6 +24,10 @@ export type Persona = {
   enEeuu: boolean;
   /** Ya formateado en el servidor, en hora de Utah: «JUE 20 · 9:00». */
   cuando: string;
+  /** La hora que ve ESA persona. `null` si está a la misma hora que Utah. */
+  horaSuya: string | null;
+  /** Sólo dígitos, con código de país. `null` en las citas anteriores a esto. */
+  whatsapp: string | null;
   apartoEl: string;
   cancelada: boolean;
   pasada: boolean;
@@ -167,13 +171,13 @@ export function TablaPersonas({
         <>
           {/* ── Escritorio: tabla ── */}
           <div className="mt-5 hidden overflow-hidden rounded-[20px] border border-white/12 lg:block">
-            <div className="grid grid-cols-[1.5fr_1fr_1.2fr_1.7fr_1.3fr_0.9fr] gap-4 bg-white/[0.045] px-6 py-3 text-[11px] font-medium tracking-[0.13em] text-tinta-tenue">
+                <div className="grid grid-cols-[1.4fr_0.9fr_1.1fr_1.5fr_1.5fr_1.1fr] gap-4 bg-white/[0.045] px-6 py-3 text-[11px] font-medium tracking-[0.13em] text-tinta-tenue">
               <span>NOMBRE</span>
               <span>DE DÓNDE</span>
               <span>DÓNDE ESTÁ</span>
               <span>CORREO</span>
-              <span>SU HORA (MT)</span>
-              <span>APARTÓ EL</span>
+              <span>LA CITA</span>
+              <span>WHATSAPP</span>
             </div>
 
             {visibles.map((p, i) => (
@@ -181,8 +185,8 @@ export function TablaPersonas({
                 key={p.id}
                 className={
                   i % 2 === 1
-                    ? "grid grid-cols-[1.5fr_1fr_1.2fr_1.7fr_1.3fr_0.9fr] items-center gap-4 border-t border-white/[0.07] bg-white/[0.02] px-6 py-3.5"
-                    : "grid grid-cols-[1.5fr_1fr_1.2fr_1.7fr_1.3fr_0.9fr] items-center gap-4 border-t border-white/[0.07] px-6 py-3.5"
+                    ? "grid grid-cols-[1.4fr_0.9fr_1.1fr_1.5fr_1.5fr_1.1fr] items-center gap-4 border-t border-white/[0.07] bg-white/[0.02] px-6 py-3.5"
+                    : "grid grid-cols-[1.4fr_0.9fr_1.1fr_1.5fr_1.5fr_1.1fr] items-center gap-4 border-t border-white/[0.07] px-6 py-3.5"
                 }
               >
                 <span className="min-w-0 truncate text-[17px] font-bold">
@@ -204,8 +208,15 @@ export function TablaPersonas({
                 <span className="min-w-0 truncate text-[16px] text-tinta-suave">
                   {p.correo}
                 </span>
-                <span className="text-[15px] tabular-nums">{p.cuando}</span>
-                <span className="text-[15px] text-tinta-tenue">{p.apartoEl}</span>
+                <span className="min-w-0 text-[15px] tabular-nums">
+                  <span className="block">{p.cuando} <span className="text-tinta-tenue">Utah</span></span>
+                  {p.horaSuya ? (
+                    <span className="block text-[14px] text-tinta-tenue">
+                      {p.horaSuya} donde está
+                    </span>
+                  ) : null}
+                </span>
+                <BotonWhatsapp persona={p} />
               </div>
             ))}
           </div>
@@ -220,7 +231,7 @@ export function TablaPersonas({
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                   <span className="text-[18px] font-bold">{p.nombre}</span>
                   <span className="text-[15px] tabular-nums text-tinta-suave">
-                    {p.cuando}
+                    {p.cuando} Utah
                   </span>
                 </div>
                 <p className="mt-1.5 text-[16px] text-tinta-suave">
@@ -230,10 +241,18 @@ export function TablaPersonas({
                   </span>
                 </p>
                 <p className="mt-1 break-all text-[16px] text-tinta-tenue">{p.correo}</p>
+                {p.horaSuya ? (
+                  <p className="mt-1 text-[15px] text-tinta-tenue">
+                    Para esa persona son las {p.horaSuya}
+                  </p>
+                ) : null}
                 <p className="mt-1 text-[15px] text-tinta-tenue">
                   Apartó el {p.apartoEl}
                   {p.cancelada ? " · cancelada" : ""}
                 </p>
+                <div className="mt-3">
+                  <BotonWhatsapp persona={p} />
+                </div>
               </article>
             ))}
           </div>
@@ -271,6 +290,37 @@ export function TablaPersonas({
 }
 
 /**
+ * ABRIR SU CONVERSACIÓN DE WHATSAPP.
+ *
+ * `wa.me` con el número en dígitos: abre el chat con ESA persona, en la app
+ * si está instalada y en el navegador si no. Sin mensaje escrito de
+ * antemano, porque lo que Henry le manda —el enlace de la sesión, una
+ * pregunta, un recordatorio— cambia cada vez.
+ *
+ * Las citas de antes de que se pidiera el número no lo tienen, y ahí se dice
+ * en vez de dejar un botón que no lleva a ningún sitio.
+ */
+function BotonWhatsapp({ persona }: { persona: Persona }) {
+  if (!persona.whatsapp) {
+    return <span className="text-[14px] text-tinta-tenue">sin número</span>;
+  }
+
+  return (
+    <a
+      href={`https://wa.me/${persona.whatsapp}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-acento/40 px-3 text-[15px] font-bold text-acento transition-colors hover:border-acento"
+    >
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.87 9.87 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.38.11-.5.11-.11.25-.29.37-.44.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.47c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.11-.22-.17-.47-.29Z" />
+      </svg>
+      Escribirle
+    </a>
+  );
+}
+
+/**
  * La lista en CSV.
  *
  * Cada campo va entre comillas y las comillas de dentro se duplican, que es
@@ -289,6 +339,8 @@ function aCsv(personas: Persona[]): string {
     "esta_en_eeuu",
     "correo",
     "hora_utah",
+    "hora_de_esa_persona",
+    "whatsapp",
     "aparto_el",
     "estado",
   ];
@@ -299,6 +351,8 @@ function aCsv(personas: Persona[]): string {
     p.enEeuu ? "si" : "no",
     p.correo,
     p.cuando,
+    p.horaSuya ?? "",
+    p.whatsapp ?? "",
     p.apartoEl,
     p.cancelada ? "cancelada" : p.pasada ? "pasada" : "por venir",
   ]);
