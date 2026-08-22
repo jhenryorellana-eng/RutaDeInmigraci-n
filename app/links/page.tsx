@@ -153,10 +153,35 @@ function Tarjeta({ enlace }: { enlace: Enlace }) {
       <span aria-hidden="true" className="filo-luz absolute inset-x-8 top-0 h-px" />
 
       <div className="flex items-center gap-4">
+        {/* Con logo, la caja se hace neutra y el dibujo se aparta: la marca
+            de otro no lleva encima nuestro color. Sin logo, el icono
+            dibujado toma el tono de la tarjeta. */}
         <span
-          className={`flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] ${t.icono}`}
+          className={
+            enlace.logoSobreBlanco
+              ? "flex size-11 shrink-0 items-center justify-center rounded-xl bg-tinta p-1.5"
+              : enlace.logo
+                ? "flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05]"
+                : `flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] ${t.icono}`
+          }
         >
-          <Icono cual={enlace.icono} />
+          {enlace.logo ? (
+            <Image
+              src={enlace.logo}
+              alt=""
+              width={72}
+              height={72}
+              /* Sin carga diferida: son 4 y 11 KB en una pantalla de cuatro
+                 tarjetas. Diferirlos no ahorra nada y sí deja el cuadro
+                 vacío hasta que el navegador se decide — que es justo lo que
+                 pasaba, comprobado: `complete: false` y `naturalWidth: 0`
+                 incluso con la tarjeta a la vista. */
+              loading="eager"
+              className={enlace.logoSobreBlanco ? "size-full object-contain" : "size-9 object-contain"}
+            />
+          ) : (
+            <Icono cual={enlace.icono} />
+          )}
         </span>
 
         <span className="min-w-0 flex-1">

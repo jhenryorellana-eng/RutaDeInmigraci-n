@@ -20,6 +20,23 @@ export type Enlace = {
   /** Su temperatura, no su color: sale de `globals.css`, nunca de un hex suelto. */
   tono: "arena" | "malva" | "acero" | "teal";
   icono: "estrella" | "sello" | "cohete" | "ruta";
+  /**
+   * Un logo de verdad, si la marca lo tiene. Sustituye al icono dibujado.
+   * Va como archivo y no como SVG porque el original es un JPEG con degradados
+   * —la estrella pasa de azul a rojo— y redibujarlo a mano sería inventarse
+   * la marca de otro.
+   */
+  logo?: string;
+  /**
+   * Sobre blanco, porque hay logos que no se ven en negro.
+   *
+   * El de UsaLatino Prime es azul marino: sobre el cuadro casi negro de la
+   * tarjeta desaparece —comprobado, se pintaba y no se distinguía—. El de
+   * Starbiz es neón y vive precisamente en negro, así que no lo lleva.
+   * Cada marca dice lo que necesita en vez de imponerles a todas el mismo
+   * fondo.
+   */
+  logoSobreBlanco?: boolean;
 };
 
 export const ENLACES: Enlace[] = [
@@ -48,6 +65,8 @@ export const ENLACES: Enlace[] = [
     href: "https://www.usalatinoprime.com/",
     tono: "malva",
     icono: "sello",
+    logo: "/logo-usalatinoprime.png",
+    logoSobreBlanco: true,
   },
   {
     titulo: "Bootcamp para Jóvenes",
@@ -56,5 +75,6 @@ export const ENLACES: Enlace[] = [
     href: "https://comunidad.starbizacademy.com/bootcamp",
     tono: "acero",
     icono: "cohete",
+    logo: "/logo-starbiz.png",
   },
 ];
