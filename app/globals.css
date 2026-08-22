@@ -23,10 +23,15 @@
      Vive en negro y no en el azul del resto del sitio, a propósito: es la
      puerta a TRES proyectos distintos, no una pantalla de éste. El negro no
      tira de ninguno de los tres y deja que cada tarjeta traiga su color.
-     Medidos contra #0B0C0E: arena 11.3:1, acero 9.1:1, malva 9.1:1 y teal
-     7.9:1 — los cuatro muy por encima de 4.5. */
-  --color-noche: #0B0C0E;
-  --color-noche-panel: #131519;
+     Medidos contra el negro de esa pantalla: agua 12.4:1, arena 11.0:1,
+     acero 8.9:1, malva 8.9:1 y teal 7.7:1 — todos muy por encima de 4.5. */
+  /* La pared de enlaces vive en un negro con temperatura fría, no en un gris
+     neutro: detrás hay una fotografía, y un negro puro contra una foto
+     cálida deja un canto azulado en el borde del degradado. */
+  --color-noche: #0C1418;
+  --color-noche-panel: #131A1E;
+  /* El agua: el único acento de esa pantalla, y sale dos veces. */
+  --color-agua: #9FE8D8;
   /* Dos neutros con temperatura, no dos colores: la arena es cálida y el
      acero frío, y a media distancia parecen grises. Sustituyen al cian y al
      violeta de neón, que gritaban desde el otro lado de la habitación. */
@@ -77,25 +82,48 @@ button, a[role="button"] { min-height: 44px; }
    este público abre los enlaces en Android de gama media. */
 
 .pared-luz {
-  background:
-    radial-gradient(70% 42% at 50% -8%,
-      color-mix(in srgb, white 7%, transparent), transparent 68%),
-    radial-gradient(90% 40% at 50% 104%,
-      color-mix(in srgb, var(--color-acento) 7%, transparent), transparent 72%),
-    var(--color-noche);
+  background: var(--color-noche);
 }
 
-/* El filo de luz del borde de arriba de cada tarjeta. Un pelo de color que
-   se apaga hacia los lados: es todo el acento que necesita la tarjeta. */
+/* El filo de luz del borde de arriba de cada panel.
+ *
+ * Es lo que da el volumen del cristal: un canto iluminado, como el borde de
+ * una lámina de vidrio cuando le da la luz de lado. Se apaga hacia los
+ * extremos, porque un borde encendido de punta a punta parece un subrayado y
+ * no un canto. */
 .filo-luz {
   background: linear-gradient(
     to right,
     transparent,
-    currentColor 30%,
-    currentColor 70%,
+    currentColor 26%,
+    currentColor 74%,
     transparent
   );
-  opacity: 0.55;
+  opacity: 0.5;
 }
 a:hover .filo-luz { opacity: 1; }
+
+/* El cristal.
+ *
+ * `backdrop-filter` sólo sobre los cuatro paneles, nunca sobre una capa a
+ * pantalla completa: desenfocar una capa del tamaño de la pantalla obliga al
+ * teléfono a recomponerla en cada scroll, y ahí es donde una PWA empieza a
+ * arrastrar en un Android de gama media. Cuatro rectángulos pequeños los
+ * compone la GPU sin pensar.
+ *
+ * Y el fondo semitransparente va DEBAJO igualmente: donde el navegador no
+ * soporta el desenfoque —o lo desactiva por ahorro de batería— el panel
+ * sigue siendo legible, sólo que menos vaporoso.
+ *
+ * El desenfoque NO se declara aquí sino con la utilidad `backdrop-blur` en
+ * el propio elemento. Escrito en esta hoja, el compilador de CSS se lo comía
+ * en silencio —comprobado: la regla llegaba al navegador con el fondo y sin
+ * el filtro, en un navegador que lo soporta— y el cristal se quedaba en un
+ * rectángulo translúcido. */
+.cristal {
+  background: color-mix(in srgb, var(--color-tinta) 6%, transparent);
+}
+.cristal-vivo {
+  background: color-mix(in srgb, var(--color-tinta) 9%, transparent);
+}
 
