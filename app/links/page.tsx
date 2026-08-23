@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { HojaServicios } from "@/components/hoja-servicios";
 import { ENLACES, type Enlace } from "@/lib/enlaces";
 import { WHATSAPP_HENRY } from "@/lib/pago";
 
@@ -194,6 +195,17 @@ function Panel({ enlace, principal = false }: { enlace: Enlace; principal?: bool
   const clases = `cristal relative block overflow-hidden rounded-2xl px-4 py-3.5 text-left backdrop-blur-[14px] transition-colors ${
     principal ? "cristal-vivo" : ""
   }`;
+
+  /* El de las preparaciones no lleva a ningún sitio: abre la hoja con las
+     tres. Se decide aquí y no en el componente de la hoja para que el panel
+     se pinte exactamente igual en los cuatro casos. */
+  if (enlace.abreServicios) {
+    return (
+      <HojaServicios>
+        <span className={clases}>{dentro}</span>
+      </HojaServicios>
+    );
+  }
 
   return enlace.interno ? (
     <Link href={enlace.href} className={clases}>

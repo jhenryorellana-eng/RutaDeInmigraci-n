@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 import {
   CLAVE_CITA,
-  PRECIO_USD,
   ZELLE_NOMBRE,
   ZELLE_TELEFONO,
   ZELLE_TELEFONO_CRUDO,
@@ -33,7 +32,14 @@ import {
  * servidor no existe y React protestaría por la diferencia.
  */
 
-type Cita = { completa: string; utah: string };
+type Cita = {
+  completa: string;
+  utah: string;
+  /** «Preparación · Segunda audiencia (Preliminar)». */
+  servicio?: string;
+  /** El de ESTA cita, guardado cuando se apartó. */
+  precio?: number;
+};
 
 export function PagoZelle() {
   const [cita, setCita] = useState<Cita | null>(null);
@@ -65,6 +71,11 @@ export function PagoZelle() {
       <p className="mx-auto mt-4 max-w-[40ch] text-[17px] leading-[1.55] text-tinta-suave lg:text-[19px]">
         {cita ? (
           <>
+            {cita.servicio ? (
+              <>
+                <strong className="font-bold text-tinta">{cita.servicio}</strong>.{" "}
+              </>
+            ) : null}
             Te espero el{" "}
             <strong className="font-bold text-tinta">{cita.completa}</strong>.
             Falta un paso: el pago.
@@ -80,9 +91,11 @@ export function PagoZelle() {
           <span className="text-[13px] font-bold uppercase tracking-[0.14em] text-acento">
             Zelle
           </span>
-          <span className="text-[26px] font-extrabold tracking-[-0.02em]">
-            ${PRECIO_USD}
-          </span>
+          {cita?.precio ? (
+            <span className="text-[26px] font-extrabold tracking-[-0.02em]">
+              ${cita.precio}
+            </span>
+          ) : null}
         </div>
 
         <Dato
@@ -99,8 +112,10 @@ export function PagoZelle() {
         />
 
         <p className="mt-5 text-[16px] leading-[1.45] text-tinta-suave">
-          Abre la app de tu banco, busca Zelle y manda los ${PRECIO_USD} a ese
-          número. Comprueba que sale el nombre de arriba antes de enviar.
+          {cita?.precio
+            ? `Abre la app de tu banco, busca Zelle y manda los $${cita.precio} a ese número.`
+            : "Abre la app de tu banco, busca Zelle y manda el importe a ese número."}{" "}
+          Comprueba que sale el nombre de arriba antes de enviar.
         </p>
       </div>
 

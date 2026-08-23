@@ -7,7 +7,8 @@ import { PAISES } from "@/lib/paises";
 import { diaCorto, fechaLarga, horaEnZona } from "@/lib/horario";
 import type { DiaConHuecos } from "@/lib/citas";
 import { reservar } from "@/app/reservar/accion";
-import { CLAVE_CITA, PRECIO_USD } from "@/lib/pago";
+import { CLAVE_CITA } from "@/lib/pago";
+import { nombreLargo, type Servicio } from "@/lib/servicios";
 
 /**
  * UNA COSA A LA VEZ.
@@ -30,9 +31,11 @@ type Paso = "dia" | "hora" | "datos";
 export function FormularioReserva({
   dias,
   conectada,
+  servicio,
 }: {
   dias: DiaConHuecos[];
   conectada: boolean;
+  servicio: Servicio;
 }) {
   const router = useRouter();
   const [enCurso, empezar] = useTransition();
@@ -79,6 +82,7 @@ export function FormularioReserva({
         nacionalidad: pais,
         enEeuu,
         whatsapp,
+        servicio: servicio.id,
         /* La zona del navegador viaja con la reserva para que el panel pueda
            enseñar la hora de esa persona además de la de Utah. Nunca se
            deduce de la IP: una IP puede ser la de una VPN. */
@@ -91,7 +95,10 @@ export function FormularioReserva({
            bloqueado, la pantalla de pago sigue funcionando sin la hora — que
            es un adorno, mientras que los datos del banco no lo son. */
         try {
-          sessionStorage.setItem(CLAVE_CITA, describirCita(horaElegida, zonaVisitante));
+          sessionStorage.setItem(
+            CLAVE_CITA,
+            describirCita(horaElegida, zonaVisitante, servicio),
+          );
         } catch {
           /* modo privado */
         }
@@ -294,7 +301,7 @@ export function FormularioReserva({
             className="mt-6 flex min-h-[60px] w-full items-center justify-between rounded-full bg-acento px-7 text-[18px] font-extrabold tracking-[-0.02em] text-fondo transition-opacity disabled:opacity-40"
           >
             <span>{enCurso ? "Apartando…" : "Apartar mi hora"}</span>
-            <span>{`$${PRECIO_USD}`}</span>
+            <span>{`$${servicio.precioUsd}`}</span>
           </button>
         </>
       ) : null}
@@ -327,7 +334,7 @@ export function FormularioReserva({
  * las dos cuando de verdad son distintas: repetir la misma hora dos veces
  * hace dudar de si el sitio se ha equivocado.
  */
-function describirCita(iso: string, zonaVisitante: string): string {
+function describirCita(iso: string, zonaVisitante: string, servicio: Servicio): string {
   const cuando = new Date(iso);
   const enUtah = horaEnZona(cuando);
   const enSuCasa = horaEnZona(cuando, zonaVisitante);
@@ -343,6 +350,11 @@ function describirCita(iso: string, zonaVisitante: string): string {
         ? `${fecha} a las ${enUtah}`
         : `${fecha} a las ${enUtah} de Utah (${enSuCasa} donde estás)`,
     utah: `${fecha} a las ${enUtah}`,
+    /* Qué se apartó y cuánto cuesta viajan con la cita: la pantalla de pago
+       tiene que decir la cifra exacta de ESTA preparación, y con tres
+       precios distintos ya no puede sacarla de una constante. */
+    servicio: nombreLargo(servicio),
+    precio: servicio.precioUsd,
   });
 }
 

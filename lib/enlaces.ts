@@ -17,6 +17,14 @@ export type Enlace = {
   descripcion: string;
   href: string;
   interno?: boolean;
+  /**
+   * En vez de llevar a un sitio, abre la hoja de las tres preparaciones.
+   *
+   * Es lo que hace que elegir entre tres precios no cueste perder la
+   * pared: se ven las tres, se elige una y se sale hacia la reserva ya
+   * sabiendo qué se aparta.
+   */
+  abreServicios?: boolean;
   /** Su temperatura, no su color: sale de `globals.css`, nunca de un hex suelto. */
   tono: "arena" | "malva" | "acero" | "teal";
   icono: "estrella" | "sello" | "cohete" | "ruta";
@@ -41,12 +49,13 @@ export type Enlace = {
 
 export const ENLACES: Enlace[] = [
   {
-    titulo: "Asesoría personalizada",
-    etiqueta: "La ruta del inmigrante",
+    titulo: "Preparación de audiencia",
+    etiqueta: "Tres preparaciones · desde $50",
     descripcion:
-      "45 minutos para saber qué trámite te toca ahora, cuál viene después y cuáles no necesitas.",
-    href: "/",
+      "45 minutos uno a uno con Henry para llegar preparado a tu audiencia.",
+    href: "/reservar",
     interno: true,
+    abreServicios: true,
     tono: "teal",
     icono: "ruta",
   },

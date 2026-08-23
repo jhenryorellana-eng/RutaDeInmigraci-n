@@ -28,6 +28,10 @@ export type Persona = {
   horaSuya: string | null;
   /** Sólo dígitos, con código de país. `null` en las citas anteriores a esto. */
   whatsapp: string | null;
+  /** Cuál de las tres preparaciones. `null` en las citas de antes. */
+  servicio: string | null;
+  /** Lo que costaba el día que se apartó, no lo que cuesta hoy. */
+  precio: number | null;
   apartoEl: string;
   cancelada: boolean;
   pasada: boolean;
@@ -189,11 +193,19 @@ export function TablaPersonas({
                     : "grid grid-cols-[1.4fr_0.9fr_1.1fr_1.5fr_1.5fr_1.1fr] items-center gap-4 border-t border-white/[0.07] px-6 py-3.5"
                 }
               >
-                <span className="min-w-0 truncate text-[17px] font-bold">
-                  {p.nombre}
-                  {p.cancelada ? (
-                    <span className="ml-2 text-[14px] font-medium text-tinta-tenue">
-                      cancelada
+                <span className="min-w-0">
+                  <span className="block truncate text-[17px] font-bold">
+                    {p.nombre}
+                    {p.cancelada ? (
+                      <span className="ml-2 text-[14px] font-medium text-tinta-tenue">
+                        cancelada
+                      </span>
+                    ) : null}
+                  </span>
+                  {p.servicio ? (
+                    <span className="block truncate text-[14px] text-acento">
+                      {p.servicio}
+                      {p.precio ? ` · $${p.precio}` : ""}
                     </span>
                   ) : null}
                 </span>
@@ -234,6 +246,12 @@ export function TablaPersonas({
                     {p.cuando} Utah
                   </span>
                 </div>
+                {p.servicio ? (
+                  <p className="mt-1 text-[15px] font-bold text-acento">
+                    {p.servicio}
+                    {p.precio ? ` · $${p.precio}` : ""}
+                  </p>
+                ) : null}
                 <p className="mt-1.5 text-[16px] text-tinta-suave">
                   {p.pais} ·{" "}
                   <span className={p.enEeuu ? "text-acento" : "text-aviso"}>
@@ -338,6 +356,8 @@ function aCsv(personas: Persona[]): string {
     "pais",
     "esta_en_eeuu",
     "correo",
+    "preparacion",
+    "precio_usd",
     "hora_utah",
     "hora_de_esa_persona",
     "whatsapp",
@@ -350,6 +370,8 @@ function aCsv(personas: Persona[]): string {
     p.pais,
     p.enEeuu ? "si" : "no",
     p.correo,
+    p.servicio ?? "",
+    p.precio ? String(p.precio) : "",
     p.cuando,
     p.horaSuya ?? "",
     p.whatsapp ?? "",

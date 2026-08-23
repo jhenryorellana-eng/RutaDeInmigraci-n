@@ -127,3 +127,55 @@ a:hover .filo-luz { opacity: 1; }
   background: color-mix(in srgb, var(--color-tinta) 9%, transparent);
 }
 
+
+/* ═══════════════════════════════════════════════════════════
+   LA HOJA DE SERVICIOS
+   ═══════════════════════════════════════════════════════════
+
+   Sube desde abajo, como una hoja de iOS. La curva es la de Apple —
+   arranca rápido y frena largo—: una hoja con `ease` sale plana y con
+   `linear` parece que la empujan.
+
+   Va sobre `<dialog>` y no sobre un div: el elemento nativo ya trae el
+   foco atrapado, el Escape, el fondo inerte y el papel de diálogo para
+   los lectores de pantalla. Rehacer eso a mano es donde se pierde la
+   accesibilidad sin que nadie lo note. */
+
+@keyframes hoja-sube {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes velo-entra {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+dialog.hoja {
+  margin: 0 0 0 auto;
+  margin-inline-start: auto;
+  max-width: 100%;
+  max-height: 100dvh;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  /* `inset: auto 0 0 0` y no `bottom: 0` a secas: un dialog abierto se
+     centra por defecto, y sin anular los cuatro lados la hoja aparece
+     flotando en mitad de la pantalla. */
+  inset: auto 0 0 0;
+  width: 100%;
+}
+
+dialog.hoja::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  animation: velo-entra 260ms ease-out;
+}
+
+dialog.hoja > div {
+  animation: hoja-sube 380ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.hoja > div,
+  dialog.hoja::backdrop { animation: none; }
+}

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { FormularioReserva } from "@/components/formulario-reserva";
 import { diasDisponibles } from "@/lib/citas";
 import { describirHorario } from "@/lib/horario";
-import { PRECIO_USD } from "@/lib/pago";
 import { hayBase } from "@/lib/supabase/servidor";
+import { SERVICIOS, servicioPorId } from "@/lib/servicios";
 import { leerTramos } from "@/lib/tramos";
 
 /**
@@ -24,8 +24,29 @@ import { leerTramos } from "@/lib/tramos";
  */
 export const dynamic = "force-dynamic";
 
-export default async function Reservar() {
-  const [dias, tramos] = await Promise.all([diasDisponibles(), leerTramos()]);
+export default async function Reservar({
+  searchParams,
+}: {
+  searchParams: Promise<{ servicio?: string }>;
+}) {
+  const [{ servicio: pedido }, dias, tramos] = await Promise.all([
+    searchParams,
+    diasDisponibles(),
+    leerTramos(),
+  ]);
+
+  /* Qué preparación se está apartando.
+   *
+   * Viaja por la URL a propósito: es una elección de SERVICIO, no un dato de
+   * nadie — no lleva nombre, ni correo, ni teléfono. La regla de este
+   * proyecto sigue intacta, y a cambio Henry puede mandar el enlace directo
+   * a la preparación que le toque a cada quien.
+   *
+   * Si el identificador no existe, `servicioPorId` devuelve `null` y la
+   * pantalla pregunta cuál es en vez de elegir por su cuenta: mandar a
+   * alguien a pagar $150 porque escribió mal la dirección es peor que
+   * preguntarle. */
+  const servicio = servicioPorId(pedido);
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-[520px] lg:grid lg:max-w-none lg:grid-cols-[minmax(0,34%)_minmax(0,1fr)] lg:gap-0">
@@ -99,7 +120,9 @@ export default async function Reservar() {
           height={76}
           className="size-[38px] shrink-0 rounded-full object-cover [object-position:50%_14%]"
         />
-        <span className="text-[15px] text-tinta-tenue">{`45 min con Henry · $${PRECIO_USD}`}</span>
+        <span className="text-[15px] text-tinta-tenue">
+          {servicio ? `${servicio.nombre} · $${servicio.precioUsd}` : "45 min con Henry"}
+        </span>
       </div>
 
       {/* En escritorio el precio va arriba a la derecha, donde el artboard:
@@ -109,16 +132,20 @@ export default async function Reservar() {
         <Link href="/" className="text-[16px] text-tinta-tenue underline underline-offset-4">
           Volver
         </Link>
-        <span className="text-[20px] font-extrabold text-tinta-tenue">{`$${PRECIO_USD}`}</span>
+        <span className="text-[20px] font-extrabold text-tinta-tenue">
+          {servicio ? `$${servicio.precioUsd}` : ""}
+        </span>
       </div>
 
-      {dias.length === 0 ? (
+      {!servicio ? (
+        <ElegirServicio />
+      ) : dias.length === 0 ? (
         <p className="mt-10 text-[17px] leading-[1.5] text-tinta-suave">
           Ahora mismo no quedan horas libres. Vuelve mañana: se abren huecos
           nuevos cada día.
         </p>
       ) : (
-        <FormularioReserva dias={dias} conectada={hayBase} />
+        <FormularioReserva dias={dias} conectada={hayBase} servicio={servicio} />
       )}
 
       {/* El horario se cuenta solo desde los tramos de la base: escrito a
@@ -130,5 +157,59 @@ export default async function Reservar() {
       </p>
       </div>
     </main>
+  );
+}
+
+/**
+ * Cuando se llega sin decir qué preparación.
+ *
+ * Pasa al entrar por `/reservar` a secas, o si el enlace venía mal escrito.
+ * Preguntar aquí es mejor que elegir por defecto: las tres cuestan distinto.
+ */
+function ElegirServicio() {
+  return (
+    <div className="mt-8">
+      <h1 className="font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:text-[40px]">
+        ¿Para qué audiencia?
+      </h1>
+      <p className="mt-2.5 max-w-[46ch] text-[17px] leading-[1.5] text-tinta-suave">
+        Cada preparación tiene su precio. La agenda es la misma para las tres,
+        así que la hora que apartes queda tuya en cualquier caso.
+      </p>
+
+      <div className="mt-6 flex flex-col gap-2.5">
+        {SERVICIOS.map((s) => (
+          <Link
+            key={s.id}
+            href={`/reservar?servicio=${s.id}`}
+            className="flex min-h-[76px] items-center gap-4 rounded-[20px] border border-white/15 px-5 py-4 transition-colors hover:border-acento/60"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-[19px] font-bold tracking-[-0.01em]">
+                {s.nombre}
+              </span>
+              <span className="mt-0.5 block text-[15px] text-tinta-tenue">{s.etapa}</span>
+            </span>
+            <span className="shrink-0 text-[22px] font-extrabold tabular-nums text-acento">
+              ${s.precioUsd}
+            </span>
+            <span aria-hidden="true" className="shrink-0 text-tinta-tenue">
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }

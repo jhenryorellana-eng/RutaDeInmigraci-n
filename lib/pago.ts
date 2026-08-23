@@ -40,10 +40,15 @@ export const ZELLE_TELEFONO_CRUDO = "8019413479";
 /** Con el código de país, como lo quiere `wa.me`. */
 export const WHATSAPP_HENRY = "18019413479";
 
-/** Lo que cuesta la sesión. El precio se escribe AQUÍ y en ningún otro
- *  sitio: cuando estaba repetido por las pantallas, cambiarlo era buscar
- *  cuatro literales sueltos y rezar por no dejarse uno. */
-export const PRECIO_USD = 150;
+/* El precio ya no vive aquí.
+ *
+ * Hubo un momento en que la sesión costaba una sola cosa y este archivo
+ * guardaba esa cifra. Ahora hay TRES preparaciones con tres precios, así que
+ * cada una lleva el suyo en `lib/servicios.ts` y la cita guarda el que había
+ * cuando se apartó.
+ *
+ * Lo que sigue viviendo aquí es a dónde va el dinero, que es lo mismo para
+ * las tres. */
 
 /** Donde la pantalla de reserva deja la cita para la de pago. */
 export const CLAVE_CITA = "ruta_cita_apartada";

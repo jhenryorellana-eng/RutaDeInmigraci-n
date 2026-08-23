@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { PRECIO_USD } from "@/lib/pago";
+import { SERVICIOS } from "@/lib/servicios";
 
 /**
  * HOJA 1 — LA PREGUNTA Y SU RESPUESTA.
@@ -42,6 +42,11 @@ import { PRECIO_USD } from "@/lib/pago";
  */
 
 export default function Portada() {
+  /* El más barato de los tres. Se calcula y no se escribe: con tres precios
+     en juego, un «$50» a mano en la portada es el que se queda viejo cuando
+     alguno cambie. */
+  const desde = Math.min(...SERVICIOS.map((s) => s.precioUsd));
+
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-[520px] flex-col overflow-hidden bg-panel lg:max-w-none lg:bg-fondo">
       {/* El retrato: a sangre por arriba en el teléfono, mitad derecha en
@@ -130,7 +135,7 @@ export default function Portada() {
         <div className="mt-5 flex items-center gap-4 border-t border-white/15 pt-4 lg:mt-8 lg:gap-[26px] lg:pt-6">
           <Dato cifra="45 min" pie="uno a uno" />
           <span aria-hidden="true" className="h-8 w-px bg-white/15 lg:h-10" />
-          <Dato cifra={`$${PRECIO_USD}`} pie="pago único" />
+          <Dato cifra={`$${desde}`} pie="según la audiencia" />
           <span aria-hidden="true" className="h-8 w-px bg-white/15 lg:h-10" />
           <Dato cifra="1 plan" pie="estructurado" />
         </div>

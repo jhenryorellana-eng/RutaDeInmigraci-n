@@ -1,5 +1,6 @@
 import { clienteServidor, hayBase } from "@/lib/supabase/servidor";
 import { dentroDelHorario, proximosDias, type Dia } from "@/lib/horario";
+import { servicioPorId } from "@/lib/servicios";
 import { leerTramos } from "@/lib/tramos";
 
 /**
@@ -70,6 +71,8 @@ export type DatosCita = {
    * puede ser la de una VPN o la de la biblioteca del pueblo de al lado.
    */
   zonaHoraria?: string;
+  /** Cuál de las tres preparaciones. Sin esto, Henry no sabe para qué prepara. */
+  servicio: string;
 };
 
 /** Sólo dígitos, igual que hace el trigger en la base. */
@@ -119,6 +122,14 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
     };
   }
 
+  /* El servicio se resuelve contra la lista, nunca se acepta lo que llegue:
+     de ahí sale el precio que se va a cobrar, y un identificador inventado
+     acabaría en una cita sin precio o con el que quisiera quien la mandó. */
+  const servicio = servicioPorId(datos.servicio);
+  if (!servicio) {
+    return { ok: false, motivo: "Elige para qué audiencia es la preparación." };
+  }
+
   if (!hayBase) {
     return {
       ok: false,
@@ -135,6 +146,11 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
     en_eeuu: datos.enEeuu,
     whatsapp: numero,
     zona_horaria: datos.zonaHoraria?.slice(0, 64) || null,
+    servicio: servicio.id,
+    /* El precio se guarda CON la cita. Si mañana la tercera audiencia sube a
+       $180, las citas ya apartadas tienen que seguir diciendo $150: es lo
+       que esa persona vio y lo que va a pagar. */
+    precio_usd: servicio.precioUsd,
   });
 
   if (error) {

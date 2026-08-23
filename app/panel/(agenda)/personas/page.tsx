@@ -1,6 +1,7 @@
 import { TablaPersonas, type Persona } from "@/components/panel/tabla-personas";
 import { diaCorto, horaDeQuienReserva, horaEnZona, partesEnZona, ZONA } from "@/lib/horario";
 import { nombrePais } from "@/lib/paises";
+import { servicioPorId } from "@/lib/servicios";
 import { clienteServidor } from "@/lib/supabase/servidor";
 
 /**
@@ -36,6 +37,8 @@ type Fila = {
   creado_en: string;
   whatsapp: string | null;
   zona_horaria: string | null;
+  servicio: string | null;
+  precio_usd: number | null;
 };
 
 export default async function PantallaPersonas() {
@@ -44,7 +47,7 @@ export default async function PantallaPersonas() {
   const { data, count } = await supabase
     .from("citas")
     .select(
-      "id, inicia_en, nombre, correo, nacionalidad, en_eeuu, estado, creado_en, whatsapp, zona_horaria",
+      "id, inicia_en, nombre, correo, nacionalidad, en_eeuu, estado, creado_en, whatsapp, zona_horaria, servicio, precio_usd",
       {
         count: "exact",
       },
@@ -68,6 +71,11 @@ export default async function PantallaPersonas() {
          sitio se equivocó. */
       horaSuya: horaDeQuienReserva(cuando, f.zona_horaria),
       whatsapp: f.whatsapp,
+      /* El nombre sale de la lista, pero el PRECIO sale de la cita: si la
+         tercera audiencia sube mañana, esta tiene que seguir diciendo lo que
+         costaba el día que se apartó. */
+      servicio: servicioPorId(f.servicio)?.nombre ?? null,
+      precio: f.precio_usd,
       apartoEl: diaYMes(new Date(f.creado_en)),
       cancelada: f.estado === "cancelada",
       pasada: cuando.getTime() < ahora,
