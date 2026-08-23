@@ -91,8 +91,23 @@ export default function Links() {
               <br />
               <span className="italic">Orellana D.</span>
             </h1>
-            <p className="mt-3.5 text-[14px] font-light leading-[1.5] text-tinta/85">
-              Fundador y CEO · Transformando familias, empoderando líderes
+            {/* En primera persona y con un oficio dentro.
+                «Transformando familias, empoderando líderes» es lo que pone
+                cualquiera: no dice qué hace, ni para quién, ni por qué él.
+                Esto dice las tres en once palabras: «me costó» es el
+                camino recorrido, «automatizo» es el oficio, «familias
+                latinas» es para quién. Se probó una versión de dos frases
+                que abría con «recorrí este proceso y lo convertí en
+                sistemas»: decía lo mismo dos veces y ocupaba cuatro líneas
+                en lugar de dos.
+
+                Sin repetir «Orellana Group»: ya está arriba, en versalitas,
+                a cuatro líneas de distancia. Un cargo que sólo devuelve el
+                nombre de la marca que acaba de leerse ocupa la línea más
+                valiosa de la pantalla sin añadir nada. */}
+            <p className="mt-3.5 text-[15px] font-light leading-[1.5] text-tinta/85">
+              Automatizo lo que a mí me costó años, para que a las familias
+              latinas les cueste una tarde.
             </p>
           </div>
 
