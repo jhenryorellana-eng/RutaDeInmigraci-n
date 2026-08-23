@@ -78,7 +78,7 @@ export default function Links() {
         </div>
 
         <div className="relative flex min-h-dvh flex-col px-5 pb-7 pt-9">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-tinta/75">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-tinta/90">
             Orellana Group
           </p>
 
@@ -91,7 +91,7 @@ export default function Links() {
               <br />
               <span className="italic">Orellana D.</span>
             </h1>
-            <p className="mt-3.5 text-[14px] font-light leading-[1.5] text-tinta/70">
+            <p className="mt-3.5 text-[14px] font-light leading-[1.5] text-tinta/85">
               Fundador y CEO · Transformando familias, empoderando líderes
             </p>
           </div>
@@ -115,7 +115,7 @@ export default function Links() {
             Escribirle por WhatsApp
           </a>
 
-          <p className="mt-6 text-center text-[13px] text-tinta/40">
+          <p className="mt-6 text-center text-[13px] text-tinta/55">
             © {new Date().getFullYear()} Orellana Group
           </p>
         </div>
@@ -163,14 +163,14 @@ function Panel({ enlace, principal = false }: { enlace: Enlace; principal?: bool
           <span className="block truncate text-[16px] font-semibold tracking-[-0.01em]">
             {enlace.titulo}
           </span>
-          <span className="mt-0.5 block truncate text-[12px] font-light text-tinta/60">
+          <span className="mt-0.5 block truncate text-[12px] font-light text-tinta/75">
             {enlace.descripcion}
           </span>
         </span>
 
         <span
           aria-hidden="true"
-          className={principal ? "shrink-0 text-agua" : "shrink-0 text-tinta/70"}
+          className={principal ? "shrink-0 text-agua" : "shrink-0 text-tinta/85"}
         >
           <svg
             width="16"

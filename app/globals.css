@@ -151,6 +151,11 @@ a:hover .filo-luz { opacity: 1; }
 }
 
 dialog.hoja {
+  /* El navegador le da su propio `color: canvastext` —negro— y NO hereda el
+     del body. Sin esta línea, el texto de la hoja sale negro sobre un panel
+     oscuro: medido, 1.4:1, prácticamente invisible. Es de esos fallos que no
+     se ven en una captura comprimida y sí en el teléfono. */
+  color: var(--color-tinta);
   margin: 0 0 0 auto;
   margin-inline-start: auto;
   max-width: 100%;

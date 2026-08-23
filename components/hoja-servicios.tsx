@@ -83,14 +83,14 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
           {/* El asa. No hace nada por sí sola —cerrar es tocar fuera o el
               botón— pero es lo que dice «esto es una hoja» antes de leer
               una palabra. */}
-          <div aria-hidden="true" className="mx-auto h-1 w-9 rounded-full bg-tinta/25" />
+          <div aria-hidden="true" className="mx-auto h-1 w-9 rounded-full bg-tinta/35" />
 
           <div className="mt-5 flex items-start justify-between gap-4">
             <div>
               <h2 id="hoja-titulo" className="font-titulo text-[26px] font-normal leading-[1.15]">
                 ¿Para qué audiencia?
               </h2>
-              <p className="mt-1.5 text-[15px] leading-[1.45] text-tinta/60">
+              <p className="mt-1.5 text-[15px] leading-[1.45] text-tinta/75">
                 Cada preparación tiene su precio. La agenda es la misma para las
                 tres.
               </p>
@@ -100,7 +100,7 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={cerrar}
               aria-label="Cerrar"
-              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tinta/10 text-tinta/70"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tinta/15 text-tinta/85"
             >
               <svg
                 width="15"
@@ -136,14 +136,14 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
                   <span className="block text-[17px] font-semibold tracking-[-0.01em]">
                     {s.nombre}
                   </span>
-                  <span className="mt-0.5 block text-[14px] text-tinta/55">{s.etapa}</span>
+                  <span className="mt-0.5 block text-[14px] text-tinta/70">{s.etapa}</span>
                 </span>
 
                 <span className="shrink-0 text-[19px] font-bold tabular-nums text-agua">
                   ${s.precioUsd}
                 </span>
 
-                <span aria-hidden="true" className="shrink-0 text-tinta/40">
+                <span aria-hidden="true" className="shrink-0 text-tinta/55">
                   <svg
                     width="16"
                     height="16"
@@ -161,7 +161,7 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
             ))}
           </div>
 
-          <p className="mt-4 text-[14px] leading-[1.45] text-tinta/45">
+          <p className="mt-4 text-[14px] leading-[1.45] text-tinta/65">
             45 minutos uno a uno con Henry. Se paga después de apartar la hora.
           </p>
         </div>
