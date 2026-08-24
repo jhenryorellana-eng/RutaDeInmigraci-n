@@ -242,13 +242,24 @@ export function ParedGuiada() {
 const INVITACION = "¿No sabes cuál te toca? Pregúntame — me quedo aquí abajo.";
 
 function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
+  /* Cuatro luces girando en fase parecen un mecanismo; desfasadas, cuatro
+     cosas vivas. El desfase sale de la posición del servicio en la lista. */
+  const desfase = (ENLACES.findIndex((e) => e.href === enlace.href) * 7) / 4;
+
   const dentro = (
     <>
+      {/* El canto quieto de arriba, que es lo que da el volumen del cristal,
+          y la luz que da la vuelta al cuadro. El desfase se calcula del
+          propio identificador para que sea estable entre recargas: aleatorio,
+          cada visita las colocaría en otro sitio. */}
       <span
         aria-hidden="true"
         className="filo-luz absolute inset-x-[22%] top-0 h-px"
         style={{ color: "rgb(var(--tono))" }}
       />
+      <span aria-hidden="true" className="filo-vivo">
+        <span style={{ animationDelay: `-${desfase}s` }} />
+      </span>
 
       <div className="relative flex items-center gap-3">
         <span

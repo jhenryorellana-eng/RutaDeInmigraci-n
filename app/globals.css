@@ -287,6 +287,35 @@ dialog.hoja > div {
   pointer-events: none;
 }
 .globo-guia p { color: var(--color-oro); }
+
+/* La bajada va SOBRE LA FOTOGRAFÍA, y una fotografía tiene zonas claras.
+ *
+ * Medido con el fondo real: bajo esas tres líneas hay píxeles a 0.69 de
+ * luminancia —el fondo iluminado de la habitación—, y ahí el 19,4% de la
+ * superficie quedaba por debajo de 4.5:1. No lo trajo el oro: el texto blanco
+ * ya estaba en las mismas, sólo que un blanco muy claro disimula mejor.
+ *
+ * La solución es la que ya usa la portada: un halo oscuro pegado a las
+ * letras. Dos sombras y no una —una cerrada que da el filo y otra abierta que
+ * apaga la zona— porque una sola difuminada a 12px no llega a oscurecer lo
+ * bastante junto al trazo, que es donde importa.
+ *
+ * Oscurecer más el velo del retrato habría sido lo otro, y se descartó: se
+ * come la cara de Henry, que es lo que vende esta pantalla. */
+.bajada-pared {
+  text-shadow:
+    0 1px 2px rgb(6 10 12 / 0.9),
+    0 2px 14px rgb(6 10 12 / 0.75);
+}
+
+/* Las tres palabras de la bajada que la pared cumple justo debajo.
+   Con algo más de peso además del color: sobre una fotografía, el color solo
+   no basta —la foto tiene zonas claras y zonas oscuras, y en las claras el
+   oro se diluye—. El medio punto de grosor lo sostiene en las dos. */
+.destacado-oro {
+  color: var(--color-oro);
+  font-weight: 500;
+}
 .globo-guia::after {
   content: "";
   position: absolute;
@@ -303,6 +332,85 @@ dialog.hoja > div {
   bottom: -6px;
   transform: rotate(225deg);
 }
+
+/* ── El filo vivo: la luz que da la vuelta al cuadro ──
+
+   Un arco del color del servicio recorriendo el perímetro. No es adorno: con
+   cuatro tarjetas del mismo tamaño una debajo de otra, lo que las separa es
+   su color, y un color quieto en un borde de un píxel se pierde. Girando, el
+   ojo lo encuentra.
+
+   ── Por qué gira una imagen y no un gradiente ──
+
+   Lo natural sería animar el ángulo de un `conic-gradient`. Eso REPINTA el
+   degradado en cada fotograma, y son cuatro a la vez: en un Android de gama
+   media se nota y es exactamente lo que este proyecto evita.
+
+   Aquí el degradado es fijo y lo que se mueve es un `transform: rotate` sobre
+   un cuadrado que lo lleva dentro. Un transform lo compone la GPU sin repintar
+   nada. La máscara recorta ese cuadrado al anillo del borde y no se toca más.
+
+   ── Por qué cada una empieza en un punto distinto ──
+
+   Cuatro luces girando a la vez y en fase parecen un mecanismo. Desfasadas
+   parecen cuatro cosas vivas, que es lo que son. El desfase va en el elemento
+   porque es un tiempo, no un color.
+
+   ── El `@supports` no es cortesía ──
+
+   Sin `mask-composite`, la máscara no recorta: el degradado se pintaría entero
+   sobre la tarjeta y la taparía. Donde no hay soporte, no hay filo vivo —el
+   borde de color se queda quieto, que es como estaba. */
+.filo-vivo { display: none; }
+
+@supports (mask-composite: exclude) or (-webkit-mask-composite: xor) {
+  .filo-vivo {
+    display: block;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    padding: 1.4px;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+}
+
+@keyframes filo-gira {
+  to { transform: translate(-50%, -50%) rotate(1turn); }
+}
+
+.filo-vivo > span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 210%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  /* Un arco corto y con la cola apagada: una luz que pasa, no un aro de
+     color dando vueltas. */
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 58%,
+    rgb(var(--tono) / 0.15) 68%,
+    rgb(var(--tono) / 0.95) 76%,
+    rgb(var(--tono) / 0.15) 84%,
+    transparent 94% 100%
+  );
+  animation: filo-gira 7s linear infinite;
+}
+
+/* La que el guía explica gira más rápido y más encendida: es la diferencia
+   entre «aquí estoy» y «es de ésta de la que hablo». */
+.panel-servicio[data-luz="activo"] .filo-vivo > span { animation-duration: 3.6s; }
+.panel-servicio[data-luz="atenuado"] .filo-vivo { opacity: 0.4; }
 
 /* ── El fondo, mientras el guía habla ──
 
@@ -354,4 +462,6 @@ dialog.hoja > div {
   .velo-guia,
   .retrato-pared,
   .cabecera-pared { transition: none; }
+  /* La luz se para donde queda: el borde conserva su color, sin vueltas. */
+  .filo-vivo > span { animation: none; }
 }

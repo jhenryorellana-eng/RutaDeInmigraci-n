@@ -104,10 +104,17 @@ export default function Links() {
                 vuelve en primera persona. Que la misma frase abra los dos
                 sitios es deliberado: quien salta de uno a otro reconoce a la
                 misma persona. */}
-            <p className="mt-3.5 text-[15px] font-light leading-[1.5] text-tinta/85">
+            {/* Tres palabras en oro, y son las tres que la pared cumple a
+                dos dedos de aquí: trámites, comunidad y formación son los
+                servicios de abajo dichos por su nombre. El oro las ata a los
+                cuadros sin una sola palabra de más. El texto no cambia. */}
+            <p className="bajada-pared mt-3.5 text-[15px] font-light leading-[1.5] text-tinta/85">
               Llegué sin saber a quién acudir ni en quién confiar. Hoy
-              construyo lo que me faltó: trámites, comunidad y formación para
-              familias latinas.
+              construyo lo que me faltó:{" "}
+              <span className="destacado-oro">
+                trámites, comunidad y formación
+              </span>{" "}
+              para familias latinas.
             </p>
           </div>
 
