@@ -32,6 +32,13 @@
   --color-noche-panel: #131A1E;
   /* El agua: el único acento de esa pantalla, y sale dos veces. */
   --color-agua: #9FE8D8;
+  /* El oro: la VOZ del guía, y nada más.
+     No es el color de ningún servicio —cada uno tiene el suyo— sino el de
+     quien los presenta, y por eso es el mismo en los cinco pasos: cuando
+     aparece, quien lee ya sabe que está hablando el guía y no la página.
+     Cálido y sin saturar, para que resalte sobre el negro sin gritar.
+     Medido sobre el panel de la hoja (#131A1E): 11.0:1. */
+  --color-oro: #E9C88A;
   /* Dos neutros con temperatura, no dos colores: la arena es cálida y el
      acero frío, y a media distancia parecen grises. Sustituyen al cian y al
      violeta de neón, que gritaban desde el otro lado de la habitación. */
@@ -279,6 +286,7 @@ dialog.hoja > div {
   animation: globo-entra 400ms cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
+.globo-guia p { color: var(--color-oro); }
 .globo-guia::after {
   content: "";
   position: absolute;
@@ -295,6 +303,36 @@ dialog.hoja > div {
   bottom: -6px;
   transform: rotate(225deg);
 }
+
+/* ── El fondo, mientras el guía habla ──
+
+   Un velo que cae sobre el retrato y una caída de opacidad en el nombre:
+   durante esos segundos lo único a plena luz es la tarjeta que se explica.
+
+   El desenfoque va SÓLO sobre el retrato, que es un elemento, y entra y sale
+   una vez por recorrido —no en cada paso—. Desenfocar una capa a pantalla
+   completa, o hacerlo cuatro veces seguidas, es lo que pone de rodillas a un
+   Android de gama media, y este sitio se abre en Android de gama media.
+
+   El `scale(1.04)` no es estética: un desenfoque sin escalar deja los bordes
+   de la imagen medio transparentes, porque el filtro muestrea fuera de ella. */
+.velo-guia {
+  background: color-mix(in srgb, var(--color-noche) 62%, transparent);
+  opacity: 0;
+  transition: opacity 700ms ease;
+  pointer-events: none;
+}
+[data-guia="hablando"] .velo-guia { opacity: 1; }
+
+.retrato-pared,
+.cabecera-pared {
+  transition: filter 700ms ease, opacity 700ms ease, transform 700ms ease;
+}
+[data-guia="hablando"] .retrato-pared {
+  filter: blur(5px) saturate(0.9);
+  transform: scale(1.04);
+}
+[data-guia="hablando"] .cabecera-pared { opacity: 0.4; }
 
 @keyframes burbuja-llega {
   from { opacity: 0; transform: scale(0.7); }
@@ -313,4 +351,7 @@ dialog.hoja > div {
   }
   .globo-guia,
   .burbuja-guia { animation: none; }
+  .velo-guia,
+  .retrato-pared,
+  .cabecera-pared { transition: none; }
 }

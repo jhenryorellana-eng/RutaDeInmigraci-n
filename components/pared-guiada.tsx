@@ -131,6 +131,20 @@ export function ParedGuiada() {
 
   const guiando = paso >= 0 && paso <= 3;
 
+  /* Mientras el guía señala, el retrato se desenfoca y el nombre se apaga.
+     Se avisa con un atributo en la raíz porque lo que hay que atenuar —la
+     fotografía, el título— vive en un componente de servidor, arriba del
+     árbol: subir estado hasta allí obligaría a volver cliente media pantalla
+     por un cambio que es puramente de pintura. El CSS hace el resto. */
+  useEffect(() => {
+    const raiz = document.documentElement;
+    if (guiando) raiz.dataset.guia = "hablando";
+    else delete raiz.dataset.guia;
+    return () => {
+      delete raiz.dataset.guia;
+    };
+  }, [guiando]);
+
   return (
     <>
       <div className="relative mt-7 flex flex-col gap-2.5">
@@ -171,7 +185,7 @@ export function ParedGuiada() {
                       "0 0 0 1px rgb(var(--tono) / 0.12), 0 0 24px rgb(var(--tono) / 0.18), 0 14px 36px rgba(0,0,0,.5)",
                   }}
                 >
-                  <p className="text-[13.5px] leading-[1.45] text-tinta/90">{enlace.guia}</p>
+                  <p className="text-[15px] leading-[1.5]">{enlace.guia}</p>
                 </div>
               ) : null}
             </div>
@@ -186,7 +200,7 @@ export function ParedGuiada() {
           role="status"
           className="globo-guia tono-agua fixed bottom-4 right-4 z-30 w-[268px] rounded-[18px] rounded-br-md border border-agua/30 bg-noche-panel px-3.5 py-3.5 shadow-[0_0_26px_rgba(159,232,216,.2),0_18px_44px_rgba(0,0,0,.55)]"
         >
-          <p className="text-[13.5px] leading-[1.45] text-tinta/90">
+          <p className="text-[15px] leading-[1.5]">
             ¿No sabes cuál te toca? Pregúntame — me quedo aquí abajo.
           </p>
         </div>

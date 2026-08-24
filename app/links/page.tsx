@@ -61,7 +61,7 @@ export default function Links() {
             transición, la cara se oscurece antes de tiempo o el corte se
             nota como una banda. Así la cara queda limpia y sólo se apaga
             del pecho hacia abajo. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[58%] select-none">
+        <div className="retrato-pared pointer-events-none absolute inset-x-0 top-0 h-[58%] select-none">
           <Image
             src="/henry-retrato.jpg"
             alt="Henry Orellana Domínguez"
@@ -77,15 +77,21 @@ export default function Links() {
           />
         </div>
 
+        {/* El velo. Va FUERA del retrato y no dentro: dentro se desenfocaría
+            con él, y un velo desenfocado no oscurece — se deshilacha por los
+            bordes. Aquí, entre el retrato y el contenido, cae sobre la
+            fotografía y deja las tarjetas a plena luz. */}
+        <div aria-hidden="true" className="velo-guia fixed inset-0" />
+
         <div className="relative flex min-h-dvh flex-col px-5 pb-7 pt-9">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-tinta/90">
+          <p className="cabecera-pared text-[10px] font-bold uppercase tracking-[0.3em] text-tinta/90">
             Orellana Group
           </p>
 
           {/* `mt-auto` empuja el nombre hasta justo encima de los paneles:
               así queda apoyado en el pecho del retrato y no flotando en
               mitad de la cara, sea cual sea el alto del teléfono. */}
-          <div className="mt-auto">
+          <div className="cabecera-pared mt-auto">
             <h1 className="font-titulo text-[46px] font-normal leading-[1] tracking-[-0.01em]">
               Henry
               <br />
@@ -107,7 +113,7 @@ export default function Links() {
 
           <ParedGuiada />
 
-          <p className="mt-6 text-center text-[13px] text-tinta/55">
+          <p className="cabecera-pared mt-6 text-center text-[13px] text-tinta/55">
             © {new Date().getFullYear()} Orellana Group
           </p>
         </div>
