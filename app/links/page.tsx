@@ -36,8 +36,10 @@ import { ParedGuiada } from "@/components/pared-guiada";
  * ponerlo: quien lo toca se queda en la misma pantalla creyendo que el sitio
  * está roto.
  *
- * Y ya no lleva la banda de «Escribirle por WhatsApp» a lo ancho: ese
- * contacto vive ahora en la burbuja del guía, que es donde se pregunta.
+ * Y ya no lleva la banda de «Escribirle por WhatsApp» a lo ancho. Preguntar
+ * es ahora la burbuja del guía: un guion cerrado que responde lo que ya se
+ * sabe —precios, pago, qué es cada servicio, que Henry no es abogado— y que
+ * termina pudiendo pasar con él por WhatsApp para lo que no cubre.
  */
 
 export const metadata: Metadata = {

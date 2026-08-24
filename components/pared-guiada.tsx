@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { AgenteChat } from "@/components/agente-chat";
 import { HojaServicios } from "@/components/hoja-servicios";
 import { ENLACES, type Enlace } from "@/lib/enlaces";
-import { WHATSAPP_HENRY } from "@/lib/pago";
 
 /**
  * LA PARED, CON GUÍA.
@@ -62,6 +62,7 @@ function anotarVisto() {
 
 export function ParedGuiada() {
   const [paso, setPaso] = useState<Paso>(-1);
+  const [chat, setChat] = useState(false);
   const relojes = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   function parar() {
@@ -121,6 +122,9 @@ export function ParedGuiada() {
   useEffect(() => {
     if (paso === 5) return;
     const salir = () => terminar();
+    /* Se registra sólo mientras el guía habla, así que no hay riesgo de que
+       un toque dentro del chat —que aún no existe en ese momento— lo cierre
+       por sorpresa. */
     document.addEventListener("pointerdown", salir, { capture: true });
     return () => document.removeEventListener("pointerdown", salir, { capture: true });
   }, [paso]);
@@ -188,14 +192,16 @@ export function ParedGuiada() {
         </div>
       ) : null}
 
-      {/* Y la burbuja, que sí lleva a algún sitio: el WhatsApp de Henry. Una
-          burbuja de ayuda que no responde es peor que no ponerla. */}
-      {paso === 5 ? (
-        <a
-          href={`https://wa.me/${WHATSAPP_HENRY}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Preguntarle a Henry por WhatsApp"
+      {/* Y la burbuja, que abre el guion de preguntas. No lleva a WhatsApp:
+          quien toca aquí quiere resolver una duda, no abrir otra aplicación
+          y esperar respuesta. Hablar con Henry es la última pregunta del
+          guion, para quien la necesite. */}
+      {paso === 5 && !chat ? (
+        <button
+          type="button"
+          onClick={() => setChat(true)}
+          aria-label="Abrir la guía"
+          aria-expanded={chat}
           className="burbuja-guia fixed bottom-4 right-4 z-30 flex size-[52px] items-center justify-center rounded-full border border-agua/30 bg-noche-panel text-agua shadow-[0_0_30px_rgba(159,232,216,.22),0_0_70px_rgba(159,232,216,.1)]"
         >
           <svg
@@ -211,8 +217,10 @@ export function ParedGuiada() {
           >
             <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.6-.7L3 21l1.9-4.6A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z" />
           </svg>
-        </a>
+        </button>
       ) : null}
+
+      <AgenteChat abierto={chat} alCerrar={() => setChat(false)} />
     </>
   );
 }
