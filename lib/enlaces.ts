@@ -25,26 +25,21 @@ export type Enlace = {
    * sabiendo qué se aparta.
    */
   abreServicios?: boolean;
-  /** Su temperatura, no su color: sale de `globals.css`, nunca de un hex suelto. */
-  tono: "arena" | "malva" | "acero" | "teal";
-  icono: "estrella" | "sello" | "cohete" | "ruta";
   /**
-   * Un logo de verdad, si la marca lo tiene. Sustituye al icono dibujado.
-   * Va como archivo y no como SVG porque el original es un JPEG con degradados
-   * —la estrella pasa de azul a rojo— y redibujarlo a mano sería inventarse
-   * la marca de otro.
+   * Su temperatura, no su color: sale de `globals.css`, nunca de un hex
+   * suelto. Ahora hace más que teñir un filo — es el color con el que la
+   * tarjeta se queda encendida, así que es lo que distingue un servicio de
+   * otro de un vistazo.
    */
-  logo?: string;
+  tono: "agua" | "arena" | "malva" | "acero";
   /**
-   * Sobre blanco, porque hay logos que no se ven en negro.
+   * Lo que el guía dice de este servicio cuando lo señala.
    *
-   * El de UsaLatino Prime es azul marino: sobre el cuadro casi negro de la
-   * tarjeta desaparece —comprobado, se pintaba y no se distinguía—. El de
-   * Starbiz es neón y vive precisamente en negro, así que no lo lleva.
-   * Cada marca dice lo que necesita en vez de imponerles a todas el mismo
-   * fondo.
+   * Una frase, y que empiece por el CASO y no por el nombre: quien lee esto
+   * no está eligiendo un producto, está intentando saber cuál de los cuatro
+   * es el suyo.
    */
-  logoSobreBlanco?: boolean;
+  guia: string;
 };
 
 export const ENLACES: Enlace[] = [
@@ -56,8 +51,8 @@ export const ENLACES: Enlace[] = [
     href: "/reservar",
     interno: true,
     abreServicios: true,
-    tono: "teal",
-    icono: "ruta",
+    tono: "agua",
+    guia: "Si ya tienes fecha de audiencia: 45 minutos con Henry para llegar sabiendo qué te van a preguntar.",
   },
   {
     titulo: "Comunidad Andex",
@@ -65,7 +60,7 @@ export const ENLACES: Enlace[] = [
     descripcion: "Tu camino seguro hacia el sueño americano.",
     href: "https://andex.usalatinoprime.com/",
     tono: "arena",
-    icono: "estrella",
+    guia: "El acompañamiento de todo el año: tus documentos, tus fechas y gente en tu misma situación.",
   },
   {
     titulo: "Servicio Migratorio",
@@ -73,17 +68,14 @@ export const ENLACES: Enlace[] = [
     descripcion: "Los trámites migratorios, con el equipo de UsaLatino Prime.",
     href: "https://www.usalatinoprime.com/",
     tono: "malva",
-    icono: "sello",
-    logo: "/marca-usalatinoprime.png",
-    logoSobreBlanco: true,
+    guia: "Los trámites en sí, con el equipo de Henry. Es a donde vas cuando hay algo que presentar.",
   },
   {
-    titulo: "Bootcamp para Jóvenes",
+    titulo: "Bootcamp para Jóvenes 2027",
     etiqueta: "Emprendimiento",
     descripcion: "Emprendimiento, liderazgo y transformación familiar.",
     href: "https://comunidad.starbizacademy.com/bootcamp",
     tono: "acero",
-    icono: "cohete",
-    logo: "/marca-starbiz.png",
+    guia: "Para tus hijos: emprender y liderar, para que no repitan el camino largo.",
   },
 ];

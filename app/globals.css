@@ -184,3 +184,133 @@ dialog.hoja > div {
   dialog.hoja > div,
   dialog.hoja::backdrop { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   LA PARED GUIADA · el halo y el recorrido
+   ═══════════════════════════════════════════════════════════
+
+   Al entrar, el guía señala los cuatro servicios de uno en uno y se retira
+   a la esquina. Lo que se mueve NO es un foco ni un contorno: la tarjeta
+   que se explica se separa de la pared y respira dentro de un halo difuso,
+   y las otras tres se van a segundo plano.
+
+   El halo es difuso a propósito. Un contorno duro de color es un rótulo de
+   neón; una luz sin borde es profundidad. La diferencia entre las dos cosas
+   es lo único que separa esto de parecer barato.
+
+   ── Por qué el color se queda ──
+
+   Terminado el recorrido, las cuatro se quedan encendidas con su tono. Ese
+   es también su estado ANTES de que el guía empiece: el recorrido no pinta
+   la pared, sólo levanta una tarjeta cada vez. Así, quien llega con la
+   animación ya terminada —o con ella desactivada— ve exactamente la misma
+   pared de colores.
+
+   ── Por qué no hay `filter: blur()` en las atenuadas ──
+
+   Porque desenfocar tres elementos en cada paso obliga al teléfono a
+   rasterizarlos y recomponerlos cuatro veces seguidas, y esto se abre en
+   Android de gama media. La caída de opacidad sola separa igual de bien los
+   planos y no cuesta nada. */
+
+/* El tono viaja como tres números para poder graduarle la opacidad. Los
+   colores siguen viviendo sólo aquí. */
+.tono-agua  { --tono: 159 232 216; }
+.tono-arena { --tono: 214 195 160; }
+.tono-malva { --tono: 181 174 205; }
+.tono-acero { --tono: 157 180 206; }
+
+.panel-servicio {
+  /* En reposo Y al final: encendido con su color, a media luz.
+     Estos cuatro números son los que hacen que la pared se vea de colores
+     con la animación terminada. Subirlos más empieza a competir con el
+     estado activo y el recorrido deja de leerse. */
+  background: rgb(var(--tono) / 0.08);
+  border-color: rgb(var(--tono) / 0.26);
+  box-shadow:
+    0 0 0 1px rgb(var(--tono) / 0.12),
+    0 0 26px rgb(var(--tono) / 0.13);
+  transition:
+    box-shadow 600ms ease,
+    border-color 600ms ease,
+    background-color 600ms ease,
+    opacity 600ms ease,
+    transform 500ms cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+/* La que el guía está explicando: se adelanta y respira. */
+@keyframes halo-respira {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgb(var(--tono) / 0.34),
+      0 0 30px 2px rgb(var(--tono) / 0.2),
+      0 0 70px 10px rgb(var(--tono) / 0.09);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgb(var(--tono) / 0.34),
+      0 0 40px 4px rgb(var(--tono) / 0.24),
+      0 0 92px 16px rgb(var(--tono) / 0.12);
+  }
+}
+
+.panel-servicio[data-luz="activo"] {
+  background: rgb(var(--tono) / 0.1);
+  border-color: rgb(var(--tono) / 0.34);
+  transform: scale(1.02);
+  animation: halo-respira 3400ms ease-in-out infinite;
+}
+
+/* Las otras tres, mientras tanto. */
+.panel-servicio[data-luz="atenuado"] {
+  opacity: 0.34;
+  box-shadow: none;
+}
+
+/* El globo del guía: sale pegado a la tarjeta de la que habla, con su pico.
+   `pointer-events: none` no es un detalle — sin eso, el globo se come el
+   toque de la tarjeta que tapa y quien intenta entrar cree que el sitio no
+   responde. */
+@keyframes globo-entra {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+.globo-guia {
+  animation: globo-entra 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.globo-guia::after {
+  content: "";
+  position: absolute;
+  left: 34px;
+  width: 11px;
+  height: 11px;
+  transform: rotate(45deg);
+  background: var(--color-noche-panel);
+  border-left: 1px solid rgb(var(--tono) / 0.3);
+  border-top: 1px solid rgb(var(--tono) / 0.3);
+}
+.globo-guia[data-pico="arriba"]::after { top: -6px; }
+.globo-guia[data-pico="abajo"]::after {
+  bottom: -6px;
+  transform: rotate(225deg);
+}
+
+@keyframes burbuja-llega {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: none; }
+}
+.burbuja-guia { animation: burbuja-llega 420ms cubic-bezier(0.2, 1.1, 0.4, 1); }
+
+/* Quien pide menos movimiento ve la pared ya encendida y la burbuja en su
+   sitio, sin recorrido. No se pierde nada: el estado final es el mismo. */
+@media (prefers-reduced-motion: reduce) {
+  .panel-servicio,
+  .panel-servicio[data-luz="activo"] {
+    animation: none;
+    transform: none;
+    transition: none;
+  }
+  .globo-guia,
+  .burbuja-guia { animation: none; }
+}
