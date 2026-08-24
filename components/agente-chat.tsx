@@ -87,6 +87,11 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
     setOfrece((r.luego ?? []).length ? r.luego! : RESPUESTAS.map((x) => x.id).filter((x) => x !== id));
   }
 
+  function reiniciar() {
+    setTurnos([{ de: "guia", dice: [SALUDO] }]);
+    setOfrece(PRIMERAS);
+  }
+
   if (!abierto) return null;
 
   return (
@@ -100,6 +105,36 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
       <div className="flex items-center gap-2.5 border-b border-tinta/10 px-4 py-3">
         <span className="size-2 shrink-0 rounded-full bg-agua" aria-hidden="true" />
         <span className="flex-1 text-[15px] font-semibold">Guía</span>
+
+        {/* Volver a los cuatro, siempre.
+            Vive en la cabecera y no entre las preguntas porque ahí gastaría
+            uno de los cuatro botones que caben; dentro de la preparación,
+            que es la rama más honda, sin esto había que pasar por otra
+            pregunta para volver a ver los servicios. */}
+        {turnos.length > 1 ? (
+          <button
+            type="button"
+            onClick={reiniciar}
+            aria-label="Volver al principio"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tinta/10 text-tinta/80"
+          >
+            <svg
+              aria-hidden="true"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <path d="M3 4v5h5" />
+            </svg>
+          </button>
+        ) : null}
+
         <button
           type="button"
           onClick={alCerrar}
@@ -150,7 +185,12 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
       </div>
 
       {/* Las preguntas. Son botones y no una casilla: lo que se puede
-          preguntar se ve, en vez de adivinarse. */}
+          preguntar se ve, en vez de adivinarse.
+
+          Van con la etiqueta corta. Con las largas se apilaban en cuatro
+          filas y en un iPhone SE dejaban la conversación en 132 px; darle
+          scroll propio a esta franja lo empeoraba, porque escondía «Hablar
+          con Henry» detrás de un desplazamiento que nadie iba a encontrar. */}
       <div className="flex flex-wrap gap-2 border-t border-tinta/10 px-4 py-3.5">
         {ofrece.map((id) => {
           const r = respuestaPorId(id);
@@ -162,7 +202,7 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
               onClick={() => preguntar(id)}
               className="min-h-[44px] rounded-full border border-agua/30 px-3.5 text-[14px] font-medium text-agua transition-colors active:bg-agua/15"
             >
-              {r.pregunta}
+              {r.corto}
             </button>
           );
         })}

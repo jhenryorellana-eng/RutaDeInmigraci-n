@@ -17,18 +17,33 @@ import { WHATSAPP_HENRY, ZELLE_NOMBRE, ZELLE_TELEFONO } from "@/lib/pago";
  * Un guion no improvisa. Lo que no está aquí, no se contesta — se manda a
  * Henry.
  *
- * ── De dónde salen los datos ──
+ * ── Los cuatro, no uno ──
  *
- * De donde ya vivían: los precios de `lib/servicios.ts`, el Zelle de
- * `lib/pago.ts`. Escritos otra vez a mano aquí, se quedarían viejos el día
- * que cambie un precio y nadie se acordaría de esta pantalla.
+ * La pared ofrece cuatro cosas y el guion tiene que cubrir las cuatro. Una
+ * primera versión respondía de precios, pago y sesión —todo de la
+ * preparación— y de los otros tres servicios sólo decía una línea: quien
+ * venía por la comunidad o por el bootcamp se encontraba un guía que no
+ * sabía de lo suyo.
+ *
+ * ── De dónde salen los datos, y dónde se acaban ──
+ *
+ * De donde ya vivían: los precios de las preparaciones de `lib/servicios.ts`
+ * y el Zelle de `lib/pago.ts`. Los de la comunidad son los de ANDEX, $25 al
+ * mes o $250 al año.
+ *
+ * De los servicios migratorios y del bootcamp NO hay datos en ninguna parte
+ * —ni precios, ni fechas, ni qué incluye cada uno—, así que el guion dice
+ * qué son, para quién son y manda a su página. Escribir aquí un precio de
+ * oídas sería exactamente el fallo que este archivo existe para evitar. En
+ * cuanto Henry los dé, se añaden como sub-preguntas igual que las de la
+ * preparación.
  *
  * ── Lo que NO se promete ──
  *
  * Que Henry es abogado, porque no lo es, y ésa es una de las preguntas del
- * guion en vez de una nota al pie. Y no se dice por dónde ocurre la sesión
- * —videollamada, teléfono— porque eso todavía no está decidido, y escribirlo
- * aquí sería inventárselo.
+ * guion en vez de una nota al pie. Que la comunidad avise de las fechas
+ * límite, porque esos avisos todavía no existen. Y no se dice por dónde
+ * ocurre la sesión —videollamada, teléfono— porque eso aún no está decidido.
  */
 
 export type Enlace = {
@@ -42,75 +57,146 @@ export type Respuesta = {
   id: string;
   /** Como lo pregunta quien lee, no como lo nombraríamos nosotros. */
   pregunta: string;
+  /**
+   * La misma pregunta, en el botón.
+   *
+   * Los botones se apilan: cinco preguntas largas ocupaban cuatro filas y en
+   * un iPhone SE dejaban la conversación en dos líneas. Cortas caben en dos
+   * filas y la respuesta que se acaba de leer sigue en pantalla. En la
+   * conversación se escribe la larga, que es como lo diría una persona.
+   */
+  corto: string;
   dice: string[];
   enlaces?: Enlace[];
-  /** Qué se ofrece después de esta. Vacío = vuelve al menú entero. */
+  /** Qué se ofrece después de ésta. Vacío = vuelve al menú entero. */
   luego?: string[];
 };
 
 const precio = (id: string) => SERVICIOS.find((s) => s.id === id)?.precioUsd ?? 0;
 
+/** La membresía de ANDEX. El anual son diez mensualidades, no doce. */
+const ANDEX_MES = 25;
+const ANDEX_ANIO = 250;
+
 export const SALUDO =
-  "Soy la guía de esta página. No soy Henry — respondo lo que ya sé, y para lo demás te paso con él.";
+  "Soy la guía de esta página. No soy Henry — respondo lo que ya sé de las cuatro cosas de aquí, y para lo demás te paso con él.";
 
 export const RESPUESTAS: Respuesta[] = [
   {
     id: "cual",
-    pregunta: "¿Cuál de los cuatro me toca?",
+    pregunta: "¿Cuál me toca a mí?",
+    corto: "¿Cuál me toca?",
     dice: [
       "Depende de en qué punto estés:",
-      "Si ya tienes fecha de audiencia, la preparación con Henry.",
-      "Si lo que quieres es acompañamiento durante el año —tus documentos, tus fechas, gente en tu misma situación—, la comunidad.",
-      "Si hay algo que presentar, los servicios migratorios.",
-      "Y si es para un hijo tuyo, el bootcamp.",
+      "Si ya tienes fecha de audiencia → la preparación con Henry.",
+      "Si quieres acompañamiento durante el año → la comunidad.",
+      "Si hay un trámite que presentar → los servicios migratorios.",
+      "Si es para un hijo tuyo → el bootcamp.",
+      "Dime cuál te suena y te cuento más.",
     ],
-    enlaces: [{ texto: "Ver las preparaciones", href: "/reservar", interno: true }],
-    luego: ["precio", "sesion", "henry"],
+    /* Con «henry» al final: si ninguna de las cuatro le encaja, esta es
+       justo la persona que necesita hablar con él, y sin esta salida se
+       queda mirando cuatro botones que ya ha descartado. */
+    luego: ["preparacion", "comunidad", "migratorio", "bootcamp", "henry"],
   },
+
+  // ── 1 · La preparación de audiencia ────────────────────
   {
-    id: "precio",
-    pregunta: "¿Cuánto cuesta?",
+    id: "preparacion",
+    pregunta: "La preparación de audiencia",
+    corto: "La preparación",
     dice: [
-      `Hay tres preparaciones y cada una cuesta distinto: la primera audiencia (preliminar) $${precio("primera")}, la segunda (preliminar) $${precio("segunda")} y la de mérito $${precio("tercera")}.`,
-      "Las tres duran lo mismo, 45 minutos, y comparten la misma agenda: la hora que apartes queda tuya en cualquier caso.",
+      "Son 45 minutos, tú y Henry, para llegar a tu audiencia sabiendo qué te van a preguntar y con tus papeles en orden.",
+      `Hay tres, según qué audiencia tengas: la primera (preliminar) $${precio("primera")}, la segunda (preliminar) $${precio("segunda")} y la de mérito $${precio("tercera")}.`,
     ],
-    enlaces: [{ texto: "Apartar mi hora", href: "/reservar", interno: true }],
-    luego: ["pago", "sesion", "henry"],
+    enlaces: [{ texto: "Ver horas libres", href: "/reservar", interno: true }],
+    /* Con «henry» y sin «cual»: éste es el servicio que se paga, así que la
+       salida a él tiene que estar a un toque. Volver a los cuatro sigue
+       estando en las tres siguientes. */
+    luego: ["pago", "sesion", "abogado", "henry"],
   },
   {
     id: "pago",
     pregunta: "¿Cómo se paga?",
+    corto: "¿Cómo se paga?",
     dice: [
-      "Se paga después de apartar la hora, no antes. Es por Zelle:",
+      "La preparación se paga después de apartar la hora, no antes. Es por Zelle:",
       `${ZELLE_TELEFONO}, a nombre de ${ZELLE_NOMBRE}.`,
       "Cuando lo envíes, mándale la captura por WhatsApp. Zelle no avisa a nadie más que al banco de Henry, así que esa captura es lo que le confirma que pagaste.",
-      "Esta página no te pide ni ve ningún dato de tu banco. La transferencia ocurre entera dentro de tu app bancaria.",
+      "Esta página no te pide ni ve ningún dato de tu banco: la transferencia ocurre entera dentro de tu app bancaria.",
     ],
-    luego: ["precio", "sesion", "henry"],
+    luego: ["sesion", "abogado", "cual", "henry"],
   },
   {
     id: "sesion",
     pregunta: "¿Cómo es la sesión?",
+    corto: "¿Cómo es?",
     dice: [
       "45 minutos, tú y Henry, sin nadie más.",
-      "Las horas que ves en la agenda son de Utah, que es donde está él. Al elegir hora, la página te enseña también qué hora es donde tú estás, para que no haya confusión.",
+      "Las horas de la agenda son de Utah, que es donde está él. Al elegir una, la página te enseña también qué hora es donde tú estás.",
       "La cita queda apartada en cuanto la eliges. Henry te confirma.",
     ],
-    enlaces: [{ texto: "Ver horas libres", href: "/reservar", interno: true }],
-    luego: ["pago", "abogado", "henry"],
+    enlaces: [{ texto: "Apartar mi hora", href: "/reservar", interno: true }],
+    luego: ["pago", "abogado", "cual", "henry"],
   },
   {
     id: "abogado",
     pregunta: "¿Henry es abogado?",
+    corto: "¿Es abogado?",
     dice: [
       "No. Henry no es abogado y esto no es asesoría legal.",
       "Lo que hace es prepararte: que llegues sabiendo qué te van a preguntar y con tus papeles en orden. Cuando tu caso necesite un abogado, te lo va a decir.",
     ],
-    luego: ["cual", "sesion", "henry"],
+    luego: ["preparacion", "cual", "henry"],
   },
+
+  // ── 2 · La comunidad ───────────────────────────────────
+  {
+    id: "comunidad",
+    pregunta: "La comunidad Andex",
+    corto: "La comunidad",
+    dice: [
+      "Es la membresía para tu familia, y funciona como una app: allí guardas tus documentos, tienes la academia de inglés y los talleres en vivo de la comunidad.",
+      `Cuesta $${ANDEX_MES} al mes, o $${ANDEX_ANIO} al año — que son diez mensualidades: pagando de una vez, dos meses no los pagas.`,
+      "Ahora mismo funciona como piloto en Utah, en español y en inglés.",
+    ],
+    enlaces: [{ texto: "Ver la comunidad", href: "https://andex.usalatinoprime.com/" }],
+    luego: ["cual", "preparacion", "migratorio", "henry"],
+  },
+
+  // ── 3 · Los trámites ───────────────────────────────────
+  {
+    id: "migratorio",
+    pregunta: "Los servicios migratorios",
+    corto: "Los trámites",
+    dice: [
+      "Los trámites en sí los lleva el equipo de USALatino Prime. Es a donde vas cuando hay algo que presentar.",
+      "Qué trámite te toca y cuánto cuesta lo ven ellos contigo, porque depende de tu caso: no te lo puedo decir yo desde aquí sin conocerlo.",
+    ],
+    enlaces: [{ texto: "Ver los servicios", href: "https://www.usalatinoprime.com/" }],
+    luego: ["cual", "preparacion", "comunidad", "henry"],
+  },
+
+  // ── 4 · El bootcamp ────────────────────────────────────
+  {
+    id: "bootcamp",
+    pregunta: "El bootcamp para jóvenes",
+    corto: "El bootcamp",
+    dice: [
+      "Es para tus hijos: emprendimiento, liderazgo y transformación familiar. La edición que viene es la de 2027.",
+      "Las fechas, el precio y cómo se entra están en su página, que es donde se apuntan.",
+    ],
+    enlaces: [
+      { texto: "Ver el bootcamp", href: "https://comunidad.starbizacademy.com/bootcamp" },
+    ],
+    luego: ["cual", "comunidad", "preparacion", "henry"],
+  },
+
+  // ── La salida ──────────────────────────────────────────
   {
     id: "henry",
     pregunta: "Quiero hablar con Henry",
+    corto: "Hablar con Henry",
     dice: [
       "Te paso con él por WhatsApp. Es su número de verdad, el mismo del Zelle.",
       "Escríbele lo que necesites; te contesta él, no yo.",
@@ -120,8 +206,13 @@ export const RESPUESTAS: Respuesta[] = [
   },
 ];
 
-/** Lo que se ofrece nada más abrir. El orden es el de la duda más común. */
-export const PRIMERAS = ["cual", "precio", "sesion", "pago", "abogado"];
+/**
+ * Lo que se ofrece nada más abrir: los cuatro servicios y la pregunta que
+ * orienta entre ellos. Las de precio, pago y sesión no salen aquí — son de
+ * la preparación, y sacarlas al menú principal es lo que hacía parecer que
+ * el guía sólo sabía de un servicio.
+ */
+export const PRIMERAS = ["cual", "preparacion", "comunidad", "migratorio", "bootcamp"];
 
 export function respuestaPorId(id: string): Respuesta | null {
   return RESPUESTAS.find((r) => r.id === id) ?? null;
