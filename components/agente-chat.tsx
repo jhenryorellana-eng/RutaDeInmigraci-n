@@ -225,21 +225,43 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
         <div ref={fondo} />
       </div>
 
-      {/* Donde iOS pone las sugerencias del teclado: una fila que se desliza.
-          En fila y no apiladas porque apiladas se comen media conversación —
-          medido, en un iPhone SE dejaban dos líneas a la vista. */}
-      <div className="flex shrink-0 gap-2 overflow-x-auto border-t border-tinta/10 px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {ofrece.map((id) => {
+      {/* Las preguntas, TODAS a la vista.
+          Estaban en una fila que se deslizaba —como las sugerencias del
+          teclado de iOS— y de cinco se veían dos y media: nadie descubre por
+          su cuenta que hay más a la derecha, así que la mitad del guion no
+          existía. Ahora es una rejilla de dos y se ven las cinco sin mover
+          nada.
+
+          Cuando el número es impar, la PRIMERA ocupa el ancho entero. Así la
+          rejilla nunca deja un hueco, y de paso la que encabeza cada tanda es
+          siempre la que orienta: «¿Cuál me toca?» al empezar, «¿Cómo se
+          paga?» dentro de la preparación.
+
+          Y cada servicio lleva el punto de su color. Es lo que ata el botón
+          al cuadro de la pared: quien vio pasar la luz malva por el borde de
+          «Servicio Migratorio» reconoce el punto malva sin leer. */}
+      <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-tinta/10 px-4 py-3">
+        {ofrece.map((id, i) => {
           const r = respuestaPorId(id);
           if (!r) return null;
+          const ancha = ofrece.length % 2 === 1 && i === 0;
           return (
             <button
               key={id}
               type="button"
               onClick={() => preguntar(id)}
               disabled={tecleando}
-              className="min-h-[44px] shrink-0 whitespace-nowrap rounded-full bg-tinta/10 px-4 text-[14.5px] text-tinta transition-opacity active:bg-tinta/20 disabled:opacity-40"
+              className={`flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-tinta/10 px-3 text-center text-[14.5px] leading-[1.25] text-tinta transition-opacity active:bg-tinta/20 disabled:opacity-40 ${
+                ancha ? "col-span-2" : ""
+              } ${r.tono ? `tono-${r.tono}` : ""}`}
             >
+              {r.tono ? (
+                <span
+                  aria-hidden="true"
+                  className="size-[7px] shrink-0 rounded-full"
+                  style={{ background: "rgb(var(--tono))" }}
+                />
+              ) : null}
               {r.corto}
             </button>
           );

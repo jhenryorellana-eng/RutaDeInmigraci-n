@@ -81,6 +81,16 @@ export type Respuesta = {
   enlaces?: Enlace[];
   /** Qué se ofrece después de ésta. Vacío = vuelve al menú entero. */
   luego?: string[];
+  /**
+   * El color del servicio, para el punto de su botón.
+   *
+   * Sólo lo llevan las cuatro que son un servicio. Es lo que ata cada botón
+   * al cuadro que le corresponde en la pared: quien vio pasar la luz malva
+   * por el borde de «Servicio Migratorio» reconoce el punto malva sin leer.
+   * Las preguntas sueltas —el pago, la sesión— no llevan ninguno, porque no
+   * son un sitio al que ir.
+   */
+  tono?: "agua" | "arena" | "malva" | "acero";
 };
 
 const precio = (id: string) => SERVICIOS.find((s) => s.id === id)?.precioUsd ?? 0;
@@ -116,6 +126,7 @@ export const RESPUESTAS: Respuesta[] = [
     id: "preparacion",
     pregunta: "La preparación de audiencia",
     corto: "La preparación",
+    tono: "agua",
     dice: [
       "Son 45 minutos, tú y Henry, para llegar a tu audiencia sabiendo qué te van a preguntar y con tus papeles en orden.",
       `Hay tres, según qué audiencia tengas: la primera (preliminar) $${precio("primera")}, la segunda (preliminar) $${precio("segunda")} y la de mérito $${precio("tercera")}.`,
@@ -166,6 +177,7 @@ export const RESPUESTAS: Respuesta[] = [
     id: "comunidad",
     pregunta: "La comunidad Andex",
     corto: "La comunidad",
+    tono: "arena",
     dice: [
       "Es la membresía para tu familia, y funciona como una app: allí guardas tus documentos, tienes la academia de inglés y los talleres en vivo de la comunidad.",
       `Cuesta $${ANDEX_MES} al mes, o $${ANDEX_ANIO} al año — que son diez mensualidades: pagando de una vez, dos meses no los pagas.`,
@@ -180,6 +192,7 @@ export const RESPUESTAS: Respuesta[] = [
     id: "migratorio",
     pregunta: "Los servicios migratorios",
     corto: "Los trámites",
+    tono: "malva",
     dice: [
       "Los trámites en sí los lleva el equipo de USALatino Prime. Es a donde vas cuando hay algo que presentar.",
       "Qué trámite te toca y cuánto cuesta lo ven ellos contigo, porque depende de tu caso: no te lo puedo decir yo desde aquí sin conocerlo.",
@@ -193,6 +206,7 @@ export const RESPUESTAS: Respuesta[] = [
     id: "bootcamp",
     pregunta: "El bootcamp para jóvenes",
     corto: "El bootcamp",
+    tono: "acero",
     dice: [
       "Es para tus hijos: emprendimiento, liderazgo y transformación familiar. La edición que viene es la de 2027.",
       "Las fechas, el precio y cómo se entra están en su página, que es donde se apuntan.",
