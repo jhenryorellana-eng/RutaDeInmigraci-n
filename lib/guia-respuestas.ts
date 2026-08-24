@@ -1,5 +1,5 @@
 import { SERVICIOS } from "@/lib/servicios";
-import { WHATSAPP_HENRY, ZELLE_NOMBRE, ZELLE_TELEFONO } from "@/lib/pago";
+import { ZELLE_NOMBRE, ZELLE_TELEFONO } from "@/lib/pago";
 
 /**
  * LO QUE EL GUÍA SABE RESPONDER.
@@ -14,8 +14,19 @@ import { WHATSAPP_HENRY, ZELLE_NOMBRE, ZELLE_TELEFONO } from "@/lib/pago";
  * Porque esto se lo lee gente que está a semanas de una audiencia de
  * inmigración, y una respuesta inventada sobre su caso no es un fallo de
  * producto: es una persona tomando una decisión mala con información falsa.
- * Un guion no improvisa. Lo que no está aquí, no se contesta — se manda a
- * Henry.
+ * Un guion no improvisa. Lo que no está aquí, no se contesta.
+ *
+ * ── Y no se manda a WhatsApp ──
+ *
+ * Henry no atiende consultas por ahí, así que ofrecer «escríbele» sería
+ * mandar a alguien a esperar una respuesta que no va a llegar: peor que no
+ * ofrecer nada. La salida del guion es la sesión, que es donde sí le
+ * contesta —45 minutos, con las dudas apuntadas—, y eso se dice con esas
+ * palabras.
+ *
+ * El WhatsApp sigue apareciendo en UN sitio, el pago: ahí no se pide
+ * respuesta, se manda el comprobante de una transferencia que su banco no le
+ * anuncia. Es un envío, no una conversación.
  *
  * ── Los cuatro, no uno ──
  *
@@ -79,7 +90,7 @@ const ANDEX_MES = 25;
 const ANDEX_ANIO = 250;
 
 export const SALUDO =
-  "Soy la guía de esta página. No soy Henry — respondo lo que ya sé de las cuatro cosas de aquí, y para lo demás te paso con él.";
+  "Soy la guía de esta página. No soy Henry: respondo lo que él dejó escrito sobre las cuatro cosas de aquí.";
 
 export const RESPUESTAS: Respuesta[] = [
   {
@@ -97,7 +108,7 @@ export const RESPUESTAS: Respuesta[] = [
     /* Con «henry» al final: si ninguna de las cuatro le encaja, esta es
        justo la persona que necesita hablar con él, y sin esta salida se
        queda mirando cuatro botones que ya ha descartado. */
-    luego: ["preparacion", "comunidad", "migratorio", "bootcamp", "henry"],
+    luego: ["preparacion", "comunidad", "migratorio", "bootcamp", "otra"],
   },
 
   // ── 1 · La preparación de audiencia ────────────────────
@@ -113,7 +124,7 @@ export const RESPUESTAS: Respuesta[] = [
     /* Con «henry» y sin «cual»: éste es el servicio que se paga, así que la
        salida a él tiene que estar a un toque. Volver a los cuatro sigue
        estando en las tres siguientes. */
-    luego: ["pago", "sesion", "abogado", "henry"],
+    luego: ["pago", "sesion", "abogado", "otra"],
   },
   {
     id: "pago",
@@ -125,7 +136,7 @@ export const RESPUESTAS: Respuesta[] = [
       "Cuando lo envíes, mándale la captura por WhatsApp. Zelle no avisa a nadie más que al banco de Henry, así que esa captura es lo que le confirma que pagaste.",
       "Esta página no te pide ni ve ningún dato de tu banco: la transferencia ocurre entera dentro de tu app bancaria.",
     ],
-    luego: ["sesion", "abogado", "cual", "henry"],
+    luego: ["sesion", "abogado", "cual", "otra"],
   },
   {
     id: "sesion",
@@ -137,7 +148,7 @@ export const RESPUESTAS: Respuesta[] = [
       "La cita queda apartada en cuanto la eliges. Henry te confirma.",
     ],
     enlaces: [{ texto: "Apartar mi hora", href: "/reservar", interno: true }],
-    luego: ["pago", "abogado", "cual", "henry"],
+    luego: ["pago", "abogado", "cual", "otra"],
   },
   {
     id: "abogado",
@@ -147,7 +158,7 @@ export const RESPUESTAS: Respuesta[] = [
       "No. Henry no es abogado y esto no es asesoría legal.",
       "Lo que hace es prepararte: que llegues sabiendo qué te van a preguntar y con tus papeles en orden. Cuando tu caso necesite un abogado, te lo va a decir.",
     ],
-    luego: ["preparacion", "cual", "henry"],
+    luego: ["preparacion", "cual", "otra"],
   },
 
   // ── 2 · La comunidad ───────────────────────────────────
@@ -161,7 +172,7 @@ export const RESPUESTAS: Respuesta[] = [
       "Ahora mismo funciona como piloto en Utah, en español y en inglés.",
     ],
     enlaces: [{ texto: "Ver la comunidad", href: "https://andex.usalatinoprime.com/" }],
-    luego: ["cual", "preparacion", "migratorio", "henry"],
+    luego: ["cual", "preparacion", "migratorio", "otra"],
   },
 
   // ── 3 · Los trámites ───────────────────────────────────
@@ -174,7 +185,7 @@ export const RESPUESTAS: Respuesta[] = [
       "Qué trámite te toca y cuánto cuesta lo ven ellos contigo, porque depende de tu caso: no te lo puedo decir yo desde aquí sin conocerlo.",
     ],
     enlaces: [{ texto: "Ver los servicios", href: "https://www.usalatinoprime.com/" }],
-    luego: ["cual", "preparacion", "comunidad", "henry"],
+    luego: ["cual", "preparacion", "comunidad", "otra"],
   },
 
   // ── 4 · El bootcamp ────────────────────────────────────
@@ -189,20 +200,20 @@ export const RESPUESTAS: Respuesta[] = [
     enlaces: [
       { texto: "Ver el bootcamp", href: "https://comunidad.starbizacademy.com/bootcamp" },
     ],
-    luego: ["cual", "comunidad", "preparacion", "henry"],
+    luego: ["cual", "comunidad", "preparacion", "otra"],
   },
 
   // ── La salida ──────────────────────────────────────────
   {
-    id: "henry",
-    pregunta: "Quiero hablar con Henry",
-    corto: "Hablar con Henry",
+    id: "otra",
+    pregunta: "Tengo otra pregunta",
+    corto: "Otra pregunta",
     dice: [
-      "Te paso con él por WhatsApp. Es su número de verdad, el mismo del Zelle.",
-      "Escríbele lo que necesites; te contesta él, no yo.",
+      "Aquí sólo está lo que Henry dejó escrito, y tu caso no cabe en cinco respuestas.",
+      "Lo que no encuentres aquí lo ve él contigo en la sesión: son 45 minutos y puedes llevar tus dudas apuntadas.",
     ],
-    enlaces: [{ texto: "Escribirle por WhatsApp", href: `https://wa.me/${WHATSAPP_HENRY}` }],
-    luego: [],
+    enlaces: [{ texto: "Ver horas libres", href: "/reservar", interno: true }],
+    luego: ["cual", "preparacion", "pago"],
   },
 ];
 

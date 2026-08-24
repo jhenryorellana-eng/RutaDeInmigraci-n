@@ -12,13 +12,30 @@ import {
 } from "@/lib/guia-respuestas";
 
 /**
- * EL CHAT DEL GUÍA.
+ * LA GUÍA · con las formas de Mensajes.
  *
- * Preguntas escritas de antemano, respuestas escritas de antemano. No hay
- * casilla donde escribir, y es a propósito: una casilla vacía promete que
- * alguien va a entender lo que le escribas, y aquí no hay nadie al otro
- * lado. Tocar una pregunta y recibir su respuesta no promete nada que no
- * pueda cumplir.
+ * Burbujas con cola, avatar arriba, las sugerencias donde iOS pone las del
+ * teclado y los tres puntos de «escribiendo». Es el patrón que este público
+ * usa cien veces al día: no hay nada que aprender.
+ *
+ * ── El riesgo de parecerse tanto ──
+ *
+ * Que se espere que conteste como una persona. Y no hay nadie: son
+ * respuestas escritas de antemano. Eso se paga en tres sitios y a la vista:
+ * bajo el nombre («Respuestas escritas de antemano»), en el pie («toca una
+ * pregunta — aquí no se escribe») y en la primera frase que dice.
+ *
+ * ── Por qué el avatar no es la cara de Henry ──
+ *
+ * Porque con su cara esto sería hacerse pasar por él. Quien abre un hilo con
+ * la foto de alguien da por hecho que lee a ese alguien, y aquí lee un guion.
+ * El avatar es una marca sin cara y el nombre es «Guía».
+ *
+ * ── Los tres puntos no son adorno ──
+ *
+ * Separan la pregunta de la respuesta. Sin ese medio segundo, tocar un botón
+ * y ver aparecer cuatro párrafos de golpe se lee como una página que se
+ * recarga, no como alguien que contesta.
  *
  * ── Lo que no sale de aquí ──
  *
@@ -26,33 +43,23 @@ import {
  * quién. La conversación vive en la memoria de la pestaña y desaparece al
  * cerrarla. Con este público —gente con un caso de inmigración abierto— eso
  * no es una omisión, es el requisito.
- *
- * ── Por qué el cuerpo va a 15px ──
- *
- * Porque esto son párrafos que hay que leer, no rótulos. A 14px cabía más
- * conversación en pantalla y se leía peor: el sitio se abre en la calle, con
- * el sol de cara y a veces con vista cansada.
- *
- * ── La salida ──
- *
- * Toda rama termina pudiendo llegar a Henry. Un guion cerrado sin salida es
- * un callejón: quien trae una pregunta que no está prevista se queda mirando
- * cinco botones que no le sirven.
  */
 
 type Turno =
   | { de: "guia"; dice: string[]; enlaces?: Enlace[] }
   | { de: "quien"; dice: string };
 
+/** Lo que tarda en «escribir» antes de contestar. */
+const TECLEANDO_MS = 650;
+
 export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: () => void }) {
   const [turnos, setTurnos] = useState<Turno[]>([{ de: "guia", dice: [SALUDO] }]);
   const [ofrece, setOfrece] = useState<string[]>(PRIMERAS);
+  const [tecleando, setTecleando] = useState(false);
   const fondo = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const reloj = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /* Al abrir, el foco entra en el panel. Sin esto, quien navega con teclado
-     abre el chat y sigue tabulando por la pared de detrás sin enterarse de
-     que hay algo abierto. */
   useEffect(() => {
     if (abierto) panel.current?.focus();
   }, [abierto]);
@@ -66,28 +73,42 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
     return () => document.removeEventListener("keydown", teclado);
   }, [abierto, alCerrar]);
 
+  useEffect(
+    () => () => {
+      if (reloj.current) clearTimeout(reloj.current);
+    },
+    [],
+  );
+
   /* La conversación baja sola al último turno. `block: "nearest"` para que
      mueva SÓLO este panel: con el ajuste por defecto, el navegador arrastra
      también la página de detrás y la pared se va de sitio. */
   useEffect(() => {
     fondo.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [turnos]);
+  }, [turnos, tecleando]);
 
   function preguntar(id: string) {
     const r = respuestaPorId(id);
-    if (!r) return;
-    setTurnos((antes) => [
-      ...antes,
-      { de: "quien", dice: r.pregunta },
-      { de: "guia", dice: r.dice, enlaces: r.enlaces },
-    ]);
-    /* Sin `luego` propio, se vuelve a ofrecer todo menos lo que se acaba de
-       preguntar: repetir la pregunta recién contestada ocupa sitio y no
-       lleva a ninguna parte. */
-    setOfrece((r.luego ?? []).length ? r.luego! : RESPUESTAS.map((x) => x.id).filter((x) => x !== id));
+    if (!r || tecleando) return;
+
+    setTurnos((antes) => [...antes, { de: "quien", dice: r.pregunta }]);
+    setTecleando(true);
+
+    reloj.current = setTimeout(() => {
+      setTecleando(false);
+      setTurnos((antes) => [...antes, { de: "guia", dice: r.dice, enlaces: r.enlaces }]);
+      /* Sin `luego` propio, se vuelve a ofrecer todo menos lo que se acaba de
+         preguntar: repetir la pregunta recién contestada ocupa sitio y no
+         lleva a ninguna parte. */
+      setOfrece(
+        (r.luego ?? []).length ? r.luego! : RESPUESTAS.map((x) => x.id).filter((x) => x !== id),
+      );
+    }, TECLEANDO_MS);
   }
 
   function reiniciar() {
+    if (reloj.current) clearTimeout(reloj.current);
+    setTecleando(false);
     setTurnos([{ de: "guia", dice: [SALUDO] }]);
     setOfrece(PRIMERAS);
   }
@@ -100,28 +121,33 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
       role="dialog"
       aria-label="Guía de la página"
       tabIndex={-1}
-      className="fixed inset-x-3 bottom-3 z-40 flex max-h-[76dvh] flex-col overflow-hidden rounded-3xl border border-agua/25 bg-noche-panel shadow-[0_0_30px_rgba(159,232,216,.16),0_20px_60px_rgba(0,0,0,.6)] sm:left-auto sm:w-[352px]"
+      /* Crece con la conversación en vez de ocupar tres cuartos de pantalla
+         desde el primer mensaje. Un hilo de Mensajes está lleno porque tiene
+         historia; éste empieza con una frase, y un panel medio vacío al abrir
+         se lee como algo que se rompió. */
+      className="msg-hoja fixed inset-x-0 bottom-0 z-40 flex max-h-[76dvh] flex-col overflow-hidden rounded-t-[28px] border-t border-tinta/15 bg-noche-panel/95 backdrop-blur-2xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[380px] sm:rounded-[28px] sm:border"
     >
-      <div className="flex items-center gap-2.5 border-b border-tinta/10 px-4 py-3">
-        <span className="size-2 shrink-0 rounded-full bg-agua" aria-hidden="true" />
-        <span className="flex-1 text-[15px] font-semibold">Guía</span>
+      {/* La cabecera de un hilo: quién es, en el centro, y qué es debajo. */}
+      <div className="relative flex shrink-0 flex-col items-center border-b border-tinta/10 px-4 pb-3 pt-3">
+        <button
+          type="button"
+          onClick={alCerrar}
+          className="absolute left-3 top-1/2 min-h-[44px] -translate-y-1/2 px-1 text-[16px] text-agua"
+        >
+          Cerrar
+        </button>
 
-        {/* Volver a los cuatro, siempre.
-            Vive en la cabecera y no entre las preguntas porque ahí gastaría
-            uno de los cuatro botones que caben; dentro de la preparación,
-            que es la rama más honda, sin esto había que pasar por otra
-            pregunta para volver a ver los servicios. */}
         {turnos.length > 1 ? (
           <button
             type="button"
             onClick={reiniciar}
             aria-label="Volver al principio"
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tinta/10 text-tinta/80"
+            className="absolute right-3 top-1/2 flex size-[34px] -translate-y-1/2 items-center justify-center rounded-full bg-tinta/10 text-tinta/70"
           >
             <svg
               aria-hidden="true"
-              width="14"
-              height="14"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -135,63 +161,74 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
           </button>
         ) : null}
 
-        <button
-          type="button"
-          onClick={alCerrar}
-          aria-label="Cerrar la guía"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tinta/10 text-tinta/80"
+        {/* Sin cara. Ver «Por qué el avatar no es la cara de Henry». */}
+        <span
+          aria-hidden="true"
+          className="flex size-11 items-center justify-center rounded-full border border-tinta/15 bg-tinta/[0.07] text-oro"
         >
           <svg
-            aria-hidden="true"
-            width="13"
-            height="13"
+            width="21"
+            height="21"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.6"
+            strokeWidth="1.8"
             strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <path d="M18 6 6 18M6 6l12 12" />
+            <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.6-.7L3 21l1.9-4.6A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z" />
           </svg>
-        </button>
+        </span>
+        <span className="mt-1.5 text-[15px] font-semibold">Guía</span>
+        <span className="text-[12px] text-tinta/55">Respuestas escritas de antemano</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="flex flex-col gap-3">
-          {turnos.map((t, i) =>
-            t.de === "quien" ? (
-              <p
-                key={i}
-                className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-agua/15 px-3.5 py-2.5 text-[15px] leading-[1.4] text-tinta"
-              >
-                {t.dice}
-              </p>
-            ) : (
-              <div key={i} className="flex max-w-[92%] flex-col gap-2 self-start">
-                {t.dice.map((parrafo, n) => (
-                  <p
-                    key={n}
-                    className="rounded-2xl rounded-bl-md bg-tinta/[0.07] px-3.5 py-2.5 text-[15px] leading-[1.5] text-tinta/90"
-                  >
-                    {parrafo}
-                  </p>
-                ))}
-                {t.enlaces?.map((e) => <Boton key={e.href} enlace={e} />)}
-              </div>
-            ),
-          )}
-        </div>
+      <div className="flex min-h-0 flex-col gap-2 overflow-y-auto px-4 py-4">
+        {turnos.map((t, i) =>
+          t.de === "quien" ? (
+            <p
+              key={i}
+              className="msg-entra msg-mio relative max-w-[78%] self-end rounded-[20px] bg-agua px-4 py-2.5 text-[15px] font-medium leading-[1.4] text-noche"
+            >
+              {t.dice}
+            </p>
+          ) : (
+            <div key={i} className="flex max-w-[86%] flex-col gap-2 self-start">
+              {t.dice.map((parrafo, n) => (
+                <p
+                  key={n}
+                  className={`msg-entra relative rounded-[20px] bg-tinta/10 px-4 py-2.5 text-[15px] leading-[1.5] text-oro ${
+                    n === t.dice.length - 1 ? "msg-guia" : ""
+                  }`}
+                  style={{ animationDelay: `${n * 90}ms` }}
+                >
+                  {parrafo}
+                </p>
+              ))}
+              {t.enlaces?.map((e) => <Boton key={e.href} enlace={e} />)}
+            </div>
+          ),
+        )}
+
+        {tecleando ? (
+          <div
+            role="status"
+            aria-label="Escribiendo"
+            className="msg-entra msg-guia relative flex gap-1.5 self-start rounded-[20px] bg-tinta/10 px-4 py-3.5"
+          >
+            <span className="msg-punto size-[7px] rounded-full bg-tinta/80" />
+            <span className="msg-punto size-[7px] rounded-full bg-tinta/80" />
+            <span className="msg-punto size-[7px] rounded-full bg-tinta/80" />
+          </div>
+        ) : null}
+
         <div ref={fondo} />
       </div>
 
-      {/* Las preguntas. Son botones y no una casilla: lo que se puede
-          preguntar se ve, en vez de adivinarse.
-
-          Van con la etiqueta corta. Con las largas se apilaban en cuatro
-          filas y en un iPhone SE dejaban la conversación en 132 px; darle
-          scroll propio a esta franja lo empeoraba, porque escondía «Hablar
-          con Henry» detrás de un desplazamiento que nadie iba a encontrar. */}
-      <div className="flex flex-wrap gap-2 border-t border-tinta/10 px-4 py-3.5">
+      {/* Donde iOS pone las sugerencias del teclado: una fila que se desliza.
+          En fila y no apiladas porque apiladas se comen media conversación —
+          medido, en un iPhone SE dejaban dos líneas a la vista. */}
+      <div className="flex shrink-0 gap-2 overflow-x-auto border-t border-tinta/10 px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {ofrece.map((id) => {
           const r = respuestaPorId(id);
           if (!r) return null;
@@ -200,13 +237,21 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
               key={id}
               type="button"
               onClick={() => preguntar(id)}
-              className="min-h-[44px] rounded-full border border-agua/30 px-3.5 text-[14px] font-medium text-agua transition-colors active:bg-agua/15"
+              disabled={tecleando}
+              className="min-h-[44px] shrink-0 whitespace-nowrap rounded-full bg-tinta/10 px-4 text-[14.5px] text-tinta transition-opacity active:bg-tinta/20 disabled:opacity-40"
             >
               {r.corto}
             </button>
           );
         })}
       </div>
+
+      {/* Al 45% medía 4,23:1 y el mínimo es 4,5. Es la línea que dice que
+          aquí no hay nadie escribiendo: la que menos puede permitirse pasar
+          desapercibida. */}
+      <p className="shrink-0 pb-4 pt-2.5 text-center text-[12.5px] text-tinta/60">
+        Toca una pregunta — aquí no se escribe
+      </p>
     </div>
   );
 }
@@ -214,7 +259,7 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
 /** El botón de una respuesta: dentro del sitio con `Link`, fuera con `<a>`. */
 function Boton({ enlace }: { enlace: Enlace }) {
   const clases =
-    "flex min-h-[44px] items-center justify-center rounded-full bg-agua px-4 text-[15px] font-bold text-noche";
+    "msg-entra flex min-h-[44px] items-center self-start rounded-full border border-agua/40 bg-agua/15 px-[18px] text-[15px] font-semibold text-agua";
 
   return enlace.interno ? (
     <Link href={enlace.href} className={clases}>
