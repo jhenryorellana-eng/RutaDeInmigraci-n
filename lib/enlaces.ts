@@ -33,6 +33,16 @@ export type Enlace = {
    */
   tono: "agua" | "arena" | "malva" | "acero";
   /**
+   * Los dos que presta Henry directamente van con más cuerpo.
+   *
+   * Se descartó pintarlos de otro color: el oro ya es la voz del guía en
+   * esta pantalla y cada servicio tiene su propio tono, así que un tercer
+   * significado para el mismo color no lo habría destacado, lo habría
+   * enturbiado. Un punto de tamaño y otro de grosor se leen como importancia
+   * sin competir con nada.
+   */
+  destacado?: boolean;
+  /**
    * Lo que el guía dice de este servicio cuando lo señala.
    *
    * Una frase, y que empiece por el CASO y no por el nombre: quien lee esto
@@ -52,6 +62,7 @@ export const ENLACES: Enlace[] = [
     interno: true,
     abreServicios: true,
     tono: "agua",
+    destacado: true,
     guia: "Si ya tienes fecha de audiencia: 45 minutos con Henry para llegar sabiendo qué te van a preguntar.",
   },
   {
@@ -68,6 +79,7 @@ export const ENLACES: Enlace[] = [
     descripcion: "Los trámites migratorios, con el equipo de UsaLatino Prime.",
     href: "https://www.usalatinoprime.com/",
     tono: "malva",
+    destacado: true,
     guia: "Los trámites en sí, con el equipo de Henry. Es a donde vas cuando hay algo que presentar.",
   },
   {

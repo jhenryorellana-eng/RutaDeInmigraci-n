@@ -269,10 +269,27 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
         />
 
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[16px] font-semibold tracking-[-0.01em]">
+          <span
+            className={
+              enlace.destacado
+                ? /* 17px por debajo de 360px de ancho: a 18 px, «Preparación de
+                     audiencia» se salía por 13 px en un iPhone SE y se cortaba
+                     con puntos suspensivos. La jerarquía se mantiene igual —lo
+                     que la hace es el contraste con los 16 px de al lado, no el
+                     número. */
+                  "block truncate text-[17px] font-bold tracking-[-0.02em] min-[360px]:text-[18px]"
+                : "block truncate text-[16px] font-semibold tracking-[-0.01em]"
+            }
+          >
             {enlace.titulo}
           </span>
-          <span className="mt-0.5 block truncate text-[12px] font-light text-tinta/75">
+          <span
+            className={
+              enlace.destacado
+                ? "mt-0.5 block truncate text-[13px] font-normal text-tinta/80"
+                : "mt-0.5 block truncate text-[12px] font-light text-tinta/75"
+            }
+          >
             {enlace.descripcion}
           </span>
         </span>
