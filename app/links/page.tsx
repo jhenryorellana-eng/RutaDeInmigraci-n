@@ -91,23 +91,28 @@ export default function Links() {
               <br />
               <span className="italic">Orellana D.</span>
             </h1>
-            {/* En primera persona y con un oficio dentro.
-                «Transformando familias, empoderando líderes» es lo que pone
-                cualquiera: no dice qué hace, ni para quién, ni por qué él.
-                Esto dice las tres en once palabras: «me costó» es el
-                camino recorrido, «automatizo» es el oficio, «familias
-                latinas» es para quién. Se probó una versión de dos frases
-                que abría con «recorrí este proceso y lo convertí en
-                sistemas»: decía lo mismo dos veces y ocupaba cuatro líneas
-                en lugar de dos.
+            {/* Quién es y qué construyó, no cómo le gustaría sonar.
 
-                Sin repetir «Orellana Group»: ya está arriba, en versalitas,
-                a cuatro líneas de distancia. Un cargo que sólo devuelve el
-                nombre de la marca que acaba de leerse ocupa la línea más
-                valiosa de la pantalla sin añadir nada. */}
+                Las dos versiones anteriores —«Fundador y CEO · Transformando
+                familias, empoderando líderes» y «Automatizo lo que a mí me
+                costó años»— fallaban en lo mismo: se podían firmar sin haber
+                hecho nada. Ni una decía quién es él ni qué existe hoy que
+                antes no existía.
+
+                Esto no se inventó: la primera frase es la suya, la que ya
+                firma en ANDEX —«Sé lo que se siente llegar sin saber a quién
+                acudir ni en quién confiar»— traída a primera persona. Que la
+                misma frase abra los dos sitios no es un descuido; es lo que
+                hace que quien salta de uno a otro reconozca a la misma
+                persona.
+
+                La segunda nombra los cuatro botones de abajo por lo que son
+                —trámites, comunidad, formación— en vez de repetir sus
+                marcas, que ya se leen a dos dedos de aquí. */}
             <p className="mt-3.5 text-[15px] font-light leading-[1.5] text-tinta/85">
-              Automatizo lo que a mí me costó años, para que a las familias
-              latinas les cueste una tarde.
+              Llegué sin saber a quién acudir ni en quién confiar. Hoy
+              construyo lo que me faltó: trámites, comunidad y formación para
+              familias latinas.
             </p>
           </div>
 
