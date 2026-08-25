@@ -10,7 +10,7 @@ import {
   estadoPorNombre,
   estadoProbable,
 } from "@/lib/estados";
-import { ZONA, diaCorto, fechaLarga, horaEnZona } from "@/lib/horario";
+import { ZONA, desfaseConUtah, diaCorto, fechaLarga, horaEnZona } from "@/lib/horario";
 import type { DiaConHuecos } from "@/lib/citas";
 import { reservar } from "@/app/reservar/accion";
 import { CLAVE_CITA } from "@/lib/pago";
@@ -109,11 +109,19 @@ export function FormularioReserva({
      Y si el estado está partido, la mitad elegida manda sobre la primera. */
   const zonaVisitante = estado?.zonas[mitad]?.zona ?? estado?.zonas[0]?.zona ?? zonaDelNavegador;
 
-  /* Cuándo hay algo que aclarar: sólo si de verdad es otra hora. Repetir el
-     mismo número con dos etiquetas hace dudar de si el sitio se equivocó. */
-  const otraHora = zonaVisitante !== ZONA;
-
   const dia = dias.find((d) => d.clave === diaElegido) ?? null;
+
+  /* Cuándo hay algo que aclarar: sólo si de verdad es otra hora. Repetir el
+     mismo número con dos etiquetas hace dudar de si el sitio se equivocó.
+
+     Se compara el DESFASE y no el nombre de la zona: `America/Denver` y
+     `America/Boise` se escriben distinto y marcan la misma hora, así que por
+     nombre se anunciaría una diferencia que no existe.
+
+     Y se mide sobre el día elegido, no sobre hoy: Arizona está a la hora de
+     Utah en invierno y una hora por detrás en verano. */
+  const desfase = dia ? desfaseConUtah(new Date(dia.huecos[0].iso), zonaVisitante) : 0;
+  const otraHora = desfase !== 0;
 
   function elegirEstado(nombre: string) {
     setEstadoElegido(nombre);
@@ -276,6 +284,31 @@ export function FormularioReserva({
               </span>
             </button>
           )}
+
+          {/* Y lo que de verdad hace que nadie se vuelva a equivocar: no el
+              número, sino la RELACIÓN. Quien entiende que va dos horas por
+              delante ya lee bien toda la rejilla; quien sólo ve «para ti,
+              las 15:00» tiene que fiarse hueco por hueco. */}
+          {!eligiendoEstado && estado && dia ? (
+            <p className="mt-2.5 rounded-[18px] border border-acento/40 bg-acento/10 px-4 py-3 text-[15px] leading-[1.45] text-tinta">
+              {desfase === 0 ? (
+                <>
+                  En {estado.nombre} tienes <strong>la misma hora</strong> que Henry, así
+                  que lo que veas es lo que hay.
+                </>
+              ) : (
+                <>
+                  En {estado.nombre} vas{" "}
+                  <strong>
+                    {Math.abs(desfase)} {Math.abs(desfase) === 1 ? "hora" : "horas"}{" "}
+                    {desfase > 0 ? "por delante" : "por detrás"}
+                  </strong>{" "}
+                  de Henry. Sus {horaEnZona(new Date(dia.huecos[0].iso))} son tus{" "}
+                  {horaEnZona(new Date(dia.huecos[0].iso), zonaVisitante)}.
+                </>
+              )}
+            </p>
+          ) : null}
 
           {/* La segunda pregunta, SÓLO en los doce estados partidos. Con
               ciudades y no con nombres de zona: «¿más cerca de El Paso o de

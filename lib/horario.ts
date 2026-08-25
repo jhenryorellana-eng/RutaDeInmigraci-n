@@ -487,3 +487,52 @@ function horasDe(firma: string): string {
   if (partes.length === 1) return partes[0];
   return `${partes.slice(0, -1).join(", ")} y ${partes.at(-1)}`;
 }
+
+/**
+ * El desfase de un sitio respecto a Utah, en horas, para un instante dado.
+ *
+ * Positivo si van por delante —Carolina del Sur, +2—, negativo si van por
+ * detrás —California, −1—, cero si están a la misma hora.
+ *
+ * ── Por qué hace falta el instante ──
+ *
+ * Porque el desfase NO es una propiedad del sitio: cambia con el calendario.
+ * Arizona está a la misma hora que Utah en invierno y una hora por detrás en
+ * verano, porque Utah adelanta el reloj y Arizona no. Calcularlo «una vez
+ * por estado» daría el número equivocado media parte del año.
+ *
+ * ── Por qué no se resta con `getTimezoneOffset` ──
+ *
+ * Porque ése es el desfase del NAVEGADOR, no el de una zona cualquiera. Aquí
+ * hay que comparar dos zonas entre sí y ninguna de las dos tiene por qué ser
+ * la del aparato. Se hace formateando el mismo instante en cada una y
+ * midiendo cuánto se separan las dos lecturas.
+ */
+function minutosDeZona(instante: Date, zona: string): number {
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: zona,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(instante);
+
+  const v = (tipo: string) => Number(partes.find((p) => p.type === tipo)?.value ?? "0");
+  /* `hour` puede venir como 24 a medianoche en algunos entornos: el módulo lo
+     devuelve a 0 antes de que se convierta en un día de más. */
+  const comoUtc = Date.UTC(v("year"), v("month") - 1, v("day"), v("hour") % 24, v("minute"));
+  return (comoUtc - instante.getTime()) / 60000;
+}
+
+export function desfaseConUtah(instante: Date, zona: string | null | undefined): number {
+  if (!zona) return 0;
+  try {
+    return (minutosDeZona(instante, zona) - minutosDeZona(instante, ZONA)) / 60;
+  } catch {
+    /* La zona la manda un navegador o una tabla: si no es válida, mejor decir
+       que no hay diferencia que romper la pantalla de reservas. */
+    return 0;
+  }
+}

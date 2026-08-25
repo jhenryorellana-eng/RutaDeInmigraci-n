@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ZONA,
   dentroDelHorario,
+  desfaseConUtah,
   describirHorario,
   franjaDeHoras,
   horaSuelta,
@@ -233,5 +235,41 @@ describe("cómo se escribe una hora suelta", () => {
     expect(horaSuelta(8)).toBe("8:00");
     expect(horaSuelta(15)).toBe("15:00");
     expect(horaSuelta(0)).toBe("0:00");
+  });
+});
+
+describe("desfaseConUtah", () => {
+  /* En agosto Utah está en horario de verano (MDT, −6). */
+  const verano = new Date("2026-08-25T19:00:00Z");
+  /* En enero vuelve al estándar (MST, −7). */
+  const invierno = new Date("2026-01-15T19:00:00Z");
+
+  it("Carolina del Sur va dos horas por delante", () => {
+    expect(desfaseConUtah(verano, "America/New_York")).toBe(2);
+  });
+
+  it("California va una hora por detrás", () => {
+    expect(desfaseConUtah(verano, "America/Los_Angeles")).toBe(-1);
+  });
+
+  it("Texas va una hora por delante", () => {
+    expect(desfaseConUtah(verano, "America/Chicago")).toBe(1);
+  });
+
+  it("en Utah no hay diferencia", () => {
+    expect(desfaseConUtah(verano, ZONA)).toBe(0);
+  });
+
+  /* El caso que obliga a calcularlo por fecha y no por estado: Arizona no
+     adelanta el reloj, así que en verano se separa de Utah y en invierno
+     coincide con ella. Un número fijo por estado estaría mal medio año. */
+  it("Arizona se separa de Utah en verano y coincide en invierno", () => {
+    expect(desfaseConUtah(verano, "America/Phoenix")).toBe(-1);
+    expect(desfaseConUtah(invierno, "America/Phoenix")).toBe(0);
+  });
+
+  it("una zona inválida no rompe la pantalla", () => {
+    expect(desfaseConUtah(verano, "No/Existe")).toBe(0);
+    expect(desfaseConUtah(verano, null)).toBe(0);
   });
 });
