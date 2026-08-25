@@ -4,7 +4,13 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { PAISES } from "@/lib/paises";
-import { diaCorto, fechaLarga, horaEnZona } from "@/lib/horario";
+import {
+  ESTADOS,
+  ESTADO_DE_HENRY,
+  estadoPorNombre,
+  estadoProbable,
+} from "@/lib/estados";
+import { ZONA, diaCorto, fechaLarga, horaEnZona } from "@/lib/horario";
 import type { DiaConHuecos } from "@/lib/citas";
 import { reservar } from "@/app/reservar/accion";
 import { CLAVE_CITA } from "@/lib/pago";
@@ -18,12 +24,36 @@ import { nombreLargo, type Servicio } from "@/lib/servicios";
  * falta se anuncia al pie. Así nadie se pregunta cuánto queda, que es la
  * razón por la que la gente abandona un formulario a la mitad.
  *
- * ── La hora, dos veces ──
+ * ── La agenda es la de Henry, siempre ──
  *
- * Cada hueco dice qué hora es en Utah y qué hora es DONDE ESTÁ QUIEN MIRA.
- * La mitad de este público no está en Utah, y «11:00» sin apellido es una
- * cita perdida. La zona del visitante sale del navegador, nunca de su IP:
- * una IP puede ser la de una VPN o la de la biblioteca del pueblo de al lado.
+ * Toda la lógica de horas de este sitio corre en la hora de Utah, y quien
+ * reserva se adapta. No es una simplificación técnica: Henry organiza su día
+ * en su reloj, y una agenda que se mueve según quién la mire es una agenda
+ * en la que no se puede confiar.
+ *
+ * Así que el número grande de cada hueco es SU hora. Lo que cambió —y lo que
+ * costó una cita— es que ahora lo dice.
+ *
+ * Antes iba desnudo: «4:00» en letra grande, sin apellido, y debajo en
+ * pequeño la hora de quien miraba. Alguien de Carolina del Sur, dos horas por
+ * delante de Utah, leyó ese número como suyo y apartó una hora que en la
+ * agenda de Henry caía dos horas antes.
+ *
+ * Ahora ninguna hora aparece sin decir de quién es: arriba «hora de Henry ·
+ * Utah», debajo «para ti, las 6:00 en Carolina del Sur». Misma agenda, mismo
+ * cálculo; lo que se arregla es que se entienda.
+ *
+ * ── Y el sitio se dice con palabras ──
+ *
+ * Para decir esa segunda hora hay que saber dónde está esa persona, y ahora
+ * se le pregunta por su ESTADO en vez de deducirlo y callar. Todo el mundo
+ * sabe en qué estado vive; nadie sabe que vive en `America/New_York`.
+ *
+ * La zona sigue saliendo del navegador para prerrellenar, nunca de la IP —una
+ * IP puede ser la de una VPN o la de la biblioteca del pueblo de al lado—,
+ * pero ahora se ESCRIBE:
+ * «Texas», no `America/Chicago`. Y se puede corregir, porque un teléfono mal
+ * configurado antes no lo notaba nadie.
  */
 
 type Paso = "dia" | "hora" | "datos";
@@ -48,13 +78,16 @@ export function FormularioReserva({
   const [correo, setCorreo] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [pais, setPais] = useState("");
+  /** Se pregunta sólo en los doce estados que están partidos en dos zonas. */
+  const [mitad, setMitad] = useState(0);
+  const [eligiendoEstado, setEligiendoEstado] = useState(false);
   const [enEeuu, setEnEeuu] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   /* La zona del navegador, resuelta una vez. En el primer render del
      servidor no existe, así que se cae a la de Utah y se corrige al montar
      — nunca al revés, o el servidor y el cliente pintarían horas distintas. */
-  const zonaVisitante = useMemo(() => {
+  const zonaDelNavegador = useMemo(() => {
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
     } catch {
@@ -62,7 +95,31 @@ export function FormularioReserva({
     }
   }, []);
 
+  /* El estado: se prerrellena con lo que dijo el navegador y lo que se elija
+     a mano SIEMPRE gana. Una zona cubre muchos estados —`America/Chicago` va
+     de Texas a Minnesota—, así que adivinar acierta el reloj, no el sitio. */
+  const [estadoElegido, setEstadoElegido] = useState<string | null>(null);
+  const estado = useMemo(() => {
+    if (estadoElegido) return estadoPorNombre(estadoElegido);
+    return estadoProbable(zonaDelNavegador) ?? estadoPorNombre(ESTADO_DE_HENRY);
+  }, [estadoElegido, zonaDelNavegador]);
+
+  /* La zona con la que se pintan las horas.
+     El estado manda sobre el navegador porque el estado lo dijo una persona.
+     Y si el estado está partido, la mitad elegida manda sobre la primera. */
+  const zonaVisitante = estado?.zonas[mitad]?.zona ?? estado?.zonas[0]?.zona ?? zonaDelNavegador;
+
+  /* Cuándo hay algo que aclarar: sólo si de verdad es otra hora. Repetir el
+     mismo número con dos etiquetas hace dudar de si el sitio se equivocó. */
+  const otraHora = zonaVisitante !== ZONA;
+
   const dia = dias.find((d) => d.clave === diaElegido) ?? null;
+
+  function elegirEstado(nombre: string) {
+    setEstadoElegido(nombre);
+    setMitad(0);
+    setEligiendoEstado(false);
+  }
 
   function elegirDia(clave: string) {
     setDiaElegido(clave);
@@ -97,7 +154,7 @@ export function FormularioReserva({
         try {
           sessionStorage.setItem(
             CLAVE_CITA,
-            describirCita(horaElegida, zonaVisitante, servicio),
+            describirCita(horaElegida, zonaVisitante, servicio, estado?.nombre ?? null),
           );
         } catch {
           /* modo privado */
@@ -122,7 +179,11 @@ export function FormularioReserva({
 
       {horaElegida && paso === "datos" ? (
         <Resuelto
-          texto={`${horaEnZona(new Date(horaElegida))} · hora de Utah`}
+          texto={
+            otraHora
+              ? `${horaEnZona(new Date(horaElegida))} de Henry · para ti las ${horaEnZona(new Date(horaElegida), zonaVisitante)}`
+              : `${horaEnZona(new Date(horaElegida))} · hora de Henry`
+          }
           onCambiar={() => setPaso("hora")}
         />
       ) : null}
@@ -174,7 +235,76 @@ export function FormularioReserva({
           <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:mt-7 lg:text-[40px] lg:leading-[1.12]">
             ¿A qué hora nos vemos?
           </h1>
-          <div className="mt-5 grid grid-cols-2 gap-2.5 lg:mt-[18px] lg:grid-cols-3">
+
+          {/* Dónde está quien reserva, ESCRITO y corregible.
+              Antes se adivinaba del navegador y no se decía nunca: si el
+              teléfono venía mal configurado o había una VPN, la segunda hora
+              salía mal y no había forma de que nadie lo notara. */}
+          {eligiendoEstado ? (
+            <div className="mt-5 rounded-[20px] border border-white/20 p-4">
+              <p className="text-[15px] font-semibold">¿En qué estado estás?</p>
+              <div className="mt-3 max-h-[280px] overflow-y-auto">
+                <div className="grid grid-cols-2 gap-2">
+                  {ESTADOS.map((e) => (
+                    <button
+                      key={e.nombre}
+                      type="button"
+                      onClick={() => elegirEstado(e.nombre)}
+                      className={
+                        e.nombre === estado?.nombre
+                          ? "min-h-[44px] rounded-full border border-acento bg-acento/15 px-3 text-[14px] text-tinta"
+                          : "min-h-[44px] rounded-full border border-white/20 px-3 text-[14px] text-tinta-suave"
+                      }
+                    >
+                      {e.nombre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEligiendoEstado(true)}
+              className="mt-4 flex min-h-[44px] w-full items-center gap-2 rounded-full border border-white/20 px-4 text-left text-[15px] text-tinta-suave"
+            >
+              <span className="flex-1">
+                Estás en <strong className="font-semibold text-tinta">{estado?.nombre}</strong>
+              </span>
+              <span className="shrink-0 text-[14px] text-acento underline underline-offset-2">
+                Cambiar
+              </span>
+            </button>
+          )}
+
+          {/* La segunda pregunta, SÓLO en los doce estados partidos. Con
+              ciudades y no con nombres de zona: «¿más cerca de El Paso o de
+              Houston?» lo contesta cualquiera; «¿Mountain o Central?» no. */}
+          {!eligiendoEstado && estado && estado.zonas.length > 1 ? (
+            <div className="mt-2.5 rounded-[20px] border border-white/15 px-4 py-3">
+              <p className="text-[14px] text-tinta-suave">
+                En {estado.nombre} hay dos horas distintas. ¿Cuál te queda más cerca?
+              </p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {estado.zonas.map((z, i) => (
+                  <button
+                    key={z.zona}
+                    type="button"
+                    onClick={() => setMitad(i)}
+                    className={
+                      i === mitad
+                        ? "min-h-[44px] rounded-full border border-acento bg-acento/15 px-4 text-[14px] text-tinta"
+                        : "min-h-[44px] rounded-full border border-white/20 px-4 text-[14px] text-tinta-suave"
+                    }
+                  >
+                    {z.donde}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-3">
             {dia.huecos.map((h) => {
               const cuando = new Date(h.iso);
               return (
@@ -188,10 +318,12 @@ export function FormularioReserva({
                   }}
                   className={
                     h.libre
-                      ? "flex min-h-[72px] flex-col justify-center gap-0.5 rounded-[20px] border border-white/25 px-[18px] text-left transition-colors hover:border-acento"
-                      : "flex min-h-[72px] flex-col justify-center gap-0.5 rounded-[20px] border border-white/10 px-[18px] text-left text-apagado"
+                      ? "flex min-h-[84px] flex-col justify-center gap-0.5 rounded-[20px] border border-white/25 px-[18px] py-3 text-left transition-colors hover:border-acento"
+                      : "flex min-h-[84px] flex-col justify-center gap-0.5 rounded-[20px] border border-white/10 px-[18px] py-3 text-left text-apagado"
                   }
                 >
+                  {/* La hora de Henry, y DICIENDO que es la suya. Ir sin
+                      apellido es lo que costó la cita de Carolina del Sur. */}
                   <span
                     className={
                       h.libre
@@ -201,11 +333,19 @@ export function FormularioReserva({
                   >
                     {horaEnZona(cuando)}
                   </span>
-                  <span className="text-[13px] text-tinta-tenue">
-                    {h.libre
-                      ? `${horaEnZona(cuando, zonaVisitante)} donde estás`
-                      : "apartada"}
-                  </span>
+                  <span className="text-[12px] text-tinta-tenue">hora de Henry · Utah</span>
+
+                  {/* Y la de quien reserva, sólo cuando de verdad es otra:
+                      repetir el mismo número con dos etiquetas hace dudar de
+                      si el sitio se equivocó. */}
+                  {h.libre && otraHora ? (
+                    <span className="mt-1.5 text-[13px] text-tinta-suave">
+                      Para ti: {horaEnZona(cuando, zonaVisitante)}
+                    </span>
+                  ) : null}
+                  {!h.libre ? (
+                    <span className="mt-1.5 text-[13px] text-tinta-tenue">apartada</span>
+                  ) : null}
                 </button>
               );
             })}
@@ -213,7 +353,6 @@ export function FormularioReserva({
         </>
       ) : null}
 
-      {/* ── Paso 3 · quién eres ── */}
       {paso === "datos" && horaElegida ? (
         <>
           <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:mt-7 lg:text-[40px] lg:leading-[1.12]">
@@ -334,11 +473,20 @@ export function FormularioReserva({
  * las dos cuando de verdad son distintas: repetir la misma hora dos veces
  * hace dudar de si el sitio se ha equivocado.
  */
-function describirCita(iso: string, zonaVisitante: string, servicio: Servicio): string {
+function describirCita(
+  iso: string,
+  zonaVisitante: string,
+  servicio: Servicio,
+  estado: string | null,
+): string {
   const cuando = new Date(iso);
   const enUtah = horaEnZona(cuando);
   const enSuCasa = horaEnZona(cuando, zonaVisitante);
   const fecha = fechaLarga(cuando);
+  /* Con el nombre del estado, no con «donde estás». Quien lo lee en la
+     pantalla de pago acaba de decirnos dónde vive: devolvérselo con su
+     nombre es lo que confirma que le entendimos. */
+  const suSitio = estado ? `en ${estado}` : "donde estás";
 
   /* Dos formas de la misma cita, y cada una va a un sitio: la larga se pinta
      en pantalla, la de Utah se manda por WhatsApp. Van juntas en un JSON en
@@ -348,7 +496,7 @@ function describirCita(iso: string, zonaVisitante: string, servicio: Servicio): 
     completa:
       enUtah === enSuCasa
         ? `${fecha} a las ${enUtah}`
-        : `${fecha} a las ${enUtah} de Utah (${enSuCasa} donde estás)`,
+        : `${fecha} a las ${enUtah} de Henry, en Utah — para ti las ${enSuCasa} ${suSitio}`,
     utah: `${fecha} a las ${enUtah}`,
     /* Qué se apartó y cuánto cuesta viajan con la cita: la pantalla de pago
        tiene que decir la cifra exacta de ESTA preparación, y con tres
