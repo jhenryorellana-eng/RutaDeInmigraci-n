@@ -271,15 +271,41 @@ export function FormularioReserva({
               </div>
             </div>
           ) : (
+            /* Pregunta mientras es una SUPOSICIÓN; afirma en cuanto lo ha
+               elegido una persona. La diferencia importa: «Estás en Carolina
+               del Norte» se lee como un hecho comprobado y nadie lo corrige,
+               y el navegador acierta la zona pero no el estado. */
             <button
               type="button"
               onClick={() => setEligiendoEstado(true)}
-              className="mt-4 flex min-h-[44px] w-full items-center gap-2 rounded-full border border-white/20 px-4 text-left text-[15px] text-tinta-suave"
+              className="caja-estado mt-4 flex min-h-[56px] w-full items-center gap-3 rounded-[18px] border px-4 py-2.5 text-left"
             >
-              <span className="flex-1">
-                Estás en <strong className="font-semibold text-tinta">{estado?.nombre}</strong>
+              <span aria-hidden="true" className="shrink-0 text-acento">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
               </span>
-              <span className="shrink-0 text-[14px] text-acento underline underline-offset-2">
+
+              <span className="min-w-0 flex-1">
+                <span className="block text-[12px] font-semibold uppercase tracking-[0.1em] text-acento">
+                  {estadoElegido ? "Tu estado" : "¿Es aquí donde estás?"}
+                </span>
+                <span className="mt-0.5 block truncate text-[17px] font-bold text-tinta">
+                  {estado?.nombre}
+                </span>
+              </span>
+
+              <span className="boton-cambiar shrink-0 rounded-full px-3.5 py-2 text-[14px] font-semibold">
                 Cambiar
               </span>
             </button>
@@ -290,16 +316,21 @@ export function FormularioReserva({
               delante ya lee bien toda la rejilla; quien sólo ve «para ti,
               las 15:00» tiene que fiarse hueco por hueco. */}
           {!eligiendoEstado && estado && dia ? (
-            <p className="mt-2.5 rounded-[18px] border border-acento/40 bg-acento/10 px-4 py-3 text-[15px] leading-[1.45] text-tinta">
+            /* En neutro, no en acento. Va justo debajo de la caja del estado
+               y con el mismo color las dos se anulaban: si todo destaca, no
+               destaca nada. El acento se queda donde hay algo que TOCAR; esto
+               sólo se lee. */
+            <p className="mt-2.5 rounded-[18px] border border-white/12 bg-white/[0.04] px-4 py-3 text-[15px] leading-[1.45] text-tinta-suave">
               {desfase === 0 ? (
                 <>
-                  En {estado.nombre} tienes <strong>la misma hora</strong> que Henry, así
-                  que lo que veas es lo que hay.
+                  En {estado.nombre} tienes{" "}
+                  <strong className="font-semibold text-tinta">la misma hora</strong> que
+                  Henry, así que lo que veas es lo que hay.
                 </>
               ) : (
                 <>
                   En {estado.nombre} vas{" "}
-                  <strong>
+                  <strong className="font-semibold text-tinta">
                     {Math.abs(desfase)} {Math.abs(desfase) === 1 ? "hora" : "horas"}{" "}
                     {desfase > 0 ? "por delante" : "por detrás"}
                   </strong>{" "}

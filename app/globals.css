@@ -525,3 +525,30 @@ dialog.hoja > div {
   .msg-hoja,
   .msg-punto { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   DÓNDE ESTÁ QUIEN RESERVA
+   ═══════════════════════════════════════════════════════════
+
+   Esta caja tiene un trabajo raro: pedir que alguien confirme algo que ya
+   está contestado. Con el borde tenue del resto de controles se leía como
+   una línea de información más y nadie la tocaba — y si la suposición era
+   mala, la hora de abajo salía mal sin que nadie lo notara.
+
+   Lleva el acento del sitio, que aquí no se usa en ningún otro sitio de esta
+   pantalla: es lo único con color entre el título y la rejilla de horas, así
+   que el ojo va ahí antes de elegir hora, que es cuando sirve.
+
+   El color va en el borde y en un lavado del fondo, nunca detrás del texto:
+   el acento puro con letra encima se queda en 2,5:1. */
+.caja-estado {
+  background: color-mix(in srgb, var(--color-acento) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-acento) 55%, transparent);
+}
+
+/* Y el botón de cambiar deja de ser un enlace tenue: es la acción que
+   arregla una suposición equivocada, así que se ve como un botón. */
+.boton-cambiar {
+  background: color-mix(in srgb, var(--color-acento) 22%, transparent);
+  color: var(--color-tinta);
+}
