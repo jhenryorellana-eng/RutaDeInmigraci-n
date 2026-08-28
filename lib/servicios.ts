@@ -33,21 +33,21 @@ export const SERVICIOS: Servicio[] = [
     id: "primera",
     nombre: "Primera audiencia",
     etapa: "Preliminar",
-    precioUsd: 50,
+    precioUsd: 70,
     descripcion: "Preparación para tu primera audiencia preliminar.",
   },
   {
     id: "segunda",
     nombre: "Segunda audiencia",
     etapa: "Preliminar",
-    precioUsd: 100,
+    precioUsd: 150,
     descripcion: "Preparación para tu segunda audiencia preliminar.",
   },
   {
     id: "tercera",
     nombre: "Tercera audiencia",
     etapa: "Mérito",
-    precioUsd: 150,
+    precioUsd: 250,
     descripcion: "Preparación para tu audiencia de mérito.",
   },
 ];
@@ -59,7 +59,7 @@ export const MINUTOS_SESION = 45;
  * El servicio que pide una URL, o `null`.
  *
  * Devuelve `null` —y no el primero de la lista— cuando el identificador no
- * existe: mandar a alguien a pagar $150 porque escribió mal la dirección es
+ * existe: mandar a alguien a pagar $250 porque escribió mal la dirección es
  * peor que preguntarle cuál quería.
  */
 export function servicioPorId(id: string | null | undefined): Servicio | null {
