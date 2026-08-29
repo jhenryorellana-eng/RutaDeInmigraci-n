@@ -211,15 +211,21 @@ export function FormularioReserva({
                  `getUTCDate()` daba el día equivocado para las horas de la
                  tarde, cuando en UTC ya es el día siguiente. */
               const numeroDia = Number(d.clave.slice(8, 10));
+              /* UN DÍA LLENO TAMBIÉN SE ABRE.
+                 Antes llevaba `disabled` cuando no quedaba ninguna hora
+                 libre, y eso escondía la agenda entera: quien caía en un día
+                 completo no veía que hubiera horario, veía un botón muerto.
+                 Ahora entra igual y encuentra las horas tachadas, que dicen
+                 dos cosas que el botón muerto callaba — que Henry atiende a
+                 esas horas, y que están tomadas. */
               return (
                 <button
                   key={d.clave}
                   type="button"
-                  disabled={libres === 0}
                   onClick={() => elegirDia(d.clave)}
                   className={
                     libres === 0
-                      ? "flex min-h-[82px] flex-col items-center justify-center gap-0.5 rounded-[20px] border border-white/10 text-apagado"
+                      ? "flex min-h-[82px] flex-col items-center justify-center gap-0.5 rounded-[20px] border border-white/10 text-apagado transition-colors hover:border-white/30"
                       : "flex min-h-[82px] flex-col items-center justify-center gap-0.5 rounded-[20px] border border-white/25 transition-colors hover:border-acento"
                   }
                 >

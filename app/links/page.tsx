@@ -65,8 +65,8 @@ export default function Links() {
           <Image
             src="/henry-retrato.jpg"
             alt="Henry Orellana Domínguez"
-            width={1100}
-            height={1653}
+            width={940}
+            height={1672}
             priority
             sizes="(min-width: 480px) 480px, 100vw"
             className="absolute inset-0 size-full object-cover object-[50%_12%]"
