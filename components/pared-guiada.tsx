@@ -198,7 +198,7 @@ export function ParedGuiada() {
       {paso === 4 ? (
         <div
           role="status"
-          className="globo-guia tono-agua fixed bottom-4 right-4 z-30 w-[268px] rounded-[18px] rounded-br-md border border-agua/30 bg-noche-panel px-3.5 py-3.5 shadow-[0_0_26px_rgba(159,232,216,.2),0_18px_44px_rgba(0,0,0,.55)]"
+          className="globo-guia tono-agua fixed bottom-4 right-4 z-30 w-[268px] rounded-[18px] rounded-br-md border border-agua/30 bg-noche-panel px-3.5 py-3.5 shadow-[0_0_26px_rgba(143,186,242,.2),0_18px_44px_rgba(0,0,0,.55)]"
         >
           <p className="text-[15px] leading-[1.5]">
             ¿No sabes cuál te toca? Pregúntame — me quedo aquí abajo.
@@ -216,7 +216,7 @@ export function ParedGuiada() {
           onClick={() => setChat(true)}
           aria-label="Abrir la guía"
           aria-expanded={chat}
-          className="burbuja-guia fixed bottom-4 right-4 z-30 flex size-[52px] items-center justify-center rounded-full border border-agua/30 bg-noche-panel text-agua shadow-[0_0_30px_rgba(159,232,216,.22),0_0_70px_rgba(159,232,216,.1)]"
+          className="burbuja-guia fixed bottom-4 right-4 z-30 flex size-[52px] items-center justify-center rounded-full border border-agua/30 bg-noche-panel text-agua shadow-[0_0_30px_rgba(143,186,242,.22),0_0_70px_rgba(143,186,242,.1)]"
         >
           <svg
             aria-hidden="true"

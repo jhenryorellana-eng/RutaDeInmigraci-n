@@ -85,12 +85,12 @@ export type Respuesta = {
    * El color del servicio, para el punto de su botón.
    *
    * Sólo lo llevan las cuatro que son un servicio. Es lo que ata cada botón
-   * al cuadro que le corresponde en la pared: quien vio pasar la luz malva
-   * por el borde de «Servicio Migratorio» reconoce el punto malva sin leer.
+   * al cuadro que le corresponde en la pared: quien vio pasar la luz coral
+   * por el borde de «Servicio Migratorio» reconoce el punto coral sin leer.
    * Las preguntas sueltas —el pago, la sesión— no llevan ninguno, porque no
    * son un sitio al que ir.
    */
-  tono?: "agua" | "arena" | "malva" | "acero";
+  tono?: "agua" | "arena" | "coral" | "verde";
 };
 
 const precio = (id: string) => SERVICIOS.find((s) => s.id === id)?.precioUsd ?? 0;
@@ -110,15 +110,15 @@ export const RESPUESTAS: Respuesta[] = [
     dice: [
       "Depende de en qué punto estés:",
       "Si ya tienes fecha de audiencia → la preparación con Henry.",
-      "Si quieres acompañamiento durante el año → la comunidad.",
       "Si hay un trámite que presentar → los servicios migratorios.",
+      "Si quieres acompañamiento durante el año → la comunidad.",
       "Si es para un hijo tuyo → el bootcamp.",
       "Dime cuál te suena y te cuento más.",
     ],
     /* Con «henry» al final: si ninguna de las cuatro le encaja, esta es
        justo la persona que necesita hablar con él, y sin esta salida se
        queda mirando cuatro botones que ya ha descartado. */
-    luego: ["preparacion", "comunidad", "migratorio", "bootcamp", "otra"],
+    luego: ["preparacion", "migratorio", "comunidad", "bootcamp", "otra"],
   },
 
   // ── 1 · La preparación de audiencia ────────────────────
@@ -172,7 +172,21 @@ export const RESPUESTAS: Respuesta[] = [
     luego: ["preparacion", "cual", "otra"],
   },
 
-  // ── 2 · La comunidad ───────────────────────────────────
+  // ── 2 · Los trámites ───────────────────────────────────
+  {
+    id: "migratorio",
+    pregunta: "Los servicios migratorios",
+    corto: "Los trámites",
+    tono: "coral",
+    dice: [
+      "Los trámites en sí los lleva el equipo de USALatino Prime. Es a donde vas cuando hay algo que presentar.",
+      "Qué trámite te toca y cuánto cuesta lo ven ellos contigo, porque depende de tu caso: no te lo puedo decir yo desde aquí sin conocerlo.",
+    ],
+    enlaces: [{ texto: "Ver los servicios", href: "https://www.usalatinoprime.com/" }],
+    luego: ["cual", "preparacion", "comunidad", "otra"],
+  },
+
+  // ── 3 · La comunidad ───────────────────────────────────
   {
     id: "comunidad",
     pregunta: "La comunidad Andex",
@@ -187,26 +201,12 @@ export const RESPUESTAS: Respuesta[] = [
     luego: ["cual", "preparacion", "migratorio", "otra"],
   },
 
-  // ── 3 · Los trámites ───────────────────────────────────
-  {
-    id: "migratorio",
-    pregunta: "Los servicios migratorios",
-    corto: "Los trámites",
-    tono: "malva",
-    dice: [
-      "Los trámites en sí los lleva el equipo de USALatino Prime. Es a donde vas cuando hay algo que presentar.",
-      "Qué trámite te toca y cuánto cuesta lo ven ellos contigo, porque depende de tu caso: no te lo puedo decir yo desde aquí sin conocerlo.",
-    ],
-    enlaces: [{ texto: "Ver los servicios", href: "https://www.usalatinoprime.com/" }],
-    luego: ["cual", "preparacion", "comunidad", "otra"],
-  },
-
   // ── 4 · El bootcamp ────────────────────────────────────
   {
     id: "bootcamp",
     pregunta: "El bootcamp para jóvenes",
     corto: "El bootcamp",
-    tono: "acero",
+    tono: "verde",
     dice: [
       "Es para tus hijos: emprendimiento, liderazgo y transformación familiar. La edición que viene es la de 2027.",
       "Las fechas, el precio y cómo se entra están en su página, que es donde se apuntan.",
@@ -237,7 +237,7 @@ export const RESPUESTAS: Respuesta[] = [
  * la preparación, y sacarlas al menú principal es lo que hacía parecer que
  * el guía sólo sabía de un servicio.
  */
-export const PRIMERAS = ["cual", "preparacion", "comunidad", "migratorio", "bootcamp"];
+export const PRIMERAS = ["cual", "preparacion", "migratorio", "comunidad", "bootcamp"];
 
 export function respuestaPorId(id: string): Respuesta | null {
   return RESPUESTAS.find((r) => r.id === id) ?? null;

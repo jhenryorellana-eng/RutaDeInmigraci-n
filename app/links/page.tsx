@@ -42,10 +42,66 @@ import { ParedGuiada } from "@/components/pared-guiada";
  * termina pudiendo pasar con él por WhatsApp para lo que no cubre.
  */
 
+/**
+ * LA TARJETA QUE SALE AL PEGAR ESTE ENLACE.
+ *
+ * Este enlace se comparte a mano, por WhatsApp, uno a uno. Lo que se ve en
+ * el chat antes de tocarlo —una foto, un título y una línea— es lo único que
+ * tiene alguien para decidir si entra. Sin estas etiquetas, WhatsApp enseña
+ * la dirección pelada, que no dice nada y parece un enlace sospechoso.
+ *
+ * ── Qué dice la descripción, y por qué esos cuatro ──
+ *
+ * Los cuatro servicios por su nombre, en el mismo orden que la pared. Quien
+ * lo lee tiene que reconocer LO SUYO antes de tocar: alguien que busca sus
+ * trámites no entra a algo que sólo promete «asesoría personalizada».
+ *
+ * ── Lo que WhatsApp exige, y no perdona ──
+ *
+ * · La imagen en dirección ABSOLUTA. La construye Next desde `metadataBase`,
+ *   que está en el layout y sale de `lib/sitio.ts`.
+ * · Que no pese mucho. Ésta son 316 KB, por debajo del límite al que deja de
+ *   traerse la vista previa.
+ * · `width` y `height` declarados: sin ellos algunos clientes reservan mal
+ *   el hueco y la tarjeta sale con la foto recortada.
+ *
+ * Y una advertencia para cuando se pruebe: WhatsApp CACHEA la vista previa
+ * por dirección. Si ya se compartió el enlace antes de que existieran estas
+ * etiquetas, va a seguir enseñando lo viejo — hay que probar con algo detrás
+ * (`/links?v=2`) para que la vuelva a pedir.
+ */
+const DESCRIPCION =
+  "Preparación de audiencia, servicios migratorios, la comunidad Andex y el bootcamp para jóvenes. Todo en un sitio.";
+
 export const metadata: Metadata = {
   title: "Henry Orellana D. · Todos sus proyectos",
-  description:
-    "Asesoría personalizada, servicios migratorios, comunidad y bootcamp de emprendimiento con Henry Orellana.",
+  description: DESCRIPCION,
+  alternates: { canonical: "/links" },
+  openGraph: {
+    type: "website",
+    locale: "es_US",
+    url: "/links",
+    siteName: "Orellana Group",
+    title: "Henry Orellana D. · Todos sus proyectos",
+    description: DESCRIPCION,
+    images: [
+      {
+        url: "/og-links.jpg",
+        width: 1600,
+        height: 902,
+        alt: "Henry Orellana Domínguez en la oficina de USALatino Prime.",
+      },
+    ],
+  },
+  /* Para X y para todo lo que lee las de Twitter antes que las de Open
+     Graph. `summary_large_image` es la que enseña la foto ancha; con
+     `summary` a secas sale una miniatura cuadrada del tamaño de un sello. */
+  twitter: {
+    card: "summary_large_image",
+    title: "Henry Orellana D. · Todos sus proyectos",
+    description: DESCRIPCION,
+    images: ["/og-links.jpg"],
+  },
 };
 
 export default function Links() {

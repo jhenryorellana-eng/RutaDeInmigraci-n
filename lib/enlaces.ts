@@ -31,7 +31,7 @@ export type Enlace = {
    * tarjeta se queda encendida, así que es lo que distingue un servicio de
    * otro de un vistazo.
    */
-  tono: "agua" | "arena" | "malva" | "acero";
+  tono: "agua" | "arena" | "coral" | "verde";
   /**
    * Los dos que presta Henry directamente van con más cuerpo.
    *
@@ -65,6 +65,19 @@ export const ENLACES: Enlace[] = [
     destacado: true,
     guia: "Si ya tienes fecha de audiencia: 45 minutos con Henry para llegar sabiendo qué te van a preguntar.",
   },
+  /* Los trámites van ANTES que la comunidad, y el orden de esta lista es el
+     orden de la pared. Es lo que más se pide de los tres que no son la
+     preparación, y en una pantalla que se recorre con el pulgar el segundo
+     sitio vale mucho más que el tercero. */
+  {
+    titulo: "Servicio Migratorio",
+    etiqueta: "Trámites",
+    descripcion: "Los trámites migratorios, con el equipo de UsaLatino Prime.",
+    href: "https://www.usalatinoprime.com/",
+    tono: "coral",
+    destacado: true,
+    guia: "Los trámites en sí, con el equipo de Henry. Es a donde vas cuando hay algo que presentar.",
+  },
   {
     titulo: "Comunidad Andex",
     etiqueta: "Familias",
@@ -74,20 +87,11 @@ export const ENLACES: Enlace[] = [
     guia: "El acompañamiento de todo el año: tus documentos, tus fechas y gente en tu misma situación.",
   },
   {
-    titulo: "Servicio Migratorio",
-    etiqueta: "Trámites",
-    descripcion: "Los trámites migratorios, con el equipo de UsaLatino Prime.",
-    href: "https://www.usalatinoprime.com/",
-    tono: "malva",
-    destacado: true,
-    guia: "Los trámites en sí, con el equipo de Henry. Es a donde vas cuando hay algo que presentar.",
-  },
-  {
     titulo: "Bootcamp para Jóvenes 2027",
     etiqueta: "Emprendimiento",
     descripcion: "Emprendimiento, liderazgo y transformación familiar.",
     href: "https://comunidad.starbizacademy.com/bootcamp",
-    tono: "acero",
+    tono: "verde",
     guia: "Para tus hijos: emprender y liderar, para que no repitan el camino largo.",
   },
 ];

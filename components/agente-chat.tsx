@@ -238,8 +238,8 @@ export function AgenteChat({ abierto, alCerrar }: { abierto: boolean; alCerrar: 
           paga?» dentro de la preparación.
 
           Y cada servicio lleva el punto de su color. Es lo que ata el botón
-          al cuadro de la pared: quien vio pasar la luz malva por el borde de
-          «Servicio Migratorio» reconoce el punto malva sin leer. */}
+          al cuadro de la pared: quien vio pasar la luz coral por el borde de
+          «Servicio Migratorio» reconoce el punto coral sin leer. */}
       <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-tinta/10 px-4 py-3">
         {ofrece.map((id, i) => {
           const r = respuestaPorId(id);

@@ -20,34 +20,69 @@
   --color-apagado: #5A6E85;
 
   /* ── La pared de enlaces (/links) ──
-     Vive en negro y no en el azul del resto del sitio, a propósito: es la
-     puerta a TRES proyectos distintos, no una pantalla de éste. El negro no
-     tira de ninguno de los tres y deja que cada tarjeta traiga su color.
-     Medidos contra el negro de esa pantalla: agua 12.4:1, arena 11.0:1,
-     acero 8.9:1, malva 8.9:1 y teal 7.7:1 — todos muy por encima de 4.5. */
-  /* La pared de enlaces vive en un negro con temperatura fría, no en un gris
-     neutro: detrás hay una fotografía, y un negro puro contra una foto
-     cálida deja un canto azulado en el borde del degradado. */
-  --color-noche: #0C1418;
-  --color-noche-panel: #131A1E;
-  /* El agua: el único acento de esa pantalla, y sale dos veces. */
-  --color-agua: #9FE8D8;
+     ═══════════════════════════════════════════════════════════
+
+     LA PALETA ES LA DE USALATINO PRIME, y no una elegida aquí.
+
+     Sale de las variables que su propia web declara en `:root`, leídas de
+     https://www.usalatinoprime.com el 31 de agosto de 2026:
+
+       --brand-navy-2  #061B3D      --brand-gold    #D99B2B
+       --brand-navy    #0C2C5E      --brand-gold-2  #EFC44D
+       --brand-blue    #1B4FA0      --brand-red     #D8201F
+       --brand-blue-2  #2563C4      --success       #1E9E6A
+
+     Su portada es azul marino con oro, que es exactamente el registro de
+     esta pantalla. Copiar los hex tal cual NO servía: los suyos son colores
+     oscuros y saturados sobre fondo claro, y aquí van sobre un fondo oscuro.
+     Lo que se hereda es el TONO; la claridad se sube hasta la banda que esta
+     pared necesita, y por eso los cuatro de abajo son versiones aclaradas y
+     no los valores de su hoja.
+
+     ── Lo que esto revoca, dicho en voz alta ──
+
+     Antes esta pared vivía en negro a propósito: es la puerta a CUATRO
+     proyectos y un negro no tira de ninguno. Ahora tira de USALatino Prime,
+     que es la matriz de los cuatro. Es una decisión de marca, no un ajuste
+     de color, y se toma sabiendo lo que se deja atrás.
+
+     Contrastes medidos contra el fondo (#061B3D): azul 8.4:1, verde 9.9:1,
+     arena 10.6:1, coral 8.3:1, oro 10.3:1. Todos muy por encima de 4.5. */
+  --color-noche: #061B3D;
+  --color-noche-panel: #0C2C5E;
+  /* El azul de la casa, aclarado para que viva sobre el marino. Es el acento
+     de toda esta pantalla y sale en tres sitios: el servicio de Henry, el
+     precio de la hoja y las burbujas del guía. Conserva el nombre «agua»
+     porque le sigue quedando: es más agua ahora que cuando era un verde. */
+  --color-agua: #8FBAF2;
   /* El oro: la VOZ del guía, y nada más.
      No es el color de ningún servicio —cada uno tiene el suyo— sino el de
      quien los presenta, y por eso es el mismo en los cinco pasos: cuando
      aparece, quien lee ya sabe que está hablando el guía y no la página.
-     Cálido y sin saturar, para que resalte sobre el negro sin gritar.
-     Medido sobre el panel de la hoja (#131A1E): 11.0:1. */
-  --color-oro: #E9C88A;
-  /* Dos neutros con temperatura, no dos colores: la arena es cálida y el
-     acero frío, y a media distancia parecen grises. Sustituyen al cian y al
-     violeta de neón, que gritaban desde el otro lado de la habitación. */
-  --color-arena: #D6C3A0;
-  --color-acero: #9DB4CE;
-  --color-malva: #B5AECD;
+     Ahora es el oro exacto de la marca (`--brand-gold-2`), que allí es el
+     color del botón principal. Medido sobre el panel (#0C2C5E): 8.2:1. */
+  --color-oro: #EFC44D;
+  /* Los otros tres servicios, cada uno de un sitio de su paleta: la arena
+     viene de su familia cálida, el coral de `--brand-red` y el verde de
+     `--success`. Cuatro tonos que ya no se confunden entre sí — antes el
+     acero y la malva eran casi el mismo gris azulado. */
+  --color-arena: #E2C99B;
+  --color-coral: #F2A099;
+  --color-verde: #7FD6AC;
 
-  --font-titulo: Fraunces, Georgia, "Times New Roman", serif;
-  --font-cuerpo: Manrope, ui-sans-serif, system-ui, sans-serif;
+  /* Las DOS de USALatino Prime, leídas de sus variables `--font-head` y
+     `--font-body`. Antes eran Fraunces y Manrope, elegidas aquí.
+
+     Cambian en TODO el sitio y no sólo en la pared: dos sistemas
+     tipográficos dentro del mismo producto es exactamente la incoherencia
+     que este cambio venía a quitar. La portada y el panel también se ven
+     distintos, y es a propósito.
+
+     Source Serif 4 tiene eje óptico (`opsz`), así que el mismo archivo sirve
+     para el nombre a 46px y para un título de panel a 24px sin que el
+     segundo parezca la versión encogida del primero. */
+  --font-titulo: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-cuerpo: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
 }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -222,21 +257,48 @@ dialog.hoja > div {
 
 /* El tono viaja como tres números para poder graduarle la opacidad. Los
    colores siguen viviendo sólo aquí. */
-.tono-agua  { --tono: 159 232 216; }
-.tono-arena { --tono: 214 195 160; }
-.tono-malva { --tono: 181 174 205; }
-.tono-acero { --tono: 157 180 206; }
+/* DOS números por tono, y hacen cosas distintas.
+ *
+ * `--tono` es la versión ACLARADA: el filo, el punto y el borde. Van sobre
+ * el marino y tienen que leerse, así que no pueden ser el color de marca a
+ * secas — a esa claridad, el azul #1B4FA0 desaparece contra el fondo.
+ *
+ * `--tono-hondo` es el color de marca TAL CUAL sale de su hoja, sin aclarar,
+ * y es el que tiñe el cuadro entero. Ésa es la diferencia entre una tarjeta
+ * que SE VE de su color y una tarjeta gris con un borde de color, que es lo
+ * que había.
+ *
+ * Blanco sobre cada cuadro ya compuesto contra el fondo: azul 13.1:1,
+ * coral 12.9:1, arena 8.4:1, verde 9.6:1. */
+.tono-agua  { --tono: 143 186 242; --tono-hondo:  27  79 160; } /* --brand-blue */
+.tono-coral { --tono: 242 160 153; --tono-hondo: 216  32  31; } /* --brand-red  */
+.tono-arena { --tono: 226 201 155; --tono-hondo: 217 155  43; } /* --brand-gold */
+.tono-verde { --tono: 127 214 172; --tono-hondo:  30 158 106; } /* --success    */
 
 .panel-servicio {
   /* En reposo Y al final: encendido con su color, a media luz.
      Estos cuatro números son los que hacen que la pared se vea de colores
-     con la animación terminada. Subirlos más empieza a competir con el
-     estado activo y el recorrido deja de leerse. */
-  background: rgb(var(--tono) / 0.08);
-  border-color: rgb(var(--tono) / 0.26);
+     con la animación terminada.
+
+     ── Por qué suben respecto a lo que había ──
+
+     Porque no cumplían lo que esta hoja prometía. Con el fondo a 0.08 y el
+     borde a 0.26, los cuatro paneles se veían como la MISMA tarjeta casi
+     negra: el único color que llegaba a la pantalla era el punto de seis
+     píxeles de la izquierda. Comprobado abriéndola, no leyéndola.
+
+     El aviso de antes —«subirlos más compite con el estado activo»— sigue
+     siendo cierto, así que sube también el activo y el escalón entre los dos
+     se mantiene: 0.38 → 0.55 en el fondo y 0.5 → 0.8 en el borde.
+
+     El fondo va con `--tono-hondo` —el color de marca sin aclarar— y el
+     borde con `--tono` —el aclarado—. Los dos del mismo color habrían dado
+     un cuadro plano: así el canto sigue leyéndose contra su propio relleno. */
+  background: rgb(var(--tono-hondo) / 0.38);
+  border-color: rgb(var(--tono) / 0.5);
   box-shadow:
-    0 0 0 1px rgb(var(--tono) / 0.12),
-    0 0 26px rgb(var(--tono) / 0.13);
+    0 0 0 1px rgb(var(--tono) / 0.2),
+    0 0 26px rgb(var(--tono) / 0.18);
   transition:
     box-shadow 600ms ease,
     border-color 600ms ease,
@@ -249,21 +311,21 @@ dialog.hoja > div {
 @keyframes halo-respira {
   0%, 100% {
     box-shadow:
-      0 0 0 1px rgb(var(--tono) / 0.34),
-      0 0 30px 2px rgb(var(--tono) / 0.2),
-      0 0 70px 10px rgb(var(--tono) / 0.09);
+      0 0 0 1px rgb(var(--tono) / 0.6),
+      0 0 30px 2px rgb(var(--tono) / 0.28),
+      0 0 70px 10px rgb(var(--tono) / 0.13);
   }
   50% {
     box-shadow:
-      0 0 0 1px rgb(var(--tono) / 0.34),
-      0 0 40px 4px rgb(var(--tono) / 0.24),
-      0 0 92px 16px rgb(var(--tono) / 0.12);
+      0 0 0 1px rgb(var(--tono) / 0.6),
+      0 0 40px 4px rgb(var(--tono) / 0.34),
+      0 0 92px 16px rgb(var(--tono) / 0.17);
   }
 }
 
 .panel-servicio[data-luz="activo"] {
-  background: rgb(var(--tono) / 0.1);
-  border-color: rgb(var(--tono) / 0.34);
+  background: rgb(var(--tono-hondo) / 0.55);
+  border-color: rgb(var(--tono) / 0.8);
   transform: scale(1.02);
   animation: halo-respira 3400ms ease-in-out infinite;
 }
