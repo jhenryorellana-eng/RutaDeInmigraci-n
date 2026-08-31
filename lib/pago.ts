@@ -32,13 +32,13 @@
 export const ZELLE_NOMBRE = "Jimy Henry Orellana Dominguez";
 
 /** Para leerlo y teclearlo en la app del banco. */
-export const ZELLE_TELEFONO = "(801) 941-3479";
+export const ZELLE_TELEFONO = "(385) 456-4470";
 
 /** El mismo número, en crudo: es lo que se copia y lo que abre WhatsApp. */
-export const ZELLE_TELEFONO_CRUDO = "8019413479";
+export const ZELLE_TELEFONO_CRUDO = "3854564470";
 
 /** Con el código de país, como lo quiere `wa.me`. */
-export const WHATSAPP_HENRY = "18019413479";
+export const WHATSAPP_HENRY = "13854564470";
 
 /* El precio ya no vive aquí.
  *

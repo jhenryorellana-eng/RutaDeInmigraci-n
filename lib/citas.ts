@@ -118,7 +118,7 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
   if (numero.length < 8 || numero.length > 15) {
     return {
       ok: false,
-      motivo: "Escribe tu WhatsApp con el código de país, por ejemplo +1 801 941 3479.",
+      motivo: "Escribe tu WhatsApp con el código de país, por ejemplo +1 385 456 4470.",
     };
   }
 

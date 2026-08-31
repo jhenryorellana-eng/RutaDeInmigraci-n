@@ -449,7 +449,7 @@ export function FormularioReserva({
               onCambio={setWhatsapp}
               tipo="tel"
               autoComplete="tel"
-              ayuda="Con el código de país, así: +1 801 941 3479. Por ahí le mandas el comprobante y él te manda el enlace."
+              ayuda="Con el código de país, así: +1 385 456 4470. Por ahí le mandas el comprobante y él te manda el enlace."
             />
 
             <label className="flex min-h-[56px] items-center rounded-2xl bg-white/[0.07] px-4">
