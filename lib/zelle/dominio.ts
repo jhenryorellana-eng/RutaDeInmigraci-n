@@ -350,27 +350,56 @@ export type CodigosEnMemo = {
 };
 
 /**
- * Saca códigos de cuatro dígitos del memo.
+ * El prefijo del código. `RI` de «ruta del inmigrante».
  *
- * Tolerante con lo que la gente escribe alrededor —«pago 4821», «cita
- * #4821», «4821 henry»— y nada tolerante con el número en sí: no se corrige
- * un dígito ni se rellenan ceros. Un código mal leído no es un fallo menor,
- * es el pago de una persona apuntado en la cita de otra.
+ * No es decorativo: este buzón lo lee TAMBIÉN x-legal, cuyos clientes
+ * escriben en el memo su número de caso `U26-XXXXXX`. Dos sistemas leyendo
+ * los mismos correos necesitan códigos que no se puedan confundir — es la
+ * regla §8.4 del documento de traspaso.
  *
- * Si aparecen dos números distintos de cuatro dígitos, nadie puede saber
- * cuál era el código: se devuelve `unico: null` y el pago va a revisión.
+ * Un código desnudo de cuatro cifras era justo lo confundible: cualquier
+ * número suelto en el memo de un pago ajeno lo habría parecido. Con el
+ * prefijo, cada sistema sólo reconoce lo suyo y el ruido cruzado en las
+ * bandejas baja.
+ */
+export const PREFIJO_CODIGO = "RI";
+
+/** «2635» → «RI-2635». Lo que se le enseña a quien va a pagar. */
+export function codigoParaMostrar(digitos: string): string {
+  return `${PREFIJO_CODIGO}-${digitos}`;
+}
+
+/**
+ * Saca códigos del memo. Del tipo `RI-4821`, y sólo de ése.
  *
- * ── Por qué se exige que esté aislado ──
+ * Tolerante con lo que la gente escribe alrededor —«pago RI-4821», «cita
+ * ri4821», «RI 4821 gracias»— y nada tolerante con el número en sí: no se
+ * corrige un dígito ni se rellenan ceros. Un código mal leído no es un fallo
+ * menor: es el pago de una persona apuntado en la cita de otra.
  *
- * Un importe escrito en el memo («pago 150.00») o un teléfono no pueden
- * confundirse con un código. Por eso el número tiene que ir rodeado de algo
- * que no sea un dígito ni un punto: «1500» dentro de «$1500.00» no cuenta.
+ * Devuelve los cuatro dígitos sin el prefijo, que es como se guardan.
+ *
+ * Si aparecen dos códigos distintos, nadie puede saber cuál era: se devuelve
+ * `unico: null` y el pago va a revisión.
+ *
+ * ── Lo que NO reconoce, a propósito ──
+ *
+ * Un número suelto («4821»), porque en un buzón compartido eso puede ser
+ * cualquier cosa del otro negocio. Y `U26-000107`, que es de x-legal: sus
+ * seis dígitos no caben en el patrón ni con prefijo.
  */
 export function codigosDelMemo(memo: string | null | undefined): CodigosEnMemo {
   if (!memo) return { unico: null, todos: [] };
+  const normalizado = memo
+    .normalize("NFKC")
+    .toUpperCase()
+    .replace(/[\u2010-\u2015\u2212]/g, "-");
+
   const vistos = new Set<string>();
   const todos: string[] = [];
-  for (const m of memo.matchAll(/(?:^|[^\d.,])(\d{4})(?![\d.,])/g)) {
+  for (const m of normalizado.matchAll(
+    /(?:^|[^A-Z0-9])RI[\s-]*(\d{4})(?![\d.,])/g,
+  )) {
     if (!vistos.has(m[1])) {
       vistos.add(m[1]);
       todos.push(m[1]);

@@ -17,6 +17,17 @@ import { conciliarBuzon } from "@/lib/zelle/conciliar";
  * `CRON_SECRET` en la cabecera `Authorization`; sin esa cabecera correcta,
  * esto no hace nada.
  *
+ * ── Un barrido que no corrió NO devuelve 200 ──
+ *
+ * §6.1 del traspaso, y la trampa que describe pasó allí tres veces: si el
+ * endpoint contesta 200 aunque no haya hecho nada, el panel del cron se ve
+ * «verde para siempre mientras no hace absolutamente nada». Aquí, si falta
+ * configuración o el barrido no llegó a correr, se devuelve un código de
+ * error para que se vea en rojo.
+ *
+ * La excepción es el cerrojo: que otro barrido esté dentro no es un fallo,
+ * es el cerrojo funcionando.
+ *
  * ── Lo que devuelve, y lo que no ──
  *
  * Números y nada más: cuántos correos se leyeron y en qué acabaron. Ni un
@@ -42,6 +53,11 @@ export async function GET(req: NextRequest) {
 
   try {
     const resumen = await conciliarBuzon();
+    if (!resumen.corrio) {
+      /* Solaparse no es un fallo; que falte configuración, sí. */
+      const solapado = resumen.motivo === "Ya hay un barrido en curso.";
+      return NextResponse.json(resumen, { status: solapado ? 200 : 503 });
+    }
     return NextResponse.json(resumen);
   } catch {
     /* No se filtra el error hacia fuera: un mensaje de IMAP puede llevar el

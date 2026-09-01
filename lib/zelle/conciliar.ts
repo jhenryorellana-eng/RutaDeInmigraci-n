@@ -70,10 +70,32 @@ export async function conciliarBuzon(): Promise<ResumenConciliacion> {
 
   const supabase = await clienteServidor();
 
+  /* El cerrojo, antes de tocar el buzón.
+   *
+   * Un barrido lento y el siguiente disparo del cron encima dan dos
+   * conexiones IMAP compitiendo por el mismo buzón y un cursor que puede
+   * retroceder. Va en una fila de la base y no en un advisory lock de
+   * Postgres: los advisory locks viven en la sesión, y aquí las sesiones las
+   * recicla un pool — un cerrojo que se suelta solo al devolver la conexión
+   * no protege nada. */
+  const { data: tomado, error: errCerrojo } = await supabase.rpc("zelle_tomar_cerrojo", {
+    secreto: clave,
+    segundos: 90,
+  });
+  if (errCerrojo) {
+    return { corrio: false, motivo: "La base rechazó el secreto o no responde.", ...vacio };
+  }
+  if (tomado !== true) {
+    /* Otro barrido está dentro. No es un error: es el cerrojo haciendo su
+       trabajo, y el siguiente disparo lo cubre. */
+    return { corrio: false, motivo: "Ya hay un barrido en curso.", ...vacio };
+  }
+
   const { data: cursor, error: errCursor } = await supabase.rpc("zelle_cursor_leer", {
     secreto: clave,
   });
   if (errCursor) {
+    await supabase.rpc("zelle_soltar_cerrojo", { secreto: clave });
     return { corrio: false, motivo: "La base rechazó el secreto o no responde.", ...vacio };
   }
 
@@ -83,7 +105,9 @@ export async function conciliarBuzon(): Promise<ResumenConciliacion> {
   let rechazados = 0;
   let yaVistos = 0;
 
-  const resultado = await barrerBuzon(
+  let resultado;
+  try {
+    resultado = await barrerBuzon(
     cfg,
     {
       desdeUid: leido.ultimoUid ?? 0,
@@ -161,8 +185,14 @@ export async function conciliarBuzon(): Promise<ResumenConciliacion> {
       if (decision.tipo === "confirmar") confirmados += 1;
       else if (decision.tipo === "rechazado") rechazados += 1;
       else aRevisar += 1;
-    },
-  );
+      },
+    );
+  } catch (e) {
+    /* El cerrojo se suelta SIEMPRE. Si no, un fallo de red deja el barrido
+       bloqueado noventa segundos por nada. */
+    await supabase.rpc("zelle_soltar_cerrojo", { secreto: clave });
+    throw e;
+  }
 
   await supabase.rpc("zelle_cursor_guardar", {
     secreto: clave,
@@ -170,6 +200,7 @@ export async function conciliarBuzon(): Promise<ResumenConciliacion> {
     p_ultimo_uid: resultado.ultimoUid,
     p_error: resultado.fallidos > 0 ? `${resultado.fallidos} correo(s) quedaron por reintentar` : null,
   });
+  await supabase.rpc("zelle_soltar_cerrojo", { secreto: clave });
 
   return {
     corrio: true,

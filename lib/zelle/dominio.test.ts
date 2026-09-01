@@ -109,7 +109,7 @@ describe("el desempate, que es para lo que existe el código", () => {
 
   it("dos citas del mismo importe se desempatan por el código del memo", () => {
     const d = decidir({
-      pago: pago({ memo: "pago 2222", remitente: "LUIS GOMEZ" }),
+      pago: pago({ memo: "pago RI-2222", remitente: "LUIS GOMEZ" }),
       autenticidad: SELLO_OK,
       pendientes: dos,
     });
@@ -140,7 +140,7 @@ describe("el desempate, que es para lo que existe el código", () => {
        no existe, algo va mal: adivinar por el nombre sería ignorar lo único
        que esa persona nos dijo explícitamente. */
     const d = decidir({
-      pago: pago({ memo: "9999", remitente: "ANA PEREZ" }),
+      pago: pago({ memo: "RI-9999", remitente: "ANA PEREZ" }),
       autenticidad: SELLO_OK,
       pendientes: dos,
     });
@@ -173,27 +173,45 @@ describe("lo que nunca se confirma solo", () => {
   });
 });
 
-describe("los códigos del memo", () => {
+describe("los códigos del memo, en un buzón compartido", () => {
   it("lo encuentra entre palabras", () => {
-    expect(codigosDelMemo("pago cita 4821 gracias").unico).toBe("4821");
+    expect(codigosDelMemo("pago cita RI-4821 gracias").unico).toBe("4821");
+  });
+
+  it("aguanta cómo lo escribe la gente", () => {
+    for (const memo of ["ri4821", "RI 4821", "Ri-4821", "pago ri - 4821"]) {
+      expect(codigosDelMemo(memo).unico).toBe("4821");
+    }
+  });
+
+  it("un número SUELTO ya no cuenta como código", () => {
+    /* Éste es el motivo del prefijo. El buzón lo comparte x-legal, y un
+       «4821» dentro del memo de un pago suyo no dice nada sobre una cita
+       de aquí. Sin prefijo, esto habría confirmado la cita equivocada. */
+    expect(codigosDelMemo("pago 4821").unico).toBeNull();
+  });
+
+  it("el número de caso de x-legal no se confunde con uno nuestro", () => {
+    expect(codigosDelMemo("U26-000107").unico).toBeNull();
+    expect(codigosDelMemo("pago cuota u26000107").unico).toBeNull();
   });
 
   it("no confunde un importe con un código", () => {
     expect(codigosDelMemo("pago de $1500.00").unico).toBeNull();
   });
 
-  it("dos números distintos dejan de ser un código", () => {
-    const r = codigosDelMemo("4821 y 1234");
+  it("dos códigos distintos dejan de ser uno", () => {
+    const r = codigosDelMemo("RI-4821 y RI-1234");
     expect(r.unico).toBeNull();
     expect(r.todos).toEqual(["4821", "1234"]);
   });
 
-  it("el mismo número repetido sigue siendo uno", () => {
-    expect(codigosDelMemo("4821 ref 4821").unico).toBe("4821");
+  it("el mismo repetido sigue siendo uno", () => {
+    expect(codigosDelMemo("RI-4821 ref RI-4821").unico).toBe("4821");
   });
 
-  it("no rellena ceros ni corrige: 482 no es 0482", () => {
-    expect(codigosDelMemo("pago 482").unico).toBeNull();
+  it("no rellena ceros ni corrige: RI-482 no es RI-0482", () => {
+    expect(codigosDelMemo("pago RI-482").unico).toBeNull();
   });
 
   it("sin memo no hay código", () => {

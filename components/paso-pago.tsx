@@ -10,6 +10,7 @@ import {
   enlaceWhatsapp,
 } from "@/lib/pago";
 import type { Servicio } from "@/lib/servicios";
+import { codigoParaMostrar } from "@/lib/zelle/dominio";
 
 /**
  * EL PAGO · el último paso, y el que CREA la cita.
@@ -161,12 +162,12 @@ export function PasoPago({
             <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-acento">
               Escribe esto en el memo
             </p>
-            <p className="mt-2 text-[52px] font-extrabold leading-none tracking-[0.08em] tabular-nums">
-              {codigoPago}
+            <p className="mt-2 text-[46px] font-extrabold leading-none tracking-[0.06em] tabular-nums">
+              {codigoParaMostrar(codigoPago)}
             </p>
             <button
               type="button"
-              onClick={() => copiar(codigoPago, "codigo")}
+              onClick={() => copiar(codigoParaMostrar(codigoPago), "codigo")}
               className="mt-3 min-h-11 rounded-full border border-acento/50 px-5 text-[15px] font-bold text-acento"
             >
               {copiado === "codigo" ? "Copiado" : "Copiar el código"}

@@ -17,6 +17,14 @@ import { decodificarQuotedPrintable } from "./dominio";
  * imitándolo. Leyendo por IMAP se conserva la cabecera
  * `Authentication-Results` que estampó el servidor, que es la prueba.
  *
+ * ── Se comparte el buzón con otro sistema ──
+ *
+ * x-legal lleva leyéndolo desde julio, así que este código es un invitado:
+ * sólo AÑADE su propia marca y no toca nada más. No borra, no mueve de
+ * carpeta y no marca como leído. Y los dos verán los correos del otro: los
+ * pagos que no casen con ninguna solicitud quedan en «sin identificar», que
+ * es el comportamiento esperado y no un fallo.
+ *
  * ── El buzón ES la cola ──
  *
  * No hay cola aparte, ni reintentos que mantener. Un barrido que falla se
@@ -28,10 +36,28 @@ import { decodificarQuotedPrintable } from "./dominio";
  * Henry abre este buzón con su cliente de correo. Si el barrido marcara
  * `\Seen`, bastaría con que él abriera un correo antes para que el sistema
  * lo diera por procesado y ese pago no se apuntara nunca. Se usa una marca
- * propia, `$Reconciled`, que su programa no toca.
+ * propia, que su programa no toca.
+ *
+ * ── Y NO ES `$Reconciled`, que es de otro ──
+ *
+ * Este buzón lo lee TAMBIÉN x-legal, en producción, cada dos minutos, y su
+ * marca es `$Reconciled`. Si este sistema se la pusiera a un correo que
+ * x-legal todavía no ha barrido, x-legal daría ese pago por procesado y
+ * **se lo saltaría para siempre**: un cliente suyo pagando y su cuota sin
+ * apuntar.
+ *
+ * Por eso la marca es propia. Cada sistema lleva su progreso por su lado y
+ * ninguno puede cegar al otro. Es la regla §8.1 del documento de traspaso, y
+ * no es negociable.
  */
 
-export const MARCA_PROCESADO = "$Reconciled";
+/**
+ * La marca de ESTE sistema. Nunca `$Reconciled` — ver arriba.
+ *
+ * Empieza por `$` porque los keywords IMAP personalizados lo llevan por
+ * convención, y Dovecot (que es lo que corre Migadu) los admite sin más.
+ */
+export const MARCA_PROCESADO = "$RutaProcesado";
 
 /** Tope por barrido: acota la memoria y el tiempo de una ejecución. */
 const TOPE_POR_BARRIDO = 50;
@@ -117,8 +143,8 @@ export async function barrerBuzon(
 
       /* Si cambió el UIDVALIDITY, todos los uid guardados dejan de
          significar nada y hay que releer desde cero. No es grave: la marca
-         `$Reconciled` y el número de transacción impiden apuntar dos veces
-         el mismo pago. */
+         propia y el número de transacción impiden apuntar dos veces el mismo
+         pago. */
       const cursorSirve =
         opciones.uidvalidityConocido !== null && uidvalidity === opciones.uidvalidityConocido;
       const desdeUid = cursorSirve ? opciones.desdeUid : 0;
