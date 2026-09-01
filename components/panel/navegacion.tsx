@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * LAS TRES PANTALLAS DEL PANEL.
+ * LAS CUATRO PANTALLAS DEL PANEL.
  *
  * El mismo componente sirve arriba en escritorio y abajo en el teléfono; lo
  * único que cambia son las clases que le pasa el layout. Mantenerlo en un
@@ -16,6 +16,7 @@ const PANTALLAS = [
   { href: "/panel", texto: "Calendario", icono: IconoCalendario },
   { href: "/panel/horario", texto: "Mi horario", icono: IconoReloj },
   { href: "/panel/personas", texto: "Personas", icono: IconoPersonas },
+  { href: "/panel/pagos", texto: "Pagos", icono: IconoPagos },
 ] as const;
 
 export function Navegacion({ className = "" }: { className?: string }) {
@@ -82,6 +83,26 @@ function IconoReloj({ className = "" }: { className?: string }) {
     >
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+function IconoPagos({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="21"
+      height="21"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="18" height="13" x="3" y="6" rx="2" />
+      <path d="M3 10h18" />
     </svg>
   );
 }
