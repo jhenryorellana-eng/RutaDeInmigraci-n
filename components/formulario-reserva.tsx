@@ -10,7 +10,8 @@ import {
   estadoPorNombre,
   estadoProbable,
 } from "@/lib/estados";
-import { ZONA, desfaseConUtah, diaCorto, fechaLarga, horaEnZona } from "@/lib/horario";
+import { ZONA, desfaseConUtah, fechaLarga, horaEnZona } from "@/lib/horario";
+import { CalendarioMes } from "@/components/calendario-mes";
 import type { DiaConHuecos } from "@/lib/citas";
 import { reservar } from "@/app/reservar/accion";
 import { CLAVE_CITA } from "@/lib/pago";
@@ -261,44 +262,9 @@ export function FormularioReserva({
           <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:mt-7 lg:text-[40px] lg:leading-[1.12]">
             ¿Qué día nos vemos?
           </h1>
-          <div className="mt-5 grid grid-cols-3 gap-2.5 lg:mt-[18px] lg:grid-cols-4">
-            {dias.map((d) => {
-              const primero = new Date(d.huecos[0].iso);
-              const libres = d.huecos.filter((h) => h.libre).length;
-              /* El número del día sale de la CLAVE («2026-08-20»), que ya es
-                 la fecha local de Utah. Sacarlo del instante con
-                 `getUTCDate()` daba el día equivocado para las horas de la
-                 tarde, cuando en UTC ya es el día siguiente. */
-              const numeroDia = Number(d.clave.slice(8, 10));
-              /* UN DÍA LLENO TAMBIÉN SE ABRE.
-                 Antes llevaba `disabled` cuando no quedaba ninguna hora
-                 libre, y eso escondía la agenda entera: quien caía en un día
-                 completo no veía que hubiera horario, veía un botón muerto.
-                 Ahora entra igual y encuentra las horas tachadas, que dicen
-                 dos cosas que el botón muerto callaba — que Henry atiende a
-                 esas horas, y que están tomadas. */
-              return (
-                <button
-                  key={d.clave}
-                  type="button"
-                  onClick={() => elegirDia(d.clave)}
-                  className={
-                    libres === 0
-                      ? "flex min-h-[82px] flex-col items-center justify-center gap-0.5 rounded-[20px] border border-white/10 text-apagado transition-colors hover:border-white/30"
-                      : "flex min-h-[82px] flex-col items-center justify-center gap-0.5 rounded-[20px] border border-white/25 transition-colors hover:border-acento"
-                  }
-                >
-                  <span className="text-[12px] font-bold">{diaCorto(primero)}</span>
-                  <span className="text-[26px] font-extrabold leading-none tracking-[-0.03em]">
-                    {numeroDia}
-                  </span>
-                  <span className="text-[13px]">
-                    {libres === 0 ? "lleno" : `${libres} ${libres === 1 ? "hora" : "horas"}`}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {/* El mes entero, no los seis próximos días: quien tiene una fecha
+              en la cabeza tiene que poder llegar a ella. */}
+          <CalendarioMes dias={dias} onElegir={elegirDia} />
         </>
       ) : null}
 

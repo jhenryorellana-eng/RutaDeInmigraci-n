@@ -140,7 +140,7 @@ export default async function Reservar({
 
       {!servicio ? (
         <ElegirServicio />
-      ) : dias.length === 0 ? (
+      ) : !dias.some((d) => d.huecos.some((h) => h.libre)) ? (
         <p className="mt-10 text-[17px] leading-[1.5] text-tinta-suave">
           Ahora mismo no quedan horas libres. Vuelve mañana: se abren huecos
           nuevos cada día.

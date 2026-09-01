@@ -252,6 +252,58 @@ export function proximosDias(
 }
 
 /**
+ * TODOS los días de una ventana, abiertos y cerrados, a partir de un instante.
+ *
+ * Es la fuente del calendario de mes de la pantalla de reserva, y por eso se
+ * parece a `semanaDesde()` y no a `proximosDias()`: los cerrados también
+ * salen, con la lista de huecos vacía, para que la rejilla pueda pintarlos
+ * apagados en su casilla. Saltárselos —lo que hace `proximosDias()`— deja un
+ * mes con agujeros que no se entienden.
+ *
+ * ── Por qué existe además de `proximosDias()` ──
+ *
+ * Porque aquélla busca «los próximos N con horas» y para a los 21 días. Con
+ * eso, alguien que quería el día 10 no tenía forma de llegar: pasó de verdad.
+ * Aquí la ventana es fija en DÍAS y no en «días abiertos», así que el 10 está
+ * siempre donde se espera.
+ *
+ * El tope de días lo pone quien llama, y en la práctica es el mismo que
+ * impone `horas_ocupadas()` en la base: sesenta. Pedir más aquí no serviría
+ * de nada, porque la ocupación no llegaría.
+ */
+export function diasEnRango(
+  desde: Date,
+  cuantosDias: number,
+  tramos: readonly Tramo[] = HORARIO_POR_DEFECTO,
+): Dia[] {
+  const dias: Dia[] = [];
+  const p = partesEnZona(desde);
+  let cursor = Date.UTC(p.anio, p.mes - 1, p.dia);
+
+  for (let i = 0; i < cuantosDias; i += 1) {
+    const d = new Date(cursor);
+    const anio = d.getUTCFullYear();
+    const mes = d.getUTCMonth() + 1;
+    const dia = d.getUTCDate();
+
+    dias.push({
+      clave: clave(anio, mes, dia),
+      anio,
+      mes,
+      dia,
+      diaSemana: diaSemanaDe(anio, mes, dia),
+      /* Las horas que ya pasaron hoy no se ofrecen. Un día abierto cuyas
+         horas pasaron todas queda con la lista vacía, igual que un cerrado:
+         para quien reserva es lo mismo. */
+      huecos: huecosDelDia(anio, mes, dia, tramos).filter((h) => h > desde),
+    });
+    cursor += 24 * 60 * 60 * 1000;
+  }
+
+  return dias;
+}
+
+/**
  * Los días de una semana, desde su lunes.
  *
  * Los días CERRADOS también salen, al revés que en `proximosDias()`. Es la

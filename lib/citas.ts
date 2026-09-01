@@ -1,5 +1,5 @@
 import { clienteServidor, hayBase } from "@/lib/supabase/servidor";
-import { dentroDelHorario, proximosDias, type Dia } from "@/lib/horario";
+import { dentroDelHorario, diasEnRango, type Dia } from "@/lib/horario";
 import { servicioPorId } from "@/lib/servicios";
 import { leerTramos } from "@/lib/tramos";
 
@@ -16,33 +16,48 @@ export type DiaConHuecos = {
 };
 
 /**
- * Los próximos días con sus huecos, marcando cuáles siguen libres.
+ * Sesenta días por delante, todos, con sus huecos y cuáles siguen libres.
+ *
+ * Sesenta y no seis: antes se pedían «los seis próximos días con horas», y
+ * quien tenía una fecha en la cabeza —«el 10»— no podía llegar a ella. Ahora
+ * la ventana son días de calendario, y es la misma que impone
+ * `horas_ocupadas()` en la base. Pedir más sería pintar días sin saber si
+ * están ocupados.
+ *
+ * Salen también los cerrados, con la lista vacía: el calendario de mes los
+ * necesita para pintarlos apagados en su casilla.
  *
  * Las horas ocupadas se piden con `horas_ocupadas()`, que devuelve instantes
  * y NADA más — ni nombres, ni correos. Aunque alguien llamara a esa función
  * a mano desde la consola, lo único que obtendría es lo que ya ve pintado.
  */
+export const DIAS_POR_DELANTE = 60;
+
 export async function diasDisponibles(
   ahora: Date = new Date(),
-  cuantos = 6,
+  cuantosDias = DIAS_POR_DELANTE,
 ): Promise<DiaConHuecos[]> {
   /* Los tramos salen de la base, no de una constante: si Henry parte el
      martes en «de 8 a 1 y de 3 a 5», la pantalla deja de ofrecer las 13 y
      las 14 sin que nadie toque el código. */
   const tramos = await leerTramos();
-  const dias: Dia[] = proximosDias(ahora, cuantos, tramos);
+  const dias: Dia[] = diasEnRango(ahora, cuantosDias, tramos);
   if (dias.length === 0) return [];
 
   const ocupadas = new Set<number>();
 
   if (hayBase) {
-    const ultimo = dias[dias.length - 1];
-    const finales = ultimo.huecos[ultimo.huecos.length - 1];
+    /* Hasta el último hueco que se ofrece. El último día de la ventana
+       puede estar cerrado, así que se busca hacia atrás el que tenga alguno. */
+    const conHuecos = [...dias].reverse().find((d) => d.huecos.length > 0);
+    const finales = conHuecos?.huecos[conHuecos.huecos.length - 1];
     const supabase = await clienteServidor();
-    const { data } = await supabase.rpc("horas_ocupadas", {
-      desde: ahora.toISOString(),
-      hasta: new Date(finales.getTime() + 60 * 60 * 1000).toISOString(),
-    });
+    const { data } = finales
+      ? await supabase.rpc("horas_ocupadas", {
+          desde: ahora.toISOString(),
+          hasta: new Date(finales.getTime() + 60 * 60 * 1000).toISOString(),
+        })
+      : { data: [] as string[] };
     for (const fila of (data as string[] | null) ?? []) {
       ocupadas.add(new Date(fila).getTime());
     }
