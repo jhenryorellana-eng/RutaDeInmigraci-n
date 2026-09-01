@@ -5,7 +5,7 @@ import { FormularioReserva } from "@/components/formulario-reserva";
 import { diasDisponibles } from "@/lib/citas";
 import { describirHorario } from "@/lib/horario";
 import { hayBase } from "@/lib/supabase/servidor";
-import { hayStripe } from "@/lib/pago-stripe";
+import { sePuedeCobrarConTarjeta } from "@/lib/pago-stripe";
 import { SERVICIOS, servicioPorId } from "@/lib/servicios";
 import { leerTramos } from "@/lib/tramos";
 
@@ -150,7 +150,7 @@ export default async function Reservar({
           dias={dias}
           conectada={hayBase}
           servicio={servicio}
-          hayTarjeta={hayStripe}
+          hayTarjeta={sePuedeCobrarConTarjeta}
         />
       )}
 

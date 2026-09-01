@@ -30,7 +30,30 @@ import Stripe from "stripe";
 
 const CLAVE = process.env.STRIPE_SECRET_KEY ?? "";
 
+/** Hay con qué COBRAR: basta la clave secreta para abrir una sesión. */
 export const hayStripe = CLAVE.length > 0;
+
+/**
+ * Hay con qué cobrar Y CON QUÉ CONFIRMAR. Es lo único que puede encender el
+ * botón de tarjeta.
+ *
+ * ── Por qué son tres variables y no una ──
+ *
+ * Con sólo `STRIPE_SECRET_KEY` se puede cobrar perfectamente… y no enterarse
+ * de que se cobró. Eso ya ocurrió en producción: el botón salió porque había
+ * clave, el webhook devolvía «sin configurar» por falta de las otras dos, y
+ * cualquiera que hubiera pagado habría visto su hora caducar media hora
+ * después con el dinero ya fuera de su cuenta. Un Stripe no se revierte solo.
+ *
+ * Así que ofrecer la tarjeta exige la cadena entera: la clave que cobra, el
+ * secreto de firma que permite creerse el webhook, y el secreto con el que
+ * ese webhook asciende la cita. Si falta uno, se ofrece sólo Zelle — que
+ * funciona sin ninguno de los tres.
+ */
+export const sePuedeCobrarConTarjeta =
+  CLAVE.length > 0 &&
+  (process.env.STRIPE_WEBHOOK_SECRET ?? "").length > 0 &&
+  (process.env.AVISO_SECRETO ?? "").length > 0;
 
 /** El cliente, o `null` si no hay clave. Nunca lanza al importar. */
 export function stripe(): Stripe | null {
