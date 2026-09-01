@@ -30,5 +30,6 @@ export async function abrirPagoConTarjeta(datos: {
     precioUsd: servicio.precioUsd,
     correo: datos.correo,
     urlBase: URL_SITIO,
+    servicioId: servicio.id,
   });
 }

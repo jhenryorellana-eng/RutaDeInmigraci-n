@@ -76,6 +76,8 @@ export async function crearSesionDePago(datos: {
   precioUsd: number;
   correo: string;
   urlBase: string;
+  /** Para poder volver a SU preparación si cancela, no al menú. */
+  servicioId: string;
 }): Promise<{ url: string } | { error: string }> {
   const s = stripe();
   if (!s) return { error: "El pago con tarjeta no está configurado." };
@@ -95,19 +97,46 @@ export async function crearSesionDePago(datos: {
           },
         },
       ],
-      /* La cita ya está retenida y caduca en media hora. La sesión caduca
-         antes, para que nadie termine de pagar sobre una reserva que el
-         barrido ya soltó. Stripe exige un mínimo de 30 minutos, así que se
-         pide ese mínimo y la holgura la da el lado de la cita. */
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+      /* SIN `expires_at`, y es deliberado.
+       *
+       * Llevaba `ahora + 30 minutos`, que es exactamente el mínimo que Stripe
+       * admite… y Stripe lo valida contra SU reloj al recibir la petición.
+       * Con el retardo de red le llegaban 29:59 y rechazaba la sesión entera:
+       * el botón de tarjeta fallaba siempre, en producción, con un error que
+       * este archivo se tragaba.
+       *
+       * No hace falta ponerlo. Que la sesión viva más que la retención de la
+       * hora no es un agujero: `confirmar_pago()` comprueba, bajo cerrojo, si
+       * la retención caducó Y si alguien se llevó esa hora. Si sigue libre,
+       * confirma —que es lo justo: esa persona pagó—; si no, se niega y queda
+       * escrito para que Henry devuelva el dinero. Esa decisión ya estaba
+       * tomada ahí, y duplicarla aquí con un reloj distinto sólo servía para
+       * romperlo. */
       metadata: { cita_id: String(datos.citaId) },
       success_url: `${datos.urlBase}/gracias?pago=tarjeta`,
-      cancel_url: `${datos.urlBase}/reservar?servicio=&pago=cancelado`,
+      cancel_url: `${datos.urlBase}/reservar?servicio=${datos.servicioId}&pago=cancelado`,
     });
 
     if (!sesion.url) return { error: "Stripe no devolvió una dirección de pago." };
     return { url: sesion.url };
-  } catch {
-    return { error: "No se pudo abrir el pago con tarjeta. Prueba con Zelle." };
+  } catch (e) {
+    /* El motivo REAL, no un mensaje genérico.
+     *
+     * Antes esto devolvía «no se pudo, prueba con Zelle» y nada más, y esa
+     * decisión costó un rato largo: el botón falló en producción y no había
+     * forma de saber por qué sin leer los registros del servidor. Un error
+     * que no dice qué pasó es un error que se investiga dos veces.
+     *
+     * Los mensajes de Stripe describen el problema y no llevan claves, así
+     * que se pueden enseñar. Y se escribe además en el registro, con el id
+     * de la petición, que es lo que hace falta para preguntarle a Stripe. */
+    const stripeErr = e as { message?: string; type?: string; requestId?: string };
+    console.error("stripe: no se pudo crear la sesión", {
+      type: stripeErr.type,
+      requestId: stripeErr.requestId,
+      message: stripeErr.message,
+    });
+    const razon = stripeErr.message ? ` (${stripeErr.message})` : "";
+    return { error: `No se pudo abrir el pago con tarjeta${razon}. Puedes pagar con Zelle.` };
   }
 }
