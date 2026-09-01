@@ -36,6 +36,13 @@ export async function diasDisponibles(
   const ocupadas = new Set<number>();
 
   if (hayBase) {
+    /* Antes de mirar qué está ocupado, se sueltan las retenciones que
+       caducaron. Va aquí y no en un cron porque así el barrido ocurre por el
+       mero hecho de que alguien mire la agenda: la hora de quien abandonó a
+       mitad del pago vuelve a ofrecerse sola. */
+    const limpieza = await clienteServidor();
+    await limpieza.rpc("liberar_pendientes_vencidas");
+
     const ultimo = dias[dias.length - 1];
     const finales = ultimo.huecos[ultimo.huecos.length - 1];
     const supabase = await clienteServidor();
@@ -73,6 +80,16 @@ export type DatosCita = {
   zonaHoraria?: string;
   /** Cuál de las tres preparaciones. Sin esto, Henry no sabe para qué prepara. */
   servicio: string;
+  /**
+   * En qué estado de EE. UU. está, dicho por ella misma.
+   *
+   * La columna existe desde `0007` y hasta ahora NO se escribía: el
+   * formulario preguntaba el estado, lo usaba para pintar la hora local y lo
+   * tiraba. Ahora viaja, que era el encargo de aquella migración.
+   */
+  estadoUsa?: string;
+  /** Cómo va a pagar. Se guarda al apartar aunque el pago llegue después. */
+  metodoPago?: "stripe" | "zelle";
 };
 
 /** Sólo dígitos, igual que hace el trigger en la base. */
@@ -80,7 +97,20 @@ export function soloDigitos(texto: string): string {
   return texto.replace(/\D/g, "");
 }
 
-export type Resultado = { ok: true } | { ok: false; motivo: string };
+/**
+ * Lo que se devuelve al apartar.
+ *
+ * La cita nace PENDIENTE: la hora queda retenida a nombre de esa persona,
+ * pero para Henry todavía no es una cita. Sube a «reservada» cuando el pago
+ * se confirma —el webhook de Stripe, o el conciliador leyendo el correo del
+ * banco— y caduca sola a la media hora si eso no ocurre.
+ *
+ * Por eso hacen falta los dos datos de vuelta: el `citaId` para poder pagar
+ * esa cita concreta, y el `codigoPago` para escribirlo en el memo del Zelle.
+ */
+export type Resultado =
+  | { ok: true; citaId: number; codigoPago: string; expiraEn: string }
+  | { ok: false; motivo: string };
 
 /**
  * Aparta una hora.
@@ -138,19 +168,26 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
   }
 
   const supabase = await clienteServidor();
-  const { error } = await supabase.from("citas").insert({
-    inicia_en: cuando.toISOString(),
-    nombre: datos.nombre.trim(),
-    correo: datos.correo.trim().toLowerCase(),
-    nacionalidad: datos.nacionalidad.toUpperCase(),
-    en_eeuu: datos.enEeuu,
-    whatsapp: numero,
-    zona_horaria: datos.zonaHoraria?.slice(0, 64) || null,
-    servicio: servicio.id,
+
+  /* Pasa por una función y no por un `insert` directo porque hay que RECIBIR
+     de vuelta el id y el código de cuatro dígitos, y para devolver columnas
+     hace falta permiso de lectura sobre ellas — que el público no tiene
+     sobre `citas`, ni debe tenerlo. */
+  const { data, error } = await supabase.rpc("apartar_cita", {
+    p_inicia_en: cuando.toISOString(),
+    p_nombre: datos.nombre.trim(),
+    p_correo: datos.correo.trim().toLowerCase(),
+    p_nacionalidad: datos.nacionalidad.toUpperCase(),
+    p_en_eeuu: datos.enEeuu,
+    p_whatsapp: numero,
+    p_zona_horaria: datos.zonaHoraria?.slice(0, 64) || null,
+    p_estado_usa: datos.estadoUsa?.slice(0, 40) || null,
+    p_servicio: servicio.id,
     /* El precio se guarda CON la cita. Si mañana la tercera audiencia sube a
        $180, las citas ya apartadas tienen que seguir diciendo $150: es lo
        que esa persona vio y lo que va a pagar. */
-    precio_usd: servicio.precioUsd,
+    p_precio_usd: servicio.precioUsd,
+    p_metodo_pago: datos.metodoPago ?? null,
   });
 
   if (error) {
@@ -169,5 +206,15 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
     return { ok: false, motivo: "No pudimos apartar la hora. Inténtalo otra vez." };
   }
 
-  return { ok: true };
+  const creada = (data ?? {}) as { id?: number; codigoPago?: string; expiraEn?: string };
+  if (!creada.id || !creada.codigoPago) {
+    return { ok: false, motivo: "No pudimos apartar la hora. Inténtalo otra vez." };
+  }
+
+  return {
+    ok: true,
+    citaId: creada.id,
+    codigoPago: creada.codigoPago,
+    expiraEn: creada.expiraEn ?? "",
+  };
 }

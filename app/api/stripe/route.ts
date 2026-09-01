@@ -1,0 +1,102 @@
+import { NextResponse, type NextRequest } from "next/server";
+
+import { clienteServidor } from "@/lib/supabase/servidor";
+import { stripe, hayStripe } from "@/lib/pago-stripe";
+
+/**
+ * EL WEBHOOK DE STRIPE · lo único que puede creer que una tarjeta pagó.
+ *
+ * ── Por qué no basta con la vuelta del navegador ──
+ *
+ * Porque `success_url` la puede escribir cualquiera en la barra de
+ * direcciones. Si la cita se confirmara al volver de Stripe, apuntar
+ * `/gracias?pago=tarjeta` a mano sería una cita gratis. Lo único que se
+ * puede creer es este webhook, porque viene FIRMADO con un secreto que sólo
+ * conocen Stripe y este servidor.
+ *
+ * Por eso el cuerpo se lee en crudo (`req.text()`) y no como JSON: la firma
+ * se calcula sobre los bytes exactos, y cualquier reserialización la rompe.
+ *
+ * ── Y por qué reintentar no duplica nada ──
+ *
+ * Stripe reintenta un webhook que no contesta 200, así que el mismo evento
+ * puede llegar varias veces. Confirmar se hace con `confirmar_pago`, que
+ * toma el cerrojo de la fila y devuelve `ya_estaba` si la cita ya estaba
+ * confirmada. Un reintento no es un error y no se trata como tal.
+ */
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function POST(req: NextRequest) {
+  const s = stripe();
+  const firmaSecreta = process.env.STRIPE_WEBHOOK_SECRET;
+  const secretoBase = process.env.AVISO_SECRETO;
+
+  if (!hayStripe || !s || !firmaSecreta || !secretoBase) {
+    return NextResponse.json({ error: "sin configurar" }, { status: 503 });
+  }
+
+  const firma = req.headers.get("stripe-signature");
+  if (!firma) return NextResponse.json({ error: "sin firma" }, { status: 400 });
+
+  const crudo = await req.text();
+
+  let evento;
+  try {
+    evento = s.webhooks.constructEvent(crudo, firma, firmaSecreta);
+  } catch {
+    /* Firma inválida: o no viene de Stripe, o alguien manipuló el cuerpo. En
+       los dos casos se rechaza sin mirar el contenido. */
+    return NextResponse.json({ error: "firma inválida" }, { status: 400 });
+  }
+
+  if (evento.type !== "checkout.session.completed") {
+    /* Cualquier otro evento se acepta sin hacer nada: devolver un error
+       haría que Stripe lo reintentara para siempre. */
+    return NextResponse.json({ recibido: true });
+  }
+
+  const sesion = evento.data.object as {
+    id: string;
+    client_reference_id: string | null;
+    payment_status: string | null;
+  };
+
+  /* `completed` no siempre significa pagado —una sesión puede completarse
+     con el pago pendiente— así que se comprueba explícitamente. */
+  if (sesion.payment_status !== "paid") {
+    return NextResponse.json({ recibido: true, ignorado: "pago no completado" });
+  }
+
+  const citaId = Number(sesion.client_reference_id);
+  if (!Number.isInteger(citaId) || citaId <= 0) {
+    return NextResponse.json({ recibido: true, ignorado: "sin cita" });
+  }
+
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase.rpc("confirmar_pago_con_secreto", {
+    secreto: secretoBase,
+    p_cita_id: citaId,
+    p_metodo: "stripe",
+    p_fuente: "stripe",
+    p_referencia: sesion.id,
+  });
+
+  if (error) {
+    /* Se devuelve 500 A PROPÓSITO para que Stripe reintente: el dinero ya
+       salió de la tarjeta y esta cita TIENE que quedar confirmada. */
+    return NextResponse.json({ error: "no se pudo confirmar" }, { status: 500 });
+  }
+
+  const res = (data ?? {}) as { ok?: boolean; motivo?: string };
+  if (!res.ok) {
+    /* La base se negó por una razón de negocio —la hora se la llevó otra
+       persona mientras pagaba—. Reintentar no lo va a arreglar, así que se
+       acepta el evento y esto queda para que lo vea Henry: es una devolución
+       a mano, y prefiere enterarse por su panel que por el cliente. */
+    return NextResponse.json({ recibido: true, sinAplicar: res.motivo });
+  }
+
+  return NextResponse.json({ recibido: true });
+}

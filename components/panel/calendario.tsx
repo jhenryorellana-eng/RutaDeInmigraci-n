@@ -27,6 +27,8 @@ export type CeldaDia =
       estado: "cita";
       iso: string;
       nombre: string;
+      /** Retenida, sin pagar. Ocupa la hora pero todavía no es una cita. */
+      pendiente: boolean;
       pais: string;
       enEeuu: boolean;
       /** En hora de Utah, que es la de Henry. */
@@ -445,13 +447,26 @@ function Celda({
   if (celda.estado === "cita") {
     return (
       <span
-        className="m-[3px] min-w-0 rounded-xl border border-acento/45 bg-acento/[0.16] px-2.5 py-2"
+        /* La retenida va con borde punteado y apagada: ocupa el hueco, pero
+           todavía no es tuya. Pintarla igual que una cita pagada haría contar
+           como trabajo del jueves algo que puede evaporarse en media hora. */
+        className={
+          celda.pendiente
+            ? "m-[3px] min-w-0 rounded-xl border border-dashed border-aviso/60 bg-aviso/[0.08] px-2.5 py-2"
+            : "m-[3px] min-w-0 rounded-xl border border-acento/45 bg-acento/[0.16] px-2.5 py-2"
+        }
         title={
-          celda.horaSuya
+          (celda.pendiente ? "SIN PAGAR · " : "") +
+          (celda.horaSuya
             ? `${celda.nombre} · ${celda.hora} tu hora · ${celda.horaSuya} la suya`
-            : `${celda.nombre} · ${celda.hora}`
+            : `${celda.nombre} · ${celda.hora}`)
         }
       >
+        {celda.pendiente ? (
+          <span className="block text-[11px] font-extrabold uppercase tracking-[0.1em] text-aviso">
+            Sin pagar
+          </span>
+        ) : null}
         <span className="block truncate text-[16px] font-bold">{celda.nombre}</span>
         <span
           className={
@@ -553,12 +568,29 @@ function FilaTelefono({
 
   if (celda.estado === "cita") {
     return (
-      <div className="rounded-2xl border border-acento/45 bg-acento/[0.16] px-4 py-3.5">
+      <div
+        className={
+          celda.pendiente
+            ? "rounded-2xl border border-dashed border-aviso/60 bg-aviso/[0.08] px-4 py-3.5"
+            : "rounded-2xl border border-acento/45 bg-acento/[0.16] px-4 py-3.5"
+        }
+      >
         <div className="flex items-center gap-3.5">
-          <span className="w-[52px] shrink-0 text-[16px] text-acento tabular-nums">
+          <span
+            className={
+              celda.pendiente
+                ? "w-[52px] shrink-0 text-[16px] text-aviso tabular-nums"
+                : "w-[52px] shrink-0 text-[16px] text-acento tabular-nums"
+            }
+          >
             {horaSuelta(hora)}
           </span>
           <span className="min-w-0 flex-1">
+            {celda.pendiente ? (
+              <span className="block text-[11px] font-extrabold uppercase tracking-[0.1em] text-aviso">
+                Retenida · sin pagar
+              </span>
+            ) : null}
             <span className="block truncate text-[17px] font-bold">{celda.nombre}</span>
             <span
               className={

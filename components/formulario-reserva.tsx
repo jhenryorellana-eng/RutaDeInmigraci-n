@@ -21,27 +21,33 @@ import { PasoPago } from "@/components/paso-pago";
 /**
  * UNA COSA A LA VEZ.
  *
- * Cinco pasos —el video, el pago, el día, la hora y quién eres— pero nunca
+ * Cinco pasos —el video, el día, la hora, quién eres y el pago— pero nunca
  * dos a la vez en pantalla: lo ya resuelto se encoge a una línea con su
  * palomita y lo que falta se anuncia al pie. Así nadie se pregunta cuánto
  * queda, que es la razón por la que la gente abandona un formulario a la
  * mitad.
  *
- * ── El pago va ANTES de la agenda, y eso cambió ──
+ * ── El pago va AL FINAL, y la cita no existe hasta que entra ──
  *
- * Antes era al revés: se apartaba la hora y se pagaba después, porque pagar
- * a mano tarda y nadie debía quedarse sin su hora mientras abría el banco.
- * Ahora se cobra primero, a propósito: la agenda se llenaba de horas
- * apartadas que nunca se pagaban, y cada una era un hueco muerto que Henry
- * no podía dar a nadie más.
+ * Hubo dos intentos antes de éste. El primero apartaba la hora y dejaba el
+ * pago para después: la agenda se llenaba de horas que nadie pagaba y Henry
+ * no podía distinguirlas de las buenas. El segundo cobraba primero, y traía
+ * algo peor: quien tardaba diez minutos en su banco volvía y su hora ya no
+ * estaba — una devolución a mano de un pago que Zelle no revierte.
  *
- * Lo que se acepta a cambio está dicho en `components/paso-pago.tsx`: quien
- * paga y tarda diez minutos puede volver y no encontrar la hora que quería,
- * y eso es una devolución a mano de un pago que Zelle no revierte. Por eso
- * esa pantalla dice cuántas horas quedan ANTES de mandar a nadie a su banco.
+ * Lo de ahora no es un punto medio, es otra cosa. Al llenar los datos la
+ * hora queda RETENIDA a nombre de esa persona: nadie más puede tomarla, pero
+ * para Henry todavía no es una cita. Se convierte en cita cuando el pago se
+ * confirma, y la retención caduca sola a la media hora si eso no pasa. Nadie
+ * paga sin hueco y ningún hueco se queda muerto.
  *
- * Y el botón «ya hice el pago» no comprueba nada — no puede: Zelle sólo
- * avisa al banco de Henry. Es una declaración, no una puerta.
+ * ── Y ahora el pago se comprueba de verdad ──
+ *
+ * Ya no hay botón de «ya pagué» que no compruebe nada. Con tarjeta lo dice
+ * Stripe con un webhook firmado; con Zelle lo dice el correo que el banco le
+ * manda a Henry, que un proceso lee cada dos minutos y concilia solo
+ * (`lib/zelle/`). El código de cuatro dígitos del memo existe para el día en
+ * que dos personas paguen lo mismo: el resto de los días sobra.
  *
  * ── La agenda es la de Henry, siempre ──
  *
@@ -75,16 +81,19 @@ import { PasoPago } from "@/components/paso-pago";
  * configurado antes no lo notaba nadie.
  */
 
-type Paso = "video" | "pago" | "dia" | "hora" | "datos";
+type Paso = "video" | "dia" | "hora" | "datos" | "pago";
 
 export function FormularioReserva({
   dias,
   conectada,
   servicio,
+  hayTarjeta,
 }: {
   dias: DiaConHuecos[];
   conectada: boolean;
   servicio: Servicio;
+  /** Si Stripe está configurado. Sin ello sólo se ofrece Zelle. */
+  hayTarjeta: boolean;
 }) {
   const router = useRouter();
   const [enCurso, empezar] = useTransition();
@@ -102,6 +111,9 @@ export function FormularioReserva({
   const [eligiendoEstado, setEligiendoEstado] = useState(false);
   const [enEeuu, setEnEeuu] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /* Lo que devuelve la base al retener la hora: sin esto no se puede pagar
+     esa cita concreta ni enseñar el código del memo. */
+  const [apartada, setApartada] = useState<{ citaId: number; codigoPago: string } | null>(null);
 
   /* La zona del navegador, resuelta una vez. En el primer render del
      servidor no existe, así que se cae a la de Utah y se corrige al montar
@@ -167,17 +179,18 @@ export function FormularioReserva({
         enEeuu,
         whatsapp,
         servicio: servicio.id,
+        /* El estado que eligió, que hasta ahora se usaba sólo para pintar la
+           hora local y se tiraba. La columna existe desde `0007`. */
+        estadoUsa: enEeuu ? (estado?.nombre ?? undefined) : undefined,
         /* La zona del navegador viaja con la reserva para que el panel pueda
            enseñar la hora de esa persona además de la de Utah. Nunca se
            deduce de la IP: una IP puede ser la de una VPN. */
         zonaHoraria: zonaVisitante,
       });
       if (r.ok) {
-        /* La cita viaja a la pantalla de pago por `sessionStorage`, NO por la
-           URL: una dirección se queda en el historial del teléfono y en el
-           portapapeles de quien la copie. Y si el almacenamiento está
-           bloqueado, la pantalla de pago sigue funcionando sin la hora — que
-           es un adorno, mientras que los datos del banco no lo son. */
+        /* La cita viaja a la pantalla de gracias por `sessionStorage`, NO por
+           la URL: una dirección se queda en el historial del teléfono y en el
+           portapapeles de quien la copie. */
         try {
           sessionStorage.setItem(
             CLAVE_CITA,
@@ -186,32 +199,30 @@ export function FormularioReserva({
         } catch {
           /* modo privado */
         }
-        router.push("/gracias");
+        /* La hora queda RETENIDA, no reservada. Lo que la convierte en cita
+           es el pago, que es el paso siguiente. */
+        setApartada({ citaId: r.citaId, codigoPago: r.codigoPago });
+        setPaso("pago");
       } else setError(r.motivo);
     });
   }
 
-  /* Cuántos huecos quedan en todo lo que se ofrece. Se dice en la pantalla
-     del pago, antes de mandar a nadie a abrir su banco: cobrar primero sólo
-     es defendible si quien paga sabe que hay dónde meterse. */
-  const horasLibres = dias.reduce(
-    (n, d) => n + d.huecos.filter((h) => h.libre).length,
-    0,
-  );
-
-  /* Los dos primeros pasos ocupan la pantalla entera y no comparten nada con
-     la agenda, así que salen por su cuenta en vez de sumar dos ramas más al
+  /* El video y el pago ocupan la pantalla entera y no comparten nada con la
+     agenda, así que salen por su cuenta en vez de sumar dos ramas más al
      árbol de abajo. */
   if (paso === "video") {
-    return <PasoVideo servicio={servicio} onContinuar={() => setPaso("pago")} />;
+    return <PasoVideo servicio={servicio} onContinuar={() => setPaso("dia")} />;
   }
 
-  if (paso === "pago") {
+  if (paso === "pago" && apartada) {
     return (
       <PasoPago
         servicio={servicio}
-        horasLibres={horasLibres}
-        onPagado={() => setPaso("dia")}
+        citaId={apartada.citaId}
+        codigoPago={apartada.codigoPago}
+        correo={correo.trim().toLowerCase()}
+        hayTarjeta={hayTarjeta}
+        onListo={() => router.push("/gracias")}
       />
     );
   }
@@ -553,7 +564,7 @@ export function FormularioReserva({
             disabled={enCurso || !nombre || !correo || !whatsapp || !pais || enEeuu === null}
             className="mt-6 flex min-h-[60px] w-full items-center justify-between rounded-full bg-acento px-7 text-[18px] font-extrabold tracking-[-0.02em] text-fondo transition-opacity disabled:opacity-40"
           >
-            <span>{enCurso ? "Apartando…" : "Apartar mi hora"}</span>
+            <span>{enCurso ? "Guardando tu hora…" : "Guardar mi hora y pagar"}</span>
             <span>{`$${servicio.precioUsd}`}</span>
           </button>
         </>

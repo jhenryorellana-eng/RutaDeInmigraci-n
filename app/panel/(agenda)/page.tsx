@@ -47,6 +47,11 @@ type Cita = {
   en_eeuu: boolean;
   whatsapp: string | null;
   zona_horaria: string | null;
+  /* `pendiente` es una hora RETENIDA por alguien que aún no ha pagado.
+     Ocupa el hueco igual que una cita, pero no es una cita: si se pintaran
+     iguales, Henry contaría como trabajo del jueves algo que puede
+     evaporarse en media hora. */
+  estado: string;
 };
 
 type Cierre = { id: number; inicia_en: string; termina_en: string };
@@ -80,7 +85,7 @@ export default async function PantallaCalendario({
   const [{ data: citas }, { data: cierres }] = await Promise.all([
     supabase
       .from("citas")
-      .select("id, inicia_en, nombre, nacionalidad, en_eeuu, whatsapp, zona_horaria")
+      .select("id, inicia_en, nombre, nacionalidad, en_eeuu, whatsapp, zona_horaria, estado")
       .gte("inicia_en", desde.toISOString())
       .lt("inicia_en", hasta.toISOString())
       .neq("estado", "cancelada")
@@ -126,6 +131,7 @@ export default async function PantallaCalendario({
           estado: "cita",
           iso,
           nombre: cita.nombre,
+          pendiente: cita.estado === "pendiente",
           pais: nombrePais(cita.nacionalidad),
           enEeuu: cita.en_eeuu,
           hora: horaEnZona(t),
@@ -162,8 +168,10 @@ export default async function PantallaCalendario({
     pintados.every((d) => d.celdas[i]?.estado === "fuera"),
   );
 
+  /* Las retenidas sin pagar NO cuentan como apartadas: el número de arriba
+     es lo que Henry tiene que atender, y una retención todavía no lo es. */
   const apartadas = pintados.reduce(
-    (n, d) => n + d.celdas.filter((c) => c.estado === "cita").length,
+    (n, d) => n + d.celdas.filter((c) => c.estado === "cita" && !c.pendiente).length,
     0,
   );
   const libres = pintados.reduce(
