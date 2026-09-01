@@ -4,7 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * LAS CUATRO PANTALLAS DEL PANEL.
+ * LAS TRES PANTALLAS DEL PANEL.
+ *
+ * Eran cuatro. «Mi horario» se plegó dentro del calendario porque mezclaba
+ * tres cosas sin relación entre sí, y dos de ellas la rejilla ya las hacía
+ * mejor arrastrando. Una pestaña menos es una decisión menos cada vez que se
+ * abre la agenda.
  *
  * El mismo componente sirve arriba en escritorio y abajo en el teléfono; lo
  * único que cambia son las clases que le pasa el layout. Mantenerlo en un
@@ -14,9 +19,8 @@ import { usePathname } from "next/navigation";
 
 const PANTALLAS = [
   { href: "/panel", texto: "Calendario", icono: IconoCalendario },
-  { href: "/panel/horario", texto: "Mi horario", icono: IconoReloj },
-  { href: "/panel/personas", texto: "Personas", icono: IconoPersonas },
   { href: "/panel/pagos", texto: "Pagos", icono: IconoPagos },
+  { href: "/panel/personas", texto: "Personas", icono: IconoPersonas },
 ] as const;
 
 export function Navegacion({ className = "" }: { className?: string }) {
@@ -64,25 +68,6 @@ function IconoCalendario({ className = "" }: { className?: string }) {
     >
       <rect width="18" height="18" x="3" y="4" rx="2" />
       <path d="M3 10h18M8 2v4M16 2v4" />
-    </svg>
-  );
-}
-
-function IconoReloj({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="21"
-      height="21"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
     </svg>
   );
 }

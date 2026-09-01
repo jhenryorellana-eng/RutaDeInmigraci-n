@@ -14,11 +14,18 @@ import {
   type Tramo,
 } from "@/lib/horario";
 import { nombrePais } from "@/lib/paises";
+import { AjustesAgenda } from "@/components/panel/ajustes-agenda";
 import { clienteServidor } from "@/lib/supabase/servidor";
-import { leerTramos } from "@/lib/tramos";
+import { leerTramos, leerTramosConId } from "@/lib/tramos";
 
 /**
- * EL CALENDARIO DE LA SEMANA.
+ * EL CALENDARIO · y ya no hace falta ir a ningún otro sitio.
+ *
+ * Antes esto convivía con una pantalla aparte, «Mi horario», y eso hacía
+ * pensar dos veces dónde estaba cada cosa. Dos de las tres que vivían allí
+ * el calendario ya las hace mejor arrastrando —cerrar horas y apuntar lo
+ * suyo—, así que lo que queda de aquello baja aquí, plegado, con un resumen
+ * de una línea. Una pantalla menos que aprender.
  *
  * Enseña quién apartó cada hora y deja cerrar las libres tocándolas. Toda la
  * cuenta —qué celda es qué— se hace aquí, en el servidor, y al navegador
@@ -54,7 +61,7 @@ type Cita = {
   estado: string;
 };
 
-type Cierre = { id: number; inicia_en: string; termina_en: string };
+type Cierre = { id: number; inicia_en: string; termina_en: string; nota: string | null };
 
 /* Lo suyo. Vive en su propia tabla y no toca NADA de la lógica de las
    audiencias: no sale en Personas, no entra en la conciliación, no tiene
@@ -71,7 +78,7 @@ export default async function PantallaCalendario({
   const { s } = await searchParams;
   const salto = acotar(Number.parseInt(s ?? "0", 10));
 
-  const tramos = await leerTramos();
+  const [tramos, tramosConId] = await Promise.all([leerTramos(), leerTramosConId()]);
   const ahora = new Date();
 
   const lunesActual = lunesDe(ahora);
@@ -87,7 +94,8 @@ export default async function PantallaCalendario({
   const hasta = instanteEnZona(finLunes.anio, finLunes.mes, finLunes.dia, 0);
 
   const supabase = await clienteServidor();
-  const [{ data: citas }, { data: cierres }, { data: eventos }] = await Promise.all([
+  const [{ data: citas }, { data: cierres }, { data: eventos }, { data: cierresVivos }] =
+    await Promise.all([
     supabase
       .from("citas")
       .select("id, inicia_en, nombre, nacionalidad, en_eeuu, whatsapp, zona_horaria, estado")
@@ -105,6 +113,14 @@ export default async function PantallaCalendario({
       .select("id, titulo, inicia_en, termina_en, ocupa")
       .lt("inicia_en", hasta.toISOString())
       .gt("termina_en", desde.toISOString()),
+    /* Los cierres largos pueden caer en semanas que no se están viendo, así
+       que su lista no puede depender de la semana pintada. */
+    supabase
+      .from("cierres")
+      .select("id, inicia_en, termina_en, nota")
+      .gte("termina_en", new Date().toISOString())
+      .order("inicia_en", { ascending: true })
+      .limit(60),
   ]);
 
   const porHora = new Map<number, Cita>();
@@ -216,6 +232,7 @@ export default async function PantallaCalendario({
   );
 
   return (
+    <>
     <Calendario
       /* Cambiar de semana remonta el componente: así lo marcado y el día que
          se ve en el teléfono se reinician sin un efecto que también saltara
@@ -233,6 +250,12 @@ export default async function PantallaCalendario({
       puedeAvanzar={salto < SEMANAS_ADELANTE}
       tramosVacios={tramos.length === 0}
     />
+    <AjustesAgenda
+      tramos={tramosConId}
+      cierres={(cierresVivos ?? []) as Cierre[]}
+      clavePublica={process.env.NEXT_PUBLIC_VAPID_PUBLICA ?? ""}
+    />
+    </>
   );
 }
 
