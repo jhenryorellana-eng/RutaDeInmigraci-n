@@ -28,7 +28,18 @@ import Stripe from "stripe";
  * que lleva a un error es peor que no tener botón de tarjeta.
  */
 
-const CLAVE = process.env.STRIPE_SECRET_KEY ?? "";
+/**
+ * La clave, LIMPIA.
+ *
+ * El `trim()` no es cosmético. Al pegar una clave en el panel de Vercel es
+ * facilísimo arrastrar un salto de línea o un espacio final, y eso no da un
+ * error claro: el SDK construye la cabecera `Authorization: Bearer sk_…
+`,
+ * `fetch` la rechaza por cabecera inválida, y el SDK envuelve ese fallo como
+ * «An error occurred with our connection to Stripe» — un mensaje que apunta
+ * a la red cuando el problema está en un carácter invisible.
+ */
+const CLAVE = (process.env.STRIPE_SECRET_KEY ?? "").trim();
 
 /** Hay con qué COBRAR: basta la clave secreta para abrir una sesión. */
 export const hayStripe = CLAVE.length > 0;
@@ -52,8 +63,8 @@ export const hayStripe = CLAVE.length > 0;
  */
 export const sePuedeCobrarConTarjeta =
   CLAVE.length > 0 &&
-  (process.env.STRIPE_WEBHOOK_SECRET ?? "").length > 0 &&
-  (process.env.AVISO_SECRETO ?? "").length > 0;
+  (process.env.STRIPE_WEBHOOK_SECRET ?? "").trim().length > 0 &&
+  (process.env.AVISO_SECRETO ?? "").trim().length > 0;
 
 /**
  * El cliente, o `null` si no hay clave. Nunca lanza al importar.

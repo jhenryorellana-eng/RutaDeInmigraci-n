@@ -47,7 +47,7 @@ export type ResumenConciliacion = {
 };
 
 function secreto(): string | null {
-  return process.env.AVISO_SECRETO || null;
+  return process.env.AVISO_SECRETO?.trim() || null;
 }
 
 /**

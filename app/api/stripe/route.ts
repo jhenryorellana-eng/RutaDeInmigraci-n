@@ -30,8 +30,8 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   const s = stripe();
-  const firmaSecreta = process.env.STRIPE_WEBHOOK_SECRET;
-  const secretoBase = process.env.AVISO_SECRETO;
+  const firmaSecreta = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+  const secretoBase = process.env.AVISO_SECRETO?.trim();
 
   if (!hayStripe || !s || !firmaSecreta || !secretoBase) {
     return NextResponse.json({ error: "sin configurar" }, { status: 503 });
