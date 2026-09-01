@@ -19,6 +19,13 @@
   --color-aviso: #FBE0A6;
   --color-apagado: #5A6E85;
 
+  /* LO SUYO, en el calendario del panel.
+     Un violeta suave, y a propósito fuera de la familia de los servicios: si
+     un evento personal se pintara con el tono de una preparación, de un
+     vistazo parecería una cita. Aquí el color no clasifica un servicio, dice
+     «esto no es trabajo con nadie». Medido sobre el panel (#19273E): 9.4:1. */
+  --color-personal: #C3B2E8;
+
   /* ── La pared de enlaces (/links) ──
      ═══════════════════════════════════════════════════════════
 

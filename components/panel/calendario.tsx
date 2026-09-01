@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
-import { cerrarHoras, cerrarRestoDeHoy, reabrirHora } from "@/app/panel/acciones";
+import {
+  apuntarEvento,
+  borrarEvento,
+  cerrarHoras,
+  cerrarRestoDeHoy,
+  reabrirHora,
+} from "@/app/panel/acciones";
 import { horaSuelta } from "@/lib/horario";
 
 /**
@@ -36,6 +42,18 @@ export type CeldaDia =
       /** La de esa persona. `null` si está a la misma hora que Utah. */
       horaSuya: string | null;
       whatsapp: string | null;
+    }
+  | {
+      /* Lo que Henry apuntó: el dentista, un viaje, una llamada. NO es una
+         cita: otra tabla, sin precio, sin pago y fuera de Personas. */
+      estado: "evento";
+      iso: string;
+      eventoId: number;
+      titulo: string;
+      /** Si además le quita la hora al público. */
+      ocupa: boolean;
+      /** Sólo la primera hora de una tira escribe el título. */
+      primera: boolean;
     }
   | { estado: "libre"; iso: string }
   | { estado: "cerrada"; iso: string; suelta: boolean }
@@ -78,6 +96,9 @@ export function Calendario({
   tramosVacios,
 }: Props) {
   const [marcadas, setMarcadas] = useState<string[]>([]);
+  /* Lo que se va a apuntar sobre lo marcado. Vacío = todavía no ha escrito. */
+  const [tituloEvento, setTituloEvento] = useState("");
+  const [ocupa, setOcupa] = useState(true);
   const [arrastrando, setArrastrando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enCurso, empezar] = useTransition();
@@ -128,6 +149,27 @@ export function Calendario({
       const r = await cerrarHoras(lista);
       if (r.ok) setMarcadas([]);
       else setError(r.motivo);
+    });
+  }
+
+  function apuntar() {
+    setError(null);
+    const lista = [...marcadas];
+    const texto = tituloEvento;
+    empezar(async () => {
+      const r = await apuntarEvento(lista, texto, ocupa);
+      if (r.ok) {
+        setMarcadas([]);
+        setTituloEvento("");
+      } else setError(r.motivo);
+    });
+  }
+
+  function quitarEvento(id: number) {
+    setError(null);
+    empezar(async () => {
+      const r = await borrarEvento(id);
+      if (!r.ok) setError(r.motivo);
     });
   }
 
@@ -302,6 +344,7 @@ export function Calendario({
                     onEntrar={anadir}
                     onAlternar={alternar}
                     onReabrir={abrir}
+                    onQuitarEvento={quitarEvento}
                   />
                 ))
               )}
@@ -310,27 +353,86 @@ export function Calendario({
         })}
       </div>
 
-      {/* ── La barra de lo marcado ── */}
+      {/* ── La barra de lo marcado ──
+
+          Arrastrar por la rejilla marca horas, y aquí se decide qué hacer con
+          ellas. Son DOS cosas distintas y por eso hay dos caminos:
+
+          · escribir un título → queda apuntado en su calendario
+          · no escribir nada  → se cierran, como siempre
+
+          El campo de texto se lleva el foco solo al marcar, así que el gesto
+          entero es: arrastrar, escribir, Enter. Sin tocar el ratón otra vez.
+          Y si no escribe nada, Enter no hace nada: cerrar es una decisión
+          distinta y tiene su botón. ── */}
       {marcadas.length > 0 ? (
-        <div className="mt-3.5 hidden flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-[18px] border border-acento/40 bg-panel px-6 py-3.5 md:flex">
-          <span className="text-[17px]">{resumen}</span>
-          <div className="flex items-center gap-2.5">
+        <div className="mt-3.5 hidden flex-col gap-3 rounded-[18px] border border-acento/40 bg-panel px-6 py-4 md:flex">
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+            <span className="text-[17px]">{resumen}</span>
             <button
               type="button"
-              onClick={() => setMarcadas([])}
+              onClick={() => {
+                setMarcadas([]);
+                setTituloEvento("");
+              }}
               className="min-h-11 rounded-full px-4 text-[15px] text-tinta-suave"
             >
               Quitar la marca
             </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <input
+              type="text"
+              value={tituloEvento}
+              onChange={(e) => setTituloEvento(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && tituloEvento.trim()) apuntar();
+                if (e.key === "Escape") {
+                  setMarcadas([]);
+                  setTituloEvento("");
+                }
+              }}
+              autoFocus
+              maxLength={80}
+              placeholder="¿Qué vas a hacer? Dentista, viaje, comida…"
+              className="min-h-12 flex-1 basis-[16rem] rounded-full bg-white/[0.07] px-5 text-[16px] text-tinta outline-none placeholder:text-tinta-tenue"
+            />
+
+            <button
+              type="button"
+              onClick={apuntar}
+              disabled={enCurso || !tituloEvento.trim()}
+              className="min-h-12 rounded-full bg-acento px-6 text-[16px] font-extrabold text-fondo disabled:opacity-40"
+            >
+              {enCurso ? "Guardando…" : "Apuntar"}
+            </button>
+
+            <span aria-hidden="true" className="h-7 w-px bg-white/15" />
+
             <button
               type="button"
               onClick={confirmarCierre}
               disabled={enCurso}
-              className="min-h-12 rounded-full bg-acento px-6 text-[16px] font-extrabold text-fondo disabled:opacity-50"
+              className="min-h-12 rounded-full border border-white/25 px-5 text-[15px] disabled:opacity-50"
             >
-              {enCurso ? "Cerrando…" : "Cerrar estas horas"}
+              {enCurso ? "Cerrando…" : "Cerrar sin apuntar"}
             </button>
           </div>
+
+          {/* El interruptor. Por defecto ocupa, porque casi todo lo que uno
+              apunta en un calendario es algo que va a estar haciendo. */}
+          <label className="flex cursor-pointer items-center gap-2.5 text-[15px] text-tinta-suave">
+            <input
+              type="checkbox"
+              checked={ocupa}
+              onChange={(e) => setOcupa(e.target.checked)}
+              className="size-[18px] accent-[var(--color-acento)]"
+            />
+            {ocupa
+              ? "Ocupa mi hora — nadie podrá reservarla"
+              : "Sólo es un apunte — la hora se sigue vendiendo"}
+          </label>
         </div>
       ) : null}
 
@@ -381,6 +483,7 @@ export function Calendario({
                   })
                 }
                 onReabrir={abrir}
+                onQuitarEvento={quitarEvento}
               />
             ),
           )}
@@ -429,6 +532,7 @@ function Celda({
   onEntrar,
   onAlternar,
   onReabrir,
+  onQuitarEvento,
 }: {
   celda: CeldaDia;
   etiqueta: string;
@@ -439,9 +543,41 @@ function Celda({
   onEntrar: (iso: string) => void;
   onAlternar: (iso: string) => void;
   onReabrir: (iso: string) => void;
+  onQuitarEvento: (id: number) => void;
 }) {
   if (celda.estado === "fuera") {
     return <span className="m-[3px] rounded-xl bg-white/[0.03]" aria-hidden="true" />;
+  }
+
+  if (celda.estado === "evento") {
+    return (
+      <button
+        type="button"
+        onClick={() => onQuitarEvento(celda.eventoId)}
+        title={`${celda.titulo}${celda.ocupa ? "" : " · no ocupa la hora"} — pulsa para quitarlo`}
+        /* Rayado y en malva: se distingue de una cita sin leer una palabra.
+           El que NO ocupa va más apagado, porque esa hora sigue a la venta y
+           no debe parecer bloqueada. */
+        className={
+          celda.ocupa
+            ? "m-[3px] flex min-w-0 items-start rounded-xl border border-dashed border-personal/60 bg-personal/[0.14] px-2.5 py-2 text-left"
+            : "m-[3px] flex min-w-0 items-start rounded-xl border border-dashed border-personal/30 bg-personal/[0.06] px-2.5 py-2 text-left"
+        }
+      >
+        {celda.primera ? (
+          <span className="min-w-0">
+            <span className="block truncate text-[15px] font-bold text-personal">
+              {celda.titulo}
+            </span>
+            {!celda.ocupa ? (
+              <span className="block text-[12px] text-tinta-tenue">no ocupa</span>
+            ) : null}
+          </span>
+        ) : (
+          <span className="text-[13px] text-personal/70">·</span>
+        )}
+      </button>
+    );
   }
 
   if (celda.estado === "cita") {
@@ -556,6 +692,7 @@ function FilaTelefono({
   ocupado,
   onCerrar,
   onReabrir,
+  onQuitarEvento,
 }: {
   hora: number;
   celda: Exclude<CeldaDia, { estado: "fuera" }>;
@@ -563,8 +700,29 @@ function FilaTelefono({
   ocupado: boolean;
   onCerrar: (iso: string) => void;
   onReabrir: (iso: string) => void;
+  onQuitarEvento: (id: number) => void;
 }) {
   if (descanso) return null;
+
+  if (celda.estado === "evento") {
+    return (
+      <button
+        type="button"
+        onClick={() => onQuitarEvento(celda.eventoId)}
+        className="flex w-full items-center gap-3.5 rounded-2xl border border-dashed border-personal/60 bg-personal/[0.12] px-4 py-3.5 text-left"
+      >
+        <span className="w-[52px] shrink-0 text-[16px] text-personal tabular-nums">
+          {horaSuelta(hora)}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[17px] font-bold text-personal">{celda.titulo}</span>
+          <span className="block text-[14px] text-tinta-tenue">
+            {celda.ocupa ? "lo tuyo · ocupa la hora" : "lo tuyo · no ocupa"}
+          </span>
+        </span>
+      </button>
+    );
+  }
 
   if (celda.estado === "cita") {
     return (
@@ -746,7 +904,8 @@ function Leyenda() {
   return (
     <div className="mt-4 hidden flex-wrap items-center gap-x-6 gap-y-2 md:flex">
       <Marca clase="border border-acento bg-acento/20">apartada por alguien</Marca>
-      <Marca clase="border border-dashed border-white/30">libre · tócala para cerrarla</Marca>
+      <Marca clase="border border-dashed border-personal/60 bg-personal/20">lo tuyo · tócalo para quitarlo</Marca>
+      <Marca clase="border border-dashed border-white/30">libre · arrástrala para apuntar o cerrar</Marca>
       <Marca estilo={FRANJA_GRIS}>cerrada por ti · tócala para reabrirla</Marca>
       <Marca estilo={FRANJA_AVISO}>tu descanso fijo</Marca>
       <Marca clase="bg-white/[0.05]">fuera de tu horario</Marca>

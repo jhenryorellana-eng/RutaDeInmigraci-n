@@ -56,6 +56,11 @@ type Cita = {
 
 type Cierre = { id: number; inicia_en: string; termina_en: string };
 
+/* Lo suyo. Vive en su propia tabla y no toca NADA de la lógica de las
+   audiencias: no sale en Personas, no entra en la conciliación, no tiene
+   precio. Lo único que comparte es la disponibilidad, y sólo cuando `ocupa`. */
+type Evento = { id: number; titulo: string; inicia_en: string; termina_en: string; ocupa: boolean };
+
 const HORA_MS = 60 * 60 * 1000;
 
 export default async function PantallaCalendario({
@@ -82,7 +87,7 @@ export default async function PantallaCalendario({
   const hasta = instanteEnZona(finLunes.anio, finLunes.mes, finLunes.dia, 0);
 
   const supabase = await clienteServidor();
-  const [{ data: citas }, { data: cierres }] = await Promise.all([
+  const [{ data: citas }, { data: cierres }, { data: eventos }] = await Promise.all([
     supabase
       .from("citas")
       .select("id, inicia_en, nombre, nacionalidad, en_eeuu, whatsapp, zona_horaria, estado")
@@ -93,6 +98,11 @@ export default async function PantallaCalendario({
     supabase
       .from("cierres")
       .select("id, inicia_en, termina_en")
+      .lt("inicia_en", hasta.toISOString())
+      .gt("termina_en", desde.toISOString()),
+    supabase
+      .from("eventos")
+      .select("id, titulo, inicia_en, termina_en, ocupa")
       .lt("inicia_en", hasta.toISOString())
       .gt("termina_en", desde.toISOString()),
   ]);
@@ -111,6 +121,18 @@ export default async function PantallaCalendario({
     suelto: new Date(c.termina_en).getTime() - new Date(c.inicia_en).getTime() <= HORA_MS,
   }));
 
+  /* Un evento puede durar varias horas, así que se despliega hora a hora
+     para poder preguntar por celda. `primera` marca dónde va el título: en
+     una tira de tres horas sólo se escribe arriba. */
+  const porHoraEvento = new Map<number, { id: number; titulo: string; ocupa: boolean; primera: boolean }>();
+  for (const e of ((eventos ?? []) as Evento[])) {
+    const ini = new Date(e.inicia_en).getTime();
+    const fin = new Date(e.termina_en).getTime();
+    for (let t = ini; t < fin; t += HORA_MS) {
+      porHoraEvento.set(t, { id: e.id, titulo: e.titulo, ocupa: e.ocupa, primera: t === ini });
+    }
+  }
+
   const horas = franjaDeHoras(tramos);
   const claveDeHoy = claveHoy(ahora);
 
@@ -125,6 +147,8 @@ export default async function PantallaCalendario({
       const ms = t.getTime();
       const iso = t.toISOString();
 
+      /* El orden importa: una cita PAGADA manda sobre lo que él apuntó. Si
+         hay las dos, lo que tiene que ver es a quién atiende. */
       const cita = porHora.get(ms);
       if (cita) {
         return {
@@ -140,6 +164,18 @@ export default async function PantallaCalendario({
              se equivocó. */
           horaSuya: horaDeQuienReserva(t, cita.zona_horaria),
           whatsapp: cita.whatsapp,
+        };
+      }
+
+      const suyo = porHoraEvento.get(ms);
+      if (suyo) {
+        return {
+          estado: "evento",
+          iso,
+          eventoId: suyo.id,
+          titulo: suyo.titulo,
+          ocupa: suyo.ocupa,
+          primera: suyo.primera,
         };
       }
 

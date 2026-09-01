@@ -289,3 +289,84 @@ export async function quitarTramo(id: number): Promise<Respuesta> {
   refrescar();
   return { ok: true };
 }
+
+// ═══════════════════════════════════════════════════════════════
+// LO SUYO — la agenda personal de Henry
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Apunta algo en el calendario: el dentista, un viaje, una comida.
+ *
+ * ── Qué comparte y qué no con una cita ──
+ *
+ * NADA de la lógica de las audiencias. Un evento vive en su propia tabla:
+ * no sale en Personas, no entra en la conciliación de Zelle ni en Stripe, no
+ * tiene precio ni pago, y no cuenta en el número de horas apartadas. Son dos
+ * cosas distintas que se PINTAN juntas, no una cosa mezclada.
+ *
+ * Lo único en lo que se ponen de acuerdo es la disponibilidad, y tiene que
+ * ser así: si Henry apunta el dentista a las dos y el sitio sigue vendiendo
+ * las dos, alguien la compra y él tiene dos sitios donde estar. Por eso un
+ * evento con `ocupa` entra en `horas_ocupadas()`, igual que ya hacían los
+ * cierres — una sola respuesta a «¿esta hora se puede vender?».
+ *
+ * `ocupa: false` es para lo que no le quita la hora: «llamar a Yenny»,
+ * «preparar papeles». Se ve en su rejilla y el sitio la sigue ofreciendo.
+ */
+export async function apuntarEvento(
+  isos: string[],
+  titulo: string,
+  ocupa = true,
+): Promise<Respuesta> {
+  const limpio = titulo.trim();
+  if (limpio.length === 0) return { ok: false, motivo: "Escribe qué vas a hacer." };
+  if (limpio.length > 80) return { ok: false, motivo: "El título es demasiado largo." };
+  if (isos.length === 0) return { ok: false, motivo: "No hay ninguna hora marcada." };
+  if (isos.length > HORAS_MAXIMAS_POR_TACADA) {
+    return { ok: false, motivo: "Son demasiadas horas de una vez." };
+  }
+
+  const instantes: number[] = [];
+  for (const iso of isos) {
+    const t = new Date(iso);
+    if (Number.isNaN(t.getTime())) return { ok: false, motivo: "Hay una hora que no entiendo." };
+    if (t.getTime() % HORA_MS !== 0) {
+      return { ok: false, motivo: "Sólo se pueden apuntar horas en punto." };
+    }
+    instantes.push(t.getTime());
+  }
+  instantes.sort((a, b) => a - b);
+
+  /* Las horas seguidas se juntan en UN evento, y las sueltas quedan aparte.
+     Arrastrar de tres a seis tiene que dar «Dentista, de 3 a 6» y no tres
+     filas iguales que hay que borrar una a una. */
+  const tramos: { desde: number; hasta: number }[] = [];
+  for (const t of instantes) {
+    const ultimo = tramos.at(-1);
+    if (ultimo && ultimo.hasta === t) ultimo.hasta = t + HORA_MS;
+    else tramos.push({ desde: t, hasta: t + HORA_MS });
+  }
+
+  const supabase = await clienteServidor();
+  const { error } = await supabase.from("eventos").insert(
+    tramos.map((t) => ({
+      titulo: limpio,
+      inicia_en: new Date(t.desde).toISOString(),
+      termina_en: new Date(t.hasta).toISOString(),
+      ocupa,
+    })),
+  );
+
+  if (error) return { ok: false, motivo: "No se pudo apuntar. Vuelve a intentarlo." };
+  refrescar();
+  return { ok: true };
+}
+
+/** Quita algo del calendario personal. Si ocupaba una hora, la libera. */
+export async function borrarEvento(id: number): Promise<Respuesta> {
+  const supabase = await clienteServidor();
+  const { error } = await supabase.from("eventos").delete().eq("id", id);
+  if (error) return { ok: false, motivo: "No se pudo borrar." };
+  refrescar();
+  return { ok: true };
+}
