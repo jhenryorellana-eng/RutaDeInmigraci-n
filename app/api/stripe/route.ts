@@ -44,7 +44,11 @@ export async function POST(req: NextRequest) {
 
   let evento;
   try {
-    evento = s.webhooks.constructEvent(crudo, firma, firmaSecreta);
+    /* La variante asíncrona a propósito: verifica igual, pero no depende de
+       que el cifrado SÍNCRONO de Node esté disponible. Con el transporte de
+       `fetch` que usa el cliente —el que arregló el fallo de conexión— es la
+       que Stripe recomienda, y funciona igual en los dos entornos. */
+    evento = await s.webhooks.constructEventAsync(crudo, firma, firmaSecreta);
   } catch {
     /* Firma inválida: o no viene de Stripe, o alguien manipuló el cuerpo. En
        los dos casos se rechaza sin mirar el contenido. */

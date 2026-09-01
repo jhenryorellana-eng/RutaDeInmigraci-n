@@ -55,10 +55,36 @@ export const sePuedeCobrarConTarjeta =
   (process.env.STRIPE_WEBHOOK_SECRET ?? "").length > 0 &&
   (process.env.AVISO_SECRETO ?? "").length > 0;
 
-/** El cliente, o `null` si no hay clave. Nunca lanza al importar. */
+/**
+ * El cliente, o `null` si no hay clave. Nunca lanza al importar.
+ *
+ * ── Por qué se le cambia el transporte a `fetch` ──
+ *
+ * Por defecto el SDK de Stripe habla por el módulo `http` de Node con
+ * keep-alive, pensado para un servidor de toda la vida que mantiene la
+ * conexión viva entre peticiones. Aquí no hay tal servidor: cada llamada
+ * corre en una función efímera que nace y muere, y ese cliente falla con
+ * «An error occurred with our connection to Stripe. Request was retried 2
+ * times» — que es exactamente lo que salió en producción.
+ *
+ * La pista de que era el transporte y no la red: Supabase, desde estas
+ * mismas funciones, funcionaba sin un fallo. Y Supabase habla por `fetch`.
+ *
+ * `createFetchHttpClient()` es el transporte que Stripe publica para
+ * entornos sin servidor. Sin estado entre llamadas, sin conexiones que
+ * mantener vivas.
+ *
+ * Y dos ajustes más, para que un fallo se vea en vez de colgarse: un reintento
+ * en vez de dos, y un tope de 20 segundos. Quien está esperando para pagar
+ * merece un error rápido antes que una pantalla parada un minuto.
+ */
 export function stripe(): Stripe | null {
   if (!hayStripe) return null;
-  return new Stripe(CLAVE);
+  return new Stripe(CLAVE, {
+    httpClient: Stripe.createFetchHttpClient(),
+    maxNetworkRetries: 1,
+    timeout: 20_000,
+  });
 }
 
 /**
