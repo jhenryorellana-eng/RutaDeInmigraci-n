@@ -70,6 +70,13 @@
   --color-coral: #F2A099;
   --color-verde: #7FD6AC;
 
+  /* El suelo del panel de la audiencia de mérito, en la portada.
+     Es el único sitio del sitio donde el fondo deja de ser azul: esa
+     audiencia es la que decide el caso, y el cambio de temperatura hace ese
+     trabajo sin una palabra de más. Sale del rojo de la marca (#D8201F)
+     llevado casi al negro. Blanco encima: 15.1:1. */
+  --color-merito: #2A0908;
+
   /* Las DOS de USALatino Prime, leídas de sus variables `--font-head` y
      `--font-body`. Antes eran Fraunces y Manrope, elegidas aquí.
 
