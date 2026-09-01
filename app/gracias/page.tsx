@@ -1,25 +1,28 @@
 import Link from "next/link";
 
-import { PagoZelle } from "@/components/pago-zelle";
+import { CitaConfirmada } from "@/components/cita-confirmada";
 
 /**
- * HOJA 3 — APARTADA, Y AHORA EL PAGO.
+ * HOJA 3 — TODO HECHO.
  *
- * La hora ya está guardada cuando se llega aquí, y eso se dice primero: es
- * lo que quita la angustia. Después viene lo que falta, que es pagar.
+ * Llegar aquí significa que el pago ya salió y la hora ya es suya: en este
+ * orden, el dinero se manda ANTES de tocar la agenda.
  *
- * ── Por qué el pago va DESPUÉS de apartar y no antes ──
+ * ── Lo que esta pantalla dejó de hacer ──
  *
- * Porque el pago es a mano y tarda: hay que abrir la app del banco, buscar
- * Zelle, teclear un número. Si la hora no estuviera ya guardada, alguien
- * podría quedarse sin ella mientras paga por ella. Se aparta primero, se
- * paga después, y Henry confirma.
+ * Cobrar. Antes era la pantalla del pago: enseñaba los datos de Zelle y
+ * explicaba cómo transferir, porque la hora se apartaba primero y se pagaba
+ * después. Ese orden se invirtió —la agenda se llenaba de horas apartadas
+ * que nunca se pagaban— y con él se fue de aquí la caja del banco. Repetirla
+ * ahora sería pedir el dinero dos veces.
  *
- * ── Lo que ya no dice esta pantalla ──
+ * Lo único que puede quedar pendiente es el comprobante, y por eso el botón
+ * de WhatsApp sigue estando.
  *
- * «Te mandé un correo con el enlace de la videollamada». No se manda ningún
- * correo —no está montado— y esa frase llevaba semanas prometiendo algo que
- * no llegaba. Ahora el aviso va por donde de verdad va a ocurrir: WhatsApp.
+ * ── Lo que NO se promete ──
+ *
+ * Ningún correo. No está montado, y esa frase llevaba semanas prometiendo
+ * algo que no llegaba. El aviso va por donde de verdad ocurre: WhatsApp.
  */
 export default function Gracias() {
   return (
@@ -46,7 +49,7 @@ export default function Gracias() {
         Tu hora quedó apartada.
       </h1>
 
-      <PagoZelle />
+      <CitaConfirmada />
 
       <p className="mt-7 text-[15px] font-bold text-tinta-tenue">
         Henry Orellana · Fundador de ANDEX

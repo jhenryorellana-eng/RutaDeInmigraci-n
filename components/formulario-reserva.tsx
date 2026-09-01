@@ -15,14 +15,33 @@ import type { DiaConHuecos } from "@/lib/citas";
 import { reservar } from "@/app/reservar/accion";
 import { CLAVE_CITA } from "@/lib/pago";
 import { nombreLargo, type Servicio } from "@/lib/servicios";
+import { PasoVideo } from "@/components/paso-video";
+import { PasoPago } from "@/components/paso-pago";
 
 /**
  * UNA COSA A LA VEZ.
  *
- * Tres pasos —día, hora, quién eres— pero nunca los tres a la vez en
- * pantalla: lo ya resuelto se encoge a una línea con su palomita y lo que
- * falta se anuncia al pie. Así nadie se pregunta cuánto queda, que es la
- * razón por la que la gente abandona un formulario a la mitad.
+ * Cinco pasos —el video, el pago, el día, la hora y quién eres— pero nunca
+ * dos a la vez en pantalla: lo ya resuelto se encoge a una línea con su
+ * palomita y lo que falta se anuncia al pie. Así nadie se pregunta cuánto
+ * queda, que es la razón por la que la gente abandona un formulario a la
+ * mitad.
+ *
+ * ── El pago va ANTES de la agenda, y eso cambió ──
+ *
+ * Antes era al revés: se apartaba la hora y se pagaba después, porque pagar
+ * a mano tarda y nadie debía quedarse sin su hora mientras abría el banco.
+ * Ahora se cobra primero, a propósito: la agenda se llenaba de horas
+ * apartadas que nunca se pagaban, y cada una era un hueco muerto que Henry
+ * no podía dar a nadie más.
+ *
+ * Lo que se acepta a cambio está dicho en `components/paso-pago.tsx`: quien
+ * paga y tarda diez minutos puede volver y no encontrar la hora que quería,
+ * y eso es una devolución a mano de un pago que Zelle no revierte. Por eso
+ * esa pantalla dice cuántas horas quedan ANTES de mandar a nadie a su banco.
+ *
+ * Y el botón «ya hice el pago» no comprueba nada — no puede: Zelle sólo
+ * avisa al banco de Henry. Es una declaración, no una puerta.
  *
  * ── La agenda es la de Henry, siempre ──
  *
@@ -56,7 +75,7 @@ import { nombreLargo, type Servicio } from "@/lib/servicios";
  * configurado antes no lo notaba nadie.
  */
 
-type Paso = "dia" | "hora" | "datos";
+type Paso = "video" | "pago" | "dia" | "hora" | "datos";
 
 export function FormularioReserva({
   dias,
@@ -70,7 +89,7 @@ export function FormularioReserva({
   const router = useRouter();
   const [enCurso, empezar] = useTransition();
 
-  const [paso, setPaso] = useState<Paso>("dia");
+  const [paso, setPaso] = useState<Paso>("video");
   const [diaElegido, setDiaElegido] = useState<string | null>(null);
   const [horaElegida, setHoraElegida] = useState<string | null>(null);
 
@@ -170,6 +189,31 @@ export function FormularioReserva({
         router.push("/gracias");
       } else setError(r.motivo);
     });
+  }
+
+  /* Cuántos huecos quedan en todo lo que se ofrece. Se dice en la pantalla
+     del pago, antes de mandar a nadie a abrir su banco: cobrar primero sólo
+     es defendible si quien paga sabe que hay dónde meterse. */
+  const horasLibres = dias.reduce(
+    (n, d) => n + d.huecos.filter((h) => h.libre).length,
+    0,
+  );
+
+  /* Los dos primeros pasos ocupan la pantalla entera y no comparten nada con
+     la agenda, así que salen por su cuenta en vez de sumar dos ramas más al
+     árbol de abajo. */
+  if (paso === "video") {
+    return <PasoVideo servicio={servicio} onContinuar={() => setPaso("pago")} />;
+  }
+
+  if (paso === "pago") {
+    return (
+      <PasoPago
+        servicio={servicio}
+        horasLibres={horasLibres}
+        onPagado={() => setPaso("dia")}
+      />
+    );
   }
 
   return (
@@ -522,7 +566,7 @@ export function FormularioReserva({
             aria-hidden="true"
             className="flex size-[22px] shrink-0 items-center justify-center rounded-full border border-white/25 text-[12px] text-tinta-tenue"
           >
-            {paso === "dia" ? "3" : "2"}
+            {paso === "dia" ? "2" : "1"}
           </span>
           <span className="text-[16px] text-tinta-tenue">
             {paso === "dia"
