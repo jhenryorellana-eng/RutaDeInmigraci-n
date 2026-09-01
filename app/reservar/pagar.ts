@@ -13,18 +13,18 @@ import { URL_SITIO } from "@/lib/sitio";
  * podría pagar $1 por una preparación de $250.
  */
 export async function abrirPagoConTarjeta(datos: {
-  citaId: number;
+  solicitudId: number;
   servicioId: string;
   correo: string;
 }): Promise<{ url: string } | { error: string }> {
   const servicio = servicioPorId(datos.servicioId);
   if (!servicio) return { error: "Esa preparación no existe." };
-  if (!Number.isInteger(datos.citaId) || datos.citaId <= 0) {
-    return { error: "Esa cita no existe." };
+  if (!Number.isInteger(datos.solicitudId) || datos.solicitudId <= 0) {
+    return { error: "Esa solicitud no existe." };
   }
 
   return crearSesionDePago({
-    citaId: datos.citaId,
+    solicitudId: datos.solicitudId,
     titulo: `Preparación · ${servicio.nombre}`,
     descripcion: `${servicio.etapa} · 45 minutos con Henry Orellana`,
     precioUsd: servicio.precioUsd,

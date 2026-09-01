@@ -36,13 +36,6 @@ export async function diasDisponibles(
   const ocupadas = new Set<number>();
 
   if (hayBase) {
-    /* Antes de mirar qué está ocupado, se sueltan las retenciones que
-       caducaron. Va aquí y no en un cron porque así el barrido ocurre por el
-       mero hecho de que alguien mire la agenda: la hora de quien abandonó a
-       mitad del pago vuelve a ofrecerse sola. */
-    const limpieza = await clienteServidor();
-    await limpieza.rpc("liberar_pendientes_vencidas");
-
     const ultimo = dias[dias.length - 1];
     const finales = ultimo.huecos[ultimo.huecos.length - 1];
     const supabase = await clienteServidor();
@@ -98,27 +91,35 @@ export function soloDigitos(texto: string): string {
 }
 
 /**
- * Lo que se devuelve al apartar.
+ * Lo que se devuelve al PEDIR una hora.
  *
- * La cita nace PENDIENTE: la hora queda retenida a nombre de esa persona,
- * pero para Henry todavía no es una cita. Sube a «reservada» cuando el pago
- * se confirma —el webhook de Stripe, o el conciliador leyendo el correo del
- * banco— y caduca sola a la media hora si eso no ocurre.
+ * Y pedir no es apartar. Esto NO crea una cita ni ocupa nada en la agenda:
+ * crea una SOLICITUD con los datos y el importe, y esa hora se le puede
+ * seguir vendiendo a cualquier otro hasta que entre el dinero.
  *
- * Por eso hacen falta los dos datos de vuelta: el `citaId` para poder pagar
- * esa cita concreta, y el `codigoPago` para escribirlo en el memo del Zelle.
+ * La decisión es deliberada y es de negocio: la agenda no se bloquea por
+ * gente que quizá no pague. Lo que se acepta a cambio está escrito en
+ * `0011_solicitud_antes_de_cita.sql` — dos personas pueden pagar la misma
+ * hora, y a la segunda hay que devolverle el dinero. Por eso ese caso queda
+ * marcado y visible en vez de ocurrir en silencio.
+ *
+ * De vuelta hacen falta dos cosas: el `solicitudId` para poder pagar ESA
+ * solicitud, y el `codigoPago` para escribirlo en el memo del Zelle.
  */
 export type Resultado =
-  | { ok: true; citaId: number; codigoPago: string; expiraEn: string }
+  | { ok: true; solicitudId: number; codigoPago: string }
   | { ok: false; motivo: string };
 
 /**
- * Aparta una hora.
+ * Pide una hora: guarda los datos y devuelve con qué pagar.
+ *
+ * NO aparta nada. La hora sigue a la venta hasta que el dinero entra, y la
+ * cita la crea el pago —el webhook de Stripe o el conciliador de Zelle— a
+ * través de `cita_desde_solicitud()`, que es la única puerta a la agenda.
  *
  * Las comprobaciones que se ven aquí NO son la defensa: la defensa está en
- * la base —el índice único parcial y el trigger— porque entre comprobar y
- * escribir cabe la reserva de otra persona. Esto sólo sirve para dar un
- * mensaje entendible antes de molestar a la base.
+ * la base. Esto sólo sirve para dar un mensaje entendible antes de
+ * molestarla.
  */
 export async function apartarCita(datos: DatosCita): Promise<Resultado> {
   const cuando = new Date(datos.iso);
@@ -173,7 +174,7 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
      de vuelta el id y el código de cuatro dígitos, y para devolver columnas
      hace falta permiso de lectura sobre ellas — que el público no tiene
      sobre `citas`, ni debe tenerlo. */
-  const { data, error } = await supabase.rpc("apartar_cita", {
+  const { data, error } = await supabase.rpc("pedir_hora", {
     p_inicia_en: cuando.toISOString(),
     p_nombre: datos.nombre.trim(),
     p_correo: datos.correo.trim().toLowerCase(),
@@ -191,30 +192,19 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
   });
 
   if (error) {
-    /* 23505 es la violación del índice único: alguien ganó la carrera por
-       esta hora. Se dice tal cual — «no está disponible» a secas deja a la
-       persona sin saber si el fallo fue suyo. */
-    if (error.code === "23505") {
+    if (error.code === "23505" || error.code === "23514") {
       return {
         ok: false,
-        motivo: "Alguien apartó esa hora hace un momento. Elige otra, quedan más.",
+        motivo: "Alguien compró esa hora hace un momento. Elige otra, quedan más.",
       };
     }
-    if (error.code === "23514") {
-      return { ok: false, motivo: "Esa hora ya no está disponible." };
-    }
-    return { ok: false, motivo: "No pudimos apartar la hora. Inténtalo otra vez." };
+    return { ok: false, motivo: "No pudimos guardar tus datos. Inténtalo otra vez." };
   }
 
-  const creada = (data ?? {}) as { id?: number; codigoPago?: string; expiraEn?: string };
+  const creada = (data ?? {}) as { id?: number; codigoPago?: string };
   if (!creada.id || !creada.codigoPago) {
-    return { ok: false, motivo: "No pudimos apartar la hora. Inténtalo otra vez." };
+    return { ok: false, motivo: "No pudimos guardar tus datos. Inténtalo otra vez." };
   }
 
-  return {
-    ok: true,
-    citaId: creada.id,
-    codigoPago: creada.codigoPago,
-    expiraEn: creada.expiraEn ?? "",
-  };
+  return { ok: true, solicitudId: creada.id, codigoPago: creada.codigoPago };
 }

@@ -107,7 +107,7 @@ export function stripe(): Stripe | null {
  * puede creer.
  */
 export async function crearSesionDePago(datos: {
-  citaId: number;
+  solicitudId: number;
   titulo: string;
   descripcion: string;
   precioUsd: number;
@@ -122,7 +122,11 @@ export async function crearSesionDePago(datos: {
   try {
     const sesion = await s.checkout.sessions.create({
       mode: "payment",
-      client_reference_id: String(datos.citaId),
+      /* Lo que viaja a Stripe es el id de la SOLICITUD, y es lo que el
+         webhook usa para crear la cita. Va aquí y no en la URL de vuelta
+         porque una URL la escribe cualquiera: lo que Stripe firma es lo
+         único que se puede creer. */
+      client_reference_id: String(datos.solicitudId),
       customer_email: datos.correo,
       line_items: [
         {
@@ -149,7 +153,7 @@ export async function crearSesionDePago(datos: {
        * escrito para que Henry devuelva el dinero. Esa decisión ya estaba
        * tomada ahí, y duplicarla aquí con un reloj distinto sólo servía para
        * romperlo. */
-      metadata: { cita_id: String(datos.citaId) },
+      metadata: { solicitud_id: String(datos.solicitudId) },
       success_url: `${datos.urlBase}/gracias?pago=tarjeta`,
       cancel_url: `${datos.urlBase}/reservar?servicio=${datos.servicioId}&pago=cancelado`,
     });

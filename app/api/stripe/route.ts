@@ -73,15 +73,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ recibido: true, ignorado: "pago no completado" });
   }
 
-  const citaId = Number(sesion.client_reference_id);
-  if (!Number.isInteger(citaId) || citaId <= 0) {
-    return NextResponse.json({ recibido: true, ignorado: "sin cita" });
+  const solicitudId = Number(sesion.client_reference_id);
+  if (!Number.isInteger(solicitudId) || solicitudId <= 0) {
+    return NextResponse.json({ recibido: true, ignorado: "sin solicitud" });
   }
 
+  /* Aquí es donde NACE la cita. Hasta este momento no había nada en la
+     agenda: sólo una solicitud con los datos y el importe. */
   const supabase = await clienteServidor();
-  const { data, error } = await supabase.rpc("confirmar_pago_con_secreto", {
+  const { data, error } = await supabase.rpc("cita_desde_solicitud", {
     secreto: secretoBase,
-    p_cita_id: citaId,
+    p_solicitud_id: solicitudId,
     p_metodo: "stripe",
     p_fuente: "stripe",
     p_referencia: sesion.id,
@@ -95,10 +97,12 @@ export async function POST(req: NextRequest) {
 
   const res = (data ?? {}) as { ok?: boolean; motivo?: string };
   if (!res.ok) {
-    /* La base se negó por una razón de negocio —la hora se la llevó otra
-       persona mientras pagaba—. Reintentar no lo va a arreglar, así que se
-       acepta el evento y esto queda para que lo vea Henry: es una devolución
-       a mano, y prefiere enterarse por su panel que por el cliente. */
+    /* La hora se la llevó otra persona mientras ésta pagaba. Es el riesgo
+       aceptado al no bloquear la agenda, y reintentar no lo arregla: la
+       solicitud queda marcada `hora_tomada` con la referencia del cobro,
+       para que Henry lo vea y devuelva el dinero. Se acepta el evento
+       —Stripe no tiene nada que reintentar— y el problema queda escrito
+       donde se mira, no en un registro que nadie abre. */
     return NextResponse.json({ recibido: true, sinAplicar: res.motivo });
   }
 

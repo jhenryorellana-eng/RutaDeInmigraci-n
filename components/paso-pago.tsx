@@ -12,19 +12,25 @@ import {
 import type { Servicio } from "@/lib/servicios";
 
 /**
- * EL PAGO · el último paso, y el que decide si la cita existe.
+ * EL PAGO · el último paso, y el que CREA la cita.
  *
- * Cuando se llega aquí la hora ya está RETENIDA a nombre de esta persona:
- * nadie más puede tomarla, pero para Henry todavía no es una cita. Sube a
- * cita de verdad cuando el pago se confirma, y la retención caduca sola a la
- * media hora si eso no ocurre.
+ * Cuando se llega aquí no hay nada en la agenda. Sólo existe una solicitud
+ * con los datos y el importe, y esa hora se le puede seguir vendiendo a
+ * cualquier otra persona. La cita nace en el momento en que entra el dinero,
+ * y ni un segundo antes.
  *
- * ── Por qué el pago va al final y no antes ──
+ * ── Por qué no se retiene la hora mientras pagan ──
  *
- * Porque cobrando primero pasaba lo peor que puede pasar: alguien paga,
- * tarda diez minutos en su banco, vuelve y su hora ya no está. Zelle no se
- * revierte, así que eso era una devolución a mano. Reteniendo la hora antes
- * de cobrar, ese caso desaparece.
+ * Es una decisión de negocio y va contra lo que había: retener protegía a
+ * quien pagaba —nunca volvía del banco sin hueco— pero bloqueaba media hora
+ * una hora que quizá nadie iba a comprar. Se prefiere que la agenda no se
+ * ensucie con gente que quizá no pague.
+ *
+ * Lo que se acepta a cambio: dos personas pueden pagar la misma hora, y a la
+ * segunda hay que devolverle el dinero. Esa devolución NO ocurre en
+ * silencio — la solicitud queda marcada `hora_tomada` con la referencia del
+ * cobro. Y esta pantalla lo dice en voz alta arriba, en vez de prometer una
+ * reserva que no existe.
  *
  * ── Los dos métodos no son equivalentes, y se dice ──
  *
@@ -43,14 +49,14 @@ type Metodo = "elegir" | "tarjeta" | "zelle";
 
 export function PasoPago({
   servicio,
-  citaId,
+  solicitudId,
   codigoPago,
   correo,
   hayTarjeta,
   onListo,
 }: {
   servicio: Servicio;
-  citaId: number;
+  solicitudId: number;
   codigoPago: string;
   correo: string;
   /** Falso si Stripe no está configurado: entonces no se ofrece la tarjeta. */
@@ -75,7 +81,7 @@ export function PasoPago({
   function irATarjeta() {
     setError(null);
     empezar(async () => {
-      const r = await abrirPagoConTarjeta({ citaId, servicioId: servicio.id, correo });
+      const r = await abrirPagoConTarjeta({ solicitudId, servicioId: servicio.id, correo });
       if ("url" in r) window.location.href = r.url;
       else setError(r.error);
     });
@@ -84,11 +90,15 @@ export function PasoPago({
   return (
     <div className="mt-6 lg:mt-7">
       <h1 className="font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:text-[40px] lg:leading-[1.12]">
-        Tu hora está guardada
+        Último paso: el pago
       </h1>
+      {/* Se dice claro que la hora NO está guardada todavía. Prometer lo
+          contrario para que alguien pague tranquilo sería mentir, y esa
+          mentira se descubre justo en el peor momento. */}
       <p className="mt-2.5 max-w-[46ch] text-[17px] leading-[1.5] text-tinta-suave">
-        Nadie más puede tomarla mientras pagas. Queda confirmada en cuanto
-        entre el pago — <strong className="font-bold text-tinta">tienes 30 minutos</strong>.
+        Tu hora queda tuya <strong className="font-bold text-tinta">en cuanto
+        entre el pago</strong>, no antes. Hasta ese momento sigue disponible
+        para otras personas, así que no lo dejes para luego.
       </p>
 
       {/* ── Elegir método ── */}
@@ -162,8 +172,9 @@ export function PasoPago({
               {copiado === "codigo" ? "Copiado" : "Copiar el código"}
             </button>
             <p className="mt-3 text-[15px] leading-[1.45] text-tinta-suave">
-              Con esto tu pago se reconoce solo. Si se te olvida tampoco pasa
-              nada: casi siempre basta con el importe y tu nombre.
+              Con esto tu pago se reconoce solo y tu hora queda guardada. Si
+              se te olvida tampoco pasa nada: casi siempre basta con el
+              importe y tu nombre.
             </p>
           </div>
 
@@ -215,8 +226,9 @@ export function PasoPago({
           </button>
 
           <p className="mt-4 text-[15px] leading-[1.45] text-tinta-tenue">
-            Tu pago se reconoce solo en unos minutos y Henry te escribe por
-            WhatsApp. Si algo no cuadra, él lo revisa a mano.
+            Tu pago se reconoce solo en unos minutos, tu hora queda guardada
+            y Henry te escribe por WhatsApp. Si algo no cuadra, él lo revisa a
+            mano.
           </p>
 
           <button

@@ -27,19 +27,23 @@ import { PasoPago } from "@/components/paso-pago";
  * queda, que es la razón por la que la gente abandona un formulario a la
  * mitad.
  *
- * ── El pago va AL FINAL, y la cita no existe hasta que entra ──
+ * ── El pago va AL FINAL, y la cita NACE del pago ──
  *
- * Hubo dos intentos antes de éste. El primero apartaba la hora y dejaba el
- * pago para después: la agenda se llenaba de horas que nadie pagaba y Henry
- * no podía distinguirlas de las buenas. El segundo cobraba primero, y traía
- * algo peor: quien tardaba diez minutos en su banco volvía y su hora ya no
- * estaba — una devolución a mano de un pago que Zelle no revierte.
+ * Al llenar los datos no se aparta nada: se crea una SOLICITUD, y esa hora
+ * sigue a la venta. La cita la crea el pago, y hasta entonces la agenda no
+ * se entera de que esta persona existe.
  *
- * Lo de ahora no es un punto medio, es otra cosa. Al llenar los datos la
- * hora queda RETENIDA a nombre de esa persona: nadie más puede tomarla, pero
- * para Henry todavía no es una cita. Se convierte en cita cuando el pago se
- * confirma, y la retención caduca sola a la media hora si eso no pasa. Nadie
- * paga sin hueco y ningún hueco se queda muerto.
+ * Es la tercera forma que tiene esto, y las dos anteriores se descartaron
+ * por motivos opuestos. La primera apartaba y cobraba después: la agenda se
+ * llenaba de horas que nadie pagaba. La segunda cobraba antes de dejar
+ * elegir hora: quien tardaba en su banco volvía y no quedaba hueco. La
+ * tercera —retener media hora mientras pagaban— resolvía las dos, pero
+ * bloqueaba horas vendibles por gente que quizá no iba a comprar.
+ *
+ * Lo que manda ahora es que la agenda no se ensucie. Se acepta a cambio que
+ * dos personas puedan pagar la misma hora; eso queda marcado y visible para
+ * que Henry devuelva el dinero, y esta pantalla lo advierte antes de cobrar
+ * en vez de prometer una reserva que no existe.
  *
  * ── Y ahora el pago se comprueba de verdad ──
  *
@@ -111,9 +115,9 @@ export function FormularioReserva({
   const [eligiendoEstado, setEligiendoEstado] = useState(false);
   const [enEeuu, setEnEeuu] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
-  /* Lo que devuelve la base al retener la hora: sin esto no se puede pagar
-     esa cita concreta ni enseñar el código del memo. */
-  const [apartada, setApartada] = useState<{ citaId: number; codigoPago: string } | null>(null);
+  /* Lo que devuelve la base al guardar los datos. NO es una cita: es una
+     solicitud, y esa hora sigue a la venta hasta que entre el pago. */
+  const [apartada, setApartada] = useState<{ solicitudId: number; codigoPago: string } | null>(null);
 
   /* La zona del navegador, resuelta una vez. En el primer render del
      servidor no existe, así que se cae a la de Utah y se corrige al montar
@@ -199,9 +203,9 @@ export function FormularioReserva({
         } catch {
           /* modo privado */
         }
-        /* La hora queda RETENIDA, no reservada. Lo que la convierte en cita
-           es el pago, que es el paso siguiente. */
-        setApartada({ citaId: r.citaId, codigoPago: r.codigoPago });
+        /* La hora NO queda apartada: sigue a la venta. Lo que la convierte
+           en cita es el pago, que es el paso siguiente. */
+        setApartada({ solicitudId: r.solicitudId, codigoPago: r.codigoPago });
         setPaso("pago");
       } else setError(r.motivo);
     });
@@ -218,7 +222,7 @@ export function FormularioReserva({
     return (
       <PasoPago
         servicio={servicio}
-        citaId={apartada.citaId}
+        solicitudId={apartada.solicitudId}
         codigoPago={apartada.codigoPago}
         correo={correo.trim().toLowerCase()}
         hayTarjeta={hayTarjeta}
