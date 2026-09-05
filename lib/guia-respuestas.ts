@@ -1,61 +1,7 @@
-import { SERVICIOS } from "@/lib/servicios";
+import { ASESORIA } from "@/lib/servicios";
 import { ZELLE_NOMBRE, ZELLE_TELEFONO } from "@/lib/pago";
 
-/**
- * LO QUE EL GUÍA SABE RESPONDER.
- *
- * Un guion cerrado: preguntas escritas de antemano y respuestas escritas de
- * antemano. No hay modelo detrás, no se manda nada a ningún sitio y no se
- * escribe texto libre — quien toca una pregunta recibe exactamente lo que
- * pone aquí.
- *
- * ── Por qué cerrado y no un modelo ──
- *
- * Porque esto se lo lee gente que está a semanas de una audiencia de
- * inmigración, y una respuesta inventada sobre su caso no es un fallo de
- * producto: es una persona tomando una decisión mala con información falsa.
- * Un guion no improvisa. Lo que no está aquí, no se contesta.
- *
- * ── Y no se manda a WhatsApp ──
- *
- * Henry no atiende consultas por ahí, así que ofrecer «escríbele» sería
- * mandar a alguien a esperar una respuesta que no va a llegar: peor que no
- * ofrecer nada. La salida del guion es la sesión, que es donde sí le
- * contesta —45 minutos, con las dudas apuntadas—, y eso se dice con esas
- * palabras.
- *
- * El WhatsApp sigue apareciendo en UN sitio, el pago: ahí no se pide
- * respuesta, se manda el comprobante de una transferencia que su banco no le
- * anuncia. Es un envío, no una conversación.
- *
- * ── Los cuatro, no uno ──
- *
- * La pared ofrece cuatro cosas y el guion tiene que cubrir las cuatro. Una
- * primera versión respondía de precios, pago y sesión —todo de la
- * preparación— y de los otros tres servicios sólo decía una línea: quien
- * venía por la comunidad o por el bootcamp se encontraba un guía que no
- * sabía de lo suyo.
- *
- * ── De dónde salen los datos, y dónde se acaban ──
- *
- * De donde ya vivían: los precios de las preparaciones de `lib/servicios.ts`
- * y el Zelle de `lib/pago.ts`. Los de la comunidad son los de ANDEX, $25 al
- * mes o $250 al año.
- *
- * De los servicios migratorios y del bootcamp NO hay datos en ninguna parte
- * —ni precios, ni fechas, ni qué incluye cada uno—, así que el guion dice
- * qué son, para quién son y manda a su página. Escribir aquí un precio de
- * oídas sería exactamente el fallo que este archivo existe para evitar. En
- * cuanto Henry los dé, se añaden como sub-preguntas igual que las de la
- * preparación.
- *
- * ── Lo que NO se promete ──
- *
- * Que Henry es abogado, porque no lo es, y ésa es una de las preguntas del
- * guion en vez de una nota al pie. Que la comunidad avise de las fechas
- * límite, porque esos avisos todavía no existen. Y no se dice por dónde
- * ocurre la sesión —videollamada, teléfono— porque eso aún no está decidido.
- */
+/** Respuestas predefinidas del directorio de proyectos. Los precios de la asesoría se leen del catálogo. */
 
 export type Enlace = {
   texto: string;
@@ -93,7 +39,6 @@ export type Respuesta = {
   tono?: "agua" | "arena" | "coral" | "verde";
 };
 
-const precio = (id: string) => SERVICIOS.find((s) => s.id === id)?.precioUsd ?? 0;
 
 /** La membresía de ANDEX. El anual son diez mensualidades, no doce. */
 const ANDEX_MES = 25;
@@ -109,7 +54,7 @@ export const RESPUESTAS: Respuesta[] = [
     corto: "¿Cuál me toca?",
     dice: [
       "Depende de en qué punto estés:",
-      "Si ya tienes fecha de audiencia → la preparación con Henry.",
+      "Si quieres conversar sobre tus dudas → la asesoría con Henry.",
       "Si hay un trámite que presentar → los servicios migratorios.",
       "Si quieres acompañamiento durante el año → la comunidad.",
       "Si es para un hijo tuyo → el bootcamp.",
@@ -124,12 +69,12 @@ export const RESPUESTAS: Respuesta[] = [
   // ── 1 · La preparación de audiencia ────────────────────
   {
     id: "preparacion",
-    pregunta: "La preparación de audiencia",
-    corto: "La preparación",
+    pregunta: "La asesoría personalizada",
+    corto: "La asesoría",
     tono: "agua",
     dice: [
-      "Son 45 minutos, tú y Henry, para llegar a tu audiencia sabiendo qué te van a preguntar y con tus papeles en orden.",
-      `Hay tres, según qué audiencia tengas: la primera (preliminar) $${precio("primera")}, la segunda (preliminar) $${precio("segunda")} y la de mérito $${precio("tercera")}.`,
+      "Son 45 minutos, tú y Henry, para conversar sobre tus dudas, ordenar tus prioridades y orientar tu próximo paso.",
+      `La asesoría personalizada cuesta $${ASESORIA.precioUsd} USD por sesión. No necesitas tener una audiencia programada.`,
     ],
     enlaces: [{ texto: "Ver horas libres", href: "/reservar", interno: true }],
     /* Con «henry» y sin «cual»: éste es el servicio que se paga, así que la
@@ -142,9 +87,9 @@ export const RESPUESTAS: Respuesta[] = [
     pregunta: "¿Cómo se paga?",
     corto: "¿Cómo se paga?",
     dice: [
-      "La preparación se paga después de apartar la hora, no antes. Es por Zelle:",
+      "Primero eliges una hora y completas tus datos. Después pagas con los métodos disponibles en la reserva. Para Zelle, los datos son:",
       `${ZELLE_TELEFONO}, a nombre de ${ZELLE_NOMBRE}.`,
-      "Cuando lo envíes, mándale la captura por WhatsApp. Zelle no avisa a nadie más que al banco de Henry, así que esa captura es lo que le confirma que pagaste.",
+      "Incluye el código de tu solicitud en el pago. Puedes enviar el comprobante por WhatsApp para facilitar su revisión.",
       "Esta página no te pide ni ve ningún dato de tu banco: la transferencia ocurre entera dentro de tu app bancaria.",
     ],
     luego: ["sesion", "abogado", "cual", "otra"],
@@ -156,9 +101,9 @@ export const RESPUESTAS: Respuesta[] = [
     dice: [
       "45 minutos, tú y Henry, sin nadie más.",
       "Las horas de la agenda son de Utah, que es donde está él. Al elegir una, la página te enseña también qué hora es donde tú estás.",
-      "La cita queda apartada en cuanto la eliges. Henry te confirma.",
+      "Seleccionar una hora no la bloquea. La reserva se confirma al verificar el pago y la disponibilidad; Henry te contacta por WhatsApp.",
     ],
-    enlaces: [{ texto: "Apartar mi hora", href: "/reservar", interno: true }],
+    enlaces: [{ texto: "Reservar mi asesoría", href: "/reservar", interno: true }],
     luego: ["pago", "abogado", "cual", "otra"],
   },
   {
@@ -167,7 +112,7 @@ export const RESPUESTAS: Respuesta[] = [
     corto: "¿Es abogado?",
     dice: [
       "No. Henry no es abogado y esto no es asesoría legal.",
-      "Lo que hace es prepararte: que llegues sabiendo qué te van a preguntar y con tus papeles en orden. Cuando tu caso necesite un abogado, te lo va a decir.",
+      "La sesión ofrece orientación personal. Para cuestiones legales o representación, consulta a un profesional autorizado.",
     ],
     luego: ["preparacion", "cual", "otra"],
   },

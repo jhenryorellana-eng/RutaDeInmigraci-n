@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./asesoria.css";
+import "./reserva.css";
+import "lenis/dist/lenis.css";
+import "./movimiento.css";
+import "./mobile.css";
+import "./reserva-mobile.css";
 
 import { URL_SITIO } from "@/lib/sitio";
 
@@ -8,16 +14,21 @@ export const metadata: Metadata = {
      absoluta. Sin esto, WhatsApp recibe una ruta relativa, no sabe de qué
      servidor pedir la foto y enseña el enlace pelado. */
   metadataBase: new URL(URL_SITIO),
-  title: "La ruta del inmigrante · con Henry Orellana",
+  title: "Tu próximo paso, con Henry · La ruta del inmigrante",
   description:
-    "45 minutos uno a uno para saber qué trámite te toca ahora, cuál viene después y cuáles no necesitas.",
+    "Una asesoría personalizada de 45 minutos con Henry Orellana para escucharte, ordenar tus dudas y conversar sobre tu próximo paso. $70 USD.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#16223A",
+  themeColor: "#061B3D",
+  viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="es">
       <head>
@@ -29,7 +40,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             itálica, y sin ese eje el navegador la falsea inclinando la
             redonda, que en una serif se nota a la primera. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin=""
+        />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&display=swap"

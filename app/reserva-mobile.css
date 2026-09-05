@@ -1,0 +1,442 @@
+/* Touch-first reservation refinements. Desktop keeps the existing layout. */
+.booking-mobile-summary,
+.day-availability-dot,
+.calendar-mobile-note,
+.booking-selected-date,
+.booking-moment-status {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .is-booking .booking-heading {
+    padding-top: 28px;
+  }
+
+  .is-booking .booking-heading h1 {
+    font-size: clamp(33px, 8.8vw, 43px);
+    line-height: 1.05;
+    margin-top: 13px;
+  }
+
+  .is-booking .booking-heading p {
+    max-width: 31ch;
+    font-size: 15px;
+    line-height: 1.45;
+    margin-top: 13px;
+  }
+
+  .is-booking .booking-layout {
+    padding-top: 22px;
+    gap: 16px;
+  }
+
+  .is-booking .booking-card {
+    padding: 18px 16px 20px;
+    border-radius: 20px;
+    box-shadow: 0 14px 45px #00000018;
+  }
+
+  .booking-mobile-summary {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    margin: -18px -16px 22px;
+    padding: 17px 16px;
+    border-radius: 19px 19px 0 0;
+    background: #0c2c5e;
+    color: #f3f7fa;
+    border-bottom: 1px solid #efc44d50;
+  }
+
+  .booking-mobile-avatar {
+    position: relative;
+    width: 48px;
+    height: 56px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #ffffff35;
+  }
+
+  .booking-mobile-avatar img {
+    object-fit: cover;
+    object-position: 12% center;
+  }
+
+  .booking-mobile-summary > div > strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+
+  .booking-mobile-summary > div > span {
+    display: block;
+    margin-top: 5px;
+    color: #c2d1e3;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .booking-mobile-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    color: #efc44d;
+  }
+
+  .booking-mobile-price strong {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.065em;
+    line-height: 1;
+  }
+
+  .booking-mobile-price small {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+
+  .is-booking .booking-progress {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding-bottom: 17px;
+    margin-bottom: 22px;
+  }
+
+  .is-booking .booking-progress li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  .is-booking .booking-progress li span {
+    width: 29px;
+    height: 29px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .is-booking .booking-progress li[aria-current="step"] span {
+    background: #1b4fa0;
+    border-color: #1b4fa0;
+    box-shadow: 0 0 0 4px #1b4fa010;
+  }
+
+  .is-booking .booking-card h2 {
+    font-size: 29px;
+  }
+
+  .is-booking .booking-explainer {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .is-booking .month-heading {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .is-booking .month-heading strong {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .is-booking .month-heading button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 20px;
+    touch-action: manipulation;
+  }
+
+  .is-booking .month-grid {
+    gap: 4px;
+  }
+
+  .is-booking .month-grid > span {
+    font-size: 12px;
+  }
+
+  .is-booking .month-days button,
+  .is-booking .month-days > span {
+    min-height: 48px;
+    gap: 4px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .is-booking .month-days button {
+    touch-action: manipulation;
+    border-color: transparent;
+  }
+
+  .is-booking .month-days button[aria-pressed="true"] {
+    background: #1b4fa0;
+    border-color: #1b4fa0;
+    box-shadow: 0 4px 10px #1b4fa025;
+  }
+
+  .is-booking .day-availability-text,
+  .is-booking .calendar-desktop-note {
+    display: none;
+  }
+
+  .is-booking .day-availability-dot {
+    display: block;
+    width: 4px;
+    height: 4px;
+    min-height: 4px;
+    border-radius: 50%;
+    background: #1b4fa0;
+  }
+
+  .is-booking .month-days button[aria-pressed="true"] .day-availability-dot {
+    background: #efc44d;
+  }
+
+  .is-booking .month-days button:disabled .day-availability-dot {
+    background: transparent;
+  }
+
+  .is-booking .calendar-mobile-note {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .is-booking .calendar-mobile-note i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #1b4fa0;
+  }
+
+  .is-booking .booking-hours {
+    scroll-margin-top: 95px;
+    padding-top: 20px;
+    margin-top: 22px;
+  }
+
+  .is-booking .booking-selected-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #1b4fa0;
+    margin-bottom: 16px;
+  }
+
+  .booking-selected-date > span {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #1b4fa012;
+  }
+
+  .is-booking .booking-hours h3 {
+    font-size: 25px;
+    margin-bottom: 15px;
+  }
+
+  .is-booking .zone-control {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .is-booking .zone-control > span {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .is-booking .zone-control select {
+    min-height: 44px;
+    font-size: 16px;
+    padding-right: 8px;
+  }
+
+  .is-booking .time-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .is-booking .time-grid button {
+    position: relative;
+    min-height: 70px;
+    padding: 13px 11px;
+    border-radius: 12px;
+    background: #fff;
+    touch-action: manipulation;
+    scroll-margin-block: 95px 140px;
+  }
+
+  .is-booking .time-grid button strong {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .is-booking .time-grid button small {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .is-booking .time-grid button[aria-pressed="true"] {
+    background: #e1eafa;
+    border: 2px solid #1b4fa0;
+    padding: 12px 10px;
+    box-shadow: 0 3px 12px #1b4fa012;
+  }
+
+  .is-booking .booking-moment-next {
+    display: grid;
+    position: sticky;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    z-index: 5;
+    gap: 11px;
+    margin: 20px -6px 0;
+    padding: 13px 12px 12px;
+    border: 1px solid #c5d3e6;
+    border-radius: 16px;
+    background: #f3f7faf5;
+    box-shadow: 0 8px 26px #061b3d14;
+    backdrop-filter: blur(12px);
+  }
+
+  .is-booking .booking-moment-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    color: #526880;
+    line-height: 1.3;
+    font-size: 12px;
+  }
+
+  .booking-moment-status strong {
+    color: #061b3d;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .is-booking .booking-next .route-button {
+    min-height: 52px;
+    width: 100%;
+    justify-content: center;
+    font-size: 14px;
+    padding: 12px;
+    gap: 10px;
+    border-radius: 11px;
+    touch-action: manipulation;
+  }
+
+  .is-booking .booking-next .route-button svg {
+    flex-shrink: 0;
+    margin-left: 0;
+  }
+
+  .is-booking .reservation-detail {
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 12px;
+    border: 1px solid #c5d3e6;
+    border-radius: 12px;
+  }
+
+  .is-booking .reservation-detail > div {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .is-booking .reservation-detail span {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .is-booking .reservation-detail .link-button {
+    min-width: 54px;
+    font-size: 13px;
+    align-self: center;
+  }
+
+  .is-booking .booking-fields input,
+  .is-booking .booking-fields select {
+    min-height: 52px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .is-booking .booking-summary {
+    display: block;
+    padding: 17px 18px;
+    border-radius: 14px;
+  }
+
+  .is-booking .booking-summary .booking-portrait,
+  .is-booking .booking-summary h2,
+  .is-booking .booking-summary > p:not(.summary-note),
+  .is-booking .booking-summary .summary-price {
+    display: none;
+  }
+
+  .is-booking .booking-summary .summary-note {
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 0;
+  }
+}
+
+@media (max-width: 370px) {
+  .is-booking .booking-card {
+    padding-inline: 12px;
+  }
+
+  .booking-mobile-summary {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 9px;
+    margin-inline: -12px;
+    padding-inline: 12px;
+  }
+
+  .booking-mobile-avatar {
+    width: 40px;
+    height: 50px;
+  }
+
+  .booking-mobile-summary > div > strong {
+    font-size: 15px;
+  }
+
+  .booking-mobile-summary > div > span {
+    font-size: 11px;
+  }
+
+  .booking-mobile-price strong {
+    font-size: 29px;
+  }
+
+  .is-booking .booking-next .route-button {
+    font-size: 13px;
+  }
+}

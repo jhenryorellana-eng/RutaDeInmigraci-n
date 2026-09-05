@@ -1,32 +1,4 @@
-/**
- * CÓMO SE COBRA LA SESIÓN.
- *
- * Por Zelle, a mano. No hay pasarela: la persona aparta su hora, ve estos
- * datos, hace la transferencia desde su banco y le manda la captura a Henry
- * por WhatsApp.
- *
- * ── Lo que esto NO hace, y es lo importante ──
- *
- * Aquí no se pide ni un dato financiero. Ni número de cuenta, ni tarjeta, ni
- * nada que se le parezca: sólo se ENSEÑA a dónde mandar el dinero. El pago
- * ocurre entero dentro del banco de cada uno, y este sitio no lo toca ni lo
- * ve. Por eso no hace falta ninguna pasarela para empezar a cobrar, y por
- * eso el producto no entra en el alcance de PCI DSS.
- *
- * ── Lo que tampoco hace ──
- *
- * Comprobar que se ha pagado. No hay forma: Zelle no avisa a nadie más que
- * al banco de Henry. La cita queda apartada en cuanto se pulsa el botón,
- * pagada o no, y es él quien confirma. La pantalla lo dice con esas palabras
- * en vez de dar a entender que el sistema lo sabe.
- *
- * ── Estos datos hay que verificarlos ──
- *
- * Un dígito mal en el número manda el dinero de otra persona a un
- * desconocido, y Zelle es de los pagos que NO se pueden revertir. Cualquiera
- * que toque este archivo tiene que confirmar los datos con Henry antes, no
- * después.
- */
+/** Datos públicos de pago y contacto. Conservar los datos del destinatario verificados. */
 
 /** Tal y como aparece en su cuenta. Si no coincide, el banco puede parar el envío. */
 export const ZELLE_NOMBRE = "Jimy Henry Orellana Dominguez";
@@ -40,15 +12,7 @@ export const ZELLE_TELEFONO_CRUDO = "3854564470";
 /** Con el código de país, como lo quiere `wa.me`. */
 export const WHATSAPP_HENRY = "13854564470";
 
-/* El precio ya no vive aquí.
- *
- * Hubo un momento en que la sesión costaba una sola cosa y este archivo
- * guardaba esa cifra. Ahora hay TRES preparaciones con tres precios, así que
- * cada una lleva el suyo en `lib/servicios.ts` y la cita guarda el que había
- * cuando se apartó.
- *
- * Lo que sigue viviendo aquí es a dónde va el dinero, que es lo mismo para
- * las tres. */
+/* El precio de la asesoría vive en lib/servicios.ts. */
 
 /** Donde la pantalla de reserva deja la cita para la de pago. */
 export const CLAVE_CITA = "ruta_cita_apartada";
@@ -68,7 +32,7 @@ export const CLAVE_CITA = "ruta_cita_apartada";
  */
 export function enlaceWhatsapp(cuando?: string): string {
   const texto = cuando
-    ? `Hola Henry, aparté mi sesión para ${cuando} y aquí te mando el comprobante del pago.`
-    : "Hola Henry, aparté mi sesión y aquí te mando el comprobante del pago.";
+    ? `Hola Henry, solicité mi asesoría para ${cuando}. Quisiera coordinar la confirmación de mi sesión.`
+    : "Hola Henry, quisiera coordinar la confirmación de mi asesoría.";
   return `https://wa.me/${WHATSAPP_HENRY}?text=${encodeURIComponent(texto)}`;
 }

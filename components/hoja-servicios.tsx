@@ -88,11 +88,11 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
           <div className="mt-5 flex items-start justify-between gap-4">
             <div>
               <h2 id="hoja-titulo" className="font-titulo text-[26px] font-normal leading-[1.15]">
-                ¿Para qué audiencia?
+                Tu espacio con Henry
               </h2>
               <p className="mt-1.5 text-[15px] leading-[1.45] text-tinta/75">
-                Cada preparación tiene su precio. La agenda es la misma para las
-                tres.
+                Una sesión personalizada para conversar sobre tus dudas y tu
+                próximo paso.
               </p>
             </div>
 
@@ -162,7 +162,7 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
           </div>
 
           <p className="mt-4 text-[14px] leading-[1.45] text-tinta/65">
-            45 minutos uno a uno con Henry. Se paga después de apartar la hora.
+            45 minutos uno a uno con Henry. La reserva se confirma al verificar el pago.
           </p>
         </div>
       </dialog>

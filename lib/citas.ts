@@ -1,6 +1,6 @@
 import { clienteServidor, hayBase } from "@/lib/supabase/servidor";
 import { dentroDelHorario, diasEnRango, type Dia } from "@/lib/horario";
-import { servicioPorId } from "@/lib/servicios";
+import { ASESORIA } from "@/lib/servicios";
 import { leerTramos } from "@/lib/tramos";
 
 /**
@@ -86,7 +86,7 @@ export type DatosCita = {
    * puede ser la de una VPN o la de la biblioteca del pueblo de al lado.
    */
   zonaHoraria?: string;
-  /** Cuál de las tres preparaciones. Sin esto, Henry no sabe para qué prepara. */
+  /** Identificador compatible con el catálogo y el esquema de reservas. */
   servicio: string;
   /**
    * En qué estado de EE. UU. está, dicho por ella misma.
@@ -171,10 +171,10 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
   /* El servicio se resuelve contra la lista, nunca se acepta lo que llegue:
      de ahí sale el precio que se va a cobrar, y un identificador inventado
      acabaría en una cita sin precio o con el que quisiera quien la mandó. */
-  const servicio = servicioPorId(datos.servicio);
-  if (!servicio) {
-    return { ok: false, motivo: "Elige para qué audiencia es la preparación." };
+  if (datos.servicio !== ASESORIA.id) {
+    return { ok: false, motivo: "Esa asesoría no está disponible." };
   }
+  const servicio = ASESORIA;
 
   if (!hayBase) {
     return {
@@ -199,9 +199,7 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
     p_zona_horaria: datos.zonaHoraria?.slice(0, 64) || null,
     p_estado_usa: datos.estadoUsa?.slice(0, 40) || null,
     p_servicio: servicio.id,
-    /* El precio se guarda CON la cita. Si mañana la tercera audiencia sube a
-       $180, las citas ya apartadas tienen que seguir diciendo $150: es lo
-       que esa persona vio y lo que va a pagar. */
+    /* Se conserva el importe acordado en la solicitud. */
     p_precio_usd: servicio.precioUsd,
     p_metodo_pago: datos.metodoPago ?? null,
   });

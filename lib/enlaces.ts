@@ -54,16 +54,15 @@ export type Enlace = {
 
 export const ENLACES: Enlace[] = [
   {
-    titulo: "Preparación de audiencia",
-    etiqueta: "Tres preparaciones · desde $50",
+    titulo: "Asesoría con Henry",
+    etiqueta: "Sesión personalizada · $70 USD",
     descripcion:
-      "45 minutos uno a uno con Henry para llegar preparado a tu audiencia.",
-    href: "/reservar",
+      "45 minutos uno a uno para conversar sobre tus dudas y tu próximo paso.",
+    href: "/asesoria",
     interno: true,
-    abreServicios: true,
     tono: "agua",
     destacado: true,
-    guia: "Si ya tienes fecha de audiencia: 45 minutos con Henry para llegar sabiendo qué te van a preguntar.",
+    guia: "Si quieres orientación personal: 45 minutos con Henry para conversar sobre lo que hoy necesitas.",
   },
   /* Los trámites van ANTES que la comunidad, y el orden de esta lista es el
      orden de la pared. Es lo que más se pide de los tres que no son la

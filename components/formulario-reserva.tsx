@@ -1,93 +1,38 @@
 "use client";
-
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-
 import { PAISES } from "@/lib/paises";
-import {
-  ESTADOS,
-  ESTADO_DE_HENRY,
-  estadoPorNombre,
-  estadoProbable,
-} from "@/lib/estados";
-import { ZONA, desfaseConUtah, fechaLarga, horaEnZona } from "@/lib/horario";
+import { ESTADOS } from "@/lib/estados";
+import { ZONA, fechaLarga, horaEnZona } from "@/lib/horario";
 import { CalendarioMes } from "@/components/calendario-mes";
 import type { DiaConHuecos } from "@/lib/citas";
 import { reservar } from "@/app/reservar/accion";
 import { CLAVE_CITA } from "@/lib/pago";
-import { nombreLargo, type Servicio } from "@/lib/servicios";
-import { PasoVideo } from "@/components/paso-video";
+import type { Servicio } from "@/lib/servicios";
 import { PasoPago } from "@/components/paso-pago";
-
-/**
- * UNA COSA A LA VEZ.
- *
- * Cinco pasos —el video, el día, la hora, quién eres y el pago— pero nunca
- * dos a la vez en pantalla: lo ya resuelto se encoge a una línea con su
- * palomita y lo que falta se anuncia al pie. Así nadie se pregunta cuánto
- * queda, que es la razón por la que la gente abandona un formulario a la
- * mitad.
- *
- * ── El pago va AL FINAL, y la cita NACE del pago ──
- *
- * Al llenar los datos no se aparta nada: se crea una SOLICITUD, y esa hora
- * sigue a la venta. La cita la crea el pago, y hasta entonces la agenda no
- * se entera de que esta persona existe.
- *
- * Es la tercera forma que tiene esto, y las dos anteriores se descartaron
- * por motivos opuestos. La primera apartaba y cobraba después: la agenda se
- * llenaba de horas que nadie pagaba. La segunda cobraba antes de dejar
- * elegir hora: quien tardaba en su banco volvía y no quedaba hueco. La
- * tercera —retener media hora mientras pagaban— resolvía las dos, pero
- * bloqueaba horas vendibles por gente que quizá no iba a comprar.
- *
- * Lo que manda ahora es que la agenda no se ensucie. Se acepta a cambio que
- * dos personas puedan pagar la misma hora; eso queda marcado y visible para
- * que Henry devuelva el dinero, y esta pantalla lo advierte antes de cobrar
- * en vez de prometer una reserva que no existe.
- *
- * ── Y ahora el pago se comprueba de verdad ──
- *
- * Ya no hay botón de «ya pagué» que no compruebe nada. Con tarjeta lo dice
- * Stripe con un webhook firmado; con Zelle lo dice el correo que el banco le
- * manda a Henry, que un proceso lee cada dos minutos y concilia solo
- * (`lib/zelle/`). El código de cuatro dígitos del memo existe para el día en
- * que dos personas paguen lo mismo: el resto de los días sobra.
- *
- * ── La agenda es la de Henry, siempre ──
- *
- * Toda la lógica de horas de este sitio corre en la hora de Utah, y quien
- * reserva se adapta. No es una simplificación técnica: Henry organiza su día
- * en su reloj, y una agenda que se mueve según quién la mire es una agenda
- * en la que no se puede confiar.
- *
- * Así que el número grande de cada hueco es SU hora. Lo que cambió —y lo que
- * costó una cita— es que ahora lo dice.
- *
- * Antes iba desnudo: «4:00» en letra grande, sin apellido, y debajo en
- * pequeño la hora de quien miraba. Alguien de Carolina del Sur, dos horas por
- * delante de Utah, leyó ese número como suyo y apartó una hora que en la
- * agenda de Henry caía dos horas antes.
- *
- * Ahora ninguna hora aparece sin decir de quién es: arriba «hora de Henry ·
- * Utah», debajo «para ti, las 6:00 en Carolina del Sur». Misma agenda, mismo
- * cálculo; lo que se arregla es que se entienda.
- *
- * ── Y el sitio se dice con palabras ──
- *
- * Para decir esa segunda hora hay que saber dónde está esa persona, y ahora
- * se le pregunta por su ESTADO en vez de deducirlo y callar. Todo el mundo
- * sabe en qué estado vive; nadie sabe que vive en `America/New_York`.
- *
- * La zona sigue saliendo del navegador para prerrellenar, nunca de la IP —una
- * IP puede ser la de una VPN o la de la biblioteca del pueblo de al lado—,
- * pero ahora se ESCRIBE:
- * «Texas», no `America/Chicago`. Y se puede corregir, porque un teléfono mal
- * configurado antes no lo notaba nadie.
- */
-
-type Paso = "video" | "dia" | "hora" | "datos" | "pago";
-
+import { Flecha } from "@/components/sitio/estructura";
+const ZONAS = [
+  ["America/Lima", "Perú · Lima"],
+  ["America/Bogota", "Colombia · Bogotá"],
+  ["America/Mexico_City", "México · Ciudad de México"],
+  ["America/Caracas", "Venezuela · Caracas"],
+  ["America/Guayaquil", "Ecuador · Guayaquil"],
+  ["America/Guatemala", "Guatemala"],
+  ["America/El_Salvador", "El Salvador"],
+  ["America/Tegucigalpa", "Honduras"],
+  ["America/Santo_Domingo", "República Dominicana"],
+  ["America/Argentina/Buenos_Aires", "Argentina · Buenos Aires"],
+  ["America/Santiago", "Chile · Santiago"],
+  ["America/New_York", "EE. UU. · Nueva York / Miami"],
+  ["America/Chicago", "EE. UU. · Chicago / Houston"],
+  ["America/Denver", "EE. UU. · Utah / Denver"],
+  ["America/Phoenix", "EE. UU. · Arizona"],
+  ["America/Los_Angeles", "EE. UU. · Los Ángeles"],
+  ["America/Anchorage", "EE. UU. · Alaska"],
+  ["Pacific/Honolulu", "EE. UU. · Hawái"],
+  ["Europe/Madrid", "España · Madrid"],
+];
+type Paso = "fecha" | "datos" | "pago";
 export function FormularioReserva({
   dias,
   conectada,
@@ -97,599 +42,432 @@ export function FormularioReserva({
   dias: DiaConHuecos[];
   conectada: boolean;
   servicio: Servicio;
-  /** Si Stripe está configurado. Sin ello sólo se ofrece Zelle. */
   hayTarjeta: boolean;
 }) {
   const router = useRouter();
+  const contenedor = useRef<HTMLDivElement>(null);
+  const horas = useRef<HTMLDivElement>(null);
+  const siguiente = useRef<HTMLDivElement>(null);
+  const diaConPuntero = useRef(false);
+  const horaConPuntero = useRef(false);
+  const pasoPrevio = useRef<Paso>("fecha");
+  const [contacto, setContacto] = useState({
+    nombre: "",
+    correo: "",
+    whatsapp: "",
+    pais: "",
+    estado: "",
+  });
   const [enCurso, empezar] = useTransition();
-
-  const [paso, setPaso] = useState<Paso>("video");
+  const [paso, setPaso] = useState<Paso>("fecha");
   const [diaElegido, setDiaElegido] = useState<string | null>(null);
   const [horaElegida, setHoraElegida] = useState<string | null>(null);
-
-  const [nombre, setNombre] = useState("");
-  const [correo, setCorreo] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
-  const [pais, setPais] = useState("");
-  /** Se pregunta sólo en los doce estados que están partidos en dos zonas. */
-  const [mitad, setMitad] = useState(0);
-  const [eligiendoEstado, setEligiendoEstado] = useState(false);
-  const [enEeuu, setEnEeuu] = useState<boolean | null>(null);
+  const [zona, setZona] = useState(ZONA);
+  const [zonaDetectada, setZonaDetectada] = useState(ZONA);
   const [error, setError] = useState<string | null>(null);
-  /* Lo que devuelve la base al guardar los datos. NO es una cita: es una
-     solicitud, y esa hora sigue a la venta hasta que entre el pago. */
-  const [apartada, setApartada] = useState<{ solicitudId: number; codigoPago: string } | null>(null);
-
-  /* La zona del navegador, resuelta una vez. En el primer render del
-     servidor no existe, así que se cae a la de Utah y se corrige al montar
-     — nunca al revés, o el servidor y el cliente pintarían horas distintas. */
-  const zonaDelNavegador = useMemo(() => {
+  const [solicitud, setSolicitud] = useState<{
+    solicitudId: number;
+    codigoPago: string;
+  } | null>(null);
+  const [correoPago, setCorreoPago] = useState("");
+  const [enEeuu, setEnEeuu] = useState("");
+  useEffect(() => {
     try {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const local = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setZona(local);
+      setZonaDetectada(local);
     } catch {
-      return "America/Denver";
+      /* Utah remains a visible, editable fallback. */
     }
   }, []);
-
-  /* El estado: se prerrellena con lo que dijo el navegador y lo que se elija
-     a mano SIEMPRE gana. Una zona cubre muchos estados —`America/Chicago` va
-     de Texas a Minnesota—, así que adivinar acierta el reloj, no el sitio. */
-  const [estadoElegido, setEstadoElegido] = useState<string | null>(null);
-  const estado = useMemo(() => {
-    if (estadoElegido) return estadoPorNombre(estadoElegido);
-    return estadoProbable(zonaDelNavegador) ?? estadoPorNombre(ESTADO_DE_HENRY);
-  }, [estadoElegido, zonaDelNavegador]);
-
-  /* La zona con la que se pintan las horas.
-     El estado manda sobre el navegador porque el estado lo dijo una persona.
-     Y si el estado está partido, la mitad elegida manda sobre la primera. */
-  const zonaVisitante = estado?.zonas[mitad]?.zona ?? estado?.zonas[0]?.zona ?? zonaDelNavegador;
-
-  const dia = dias.find((d) => d.clave === diaElegido) ?? null;
-
-  /* Cuándo hay algo que aclarar: sólo si de verdad es otra hora. Repetir el
-     mismo número con dos etiquetas hace dudar de si el sitio se equivocó.
-
-     Se compara el DESFASE y no el nombre de la zona: `America/Denver` y
-     `America/Boise` se escriben distinto y marcan la misma hora, así que por
-     nombre se anunciaría una diferencia que no existe.
-
-     Y se mide sobre el día elegido, no sobre hoy: Arizona está a la hora de
-     Utah en invierno y una hora por detrás en verano. */
-  const desfase = dia ? desfaseConUtah(new Date(dia.huecos[0].iso), zonaVisitante) : 0;
-  const otraHora = desfase !== 0;
-
-  function elegirEstado(nombre: string) {
-    setEstadoElegido(nombre);
-    setMitad(0);
-    setEligiendoEstado(false);
-  }
-
-  function elegirDia(clave: string) {
+  useEffect(() => {
+    if (pasoPrevio.current !== paso) {
+      contenedor.current?.focus({ preventScroll: true });
+      contenedor.current?.scrollIntoView({ block: "start" });
+      pasoPrevio.current = paso;
+    }
+  }, [paso]);
+  useEffect(() => {
+    const porPuntero = diaConPuntero.current;
+    diaConPuntero.current = false;
+    if (
+      !porPuntero ||
+      !diaElegido ||
+      !window.matchMedia("(max-width: 760px)").matches
+    )
+      return;
+    const destino = horas.current;
+    if (
+      destino &&
+      destino.getBoundingClientRect().top > window.innerHeight * 0.65
+    ) {
+      destino.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
+    }
+  }, [diaElegido]);
+  useEffect(() => {
+    const porPuntero = horaConPuntero.current;
+    horaConPuntero.current = false;
+    if (
+      !porPuntero ||
+      !horaElegida ||
+      !window.matchMedia("(max-width: 760px)").matches
+    )
+      return;
+    const destino = siguiente.current;
+    if (
+      destino &&
+      destino.getBoundingClientRect().bottom > window.innerHeight - 12
+    ) {
+      destino.scrollIntoView({
+        block: "end",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
+    }
+  }, [horaElegida]);
+  const dia = dias.find((d) => d.clave === diaElegido);
+  const zonas = ZONAS.some(([z]) => z === zonaDetectada)
+    ? ZONAS
+    : [
+        [zonaDetectada, `Tu zona · ${zonaDetectada.replaceAll("_", " ")}`],
+        ...ZONAS,
+      ];
+  const indice = ["fecha", "datos", "pago"].indexOf(paso);
+  function elegirDia(clave: string, porPuntero = false) {
+    diaConPuntero.current = porPuntero;
     setDiaElegido(clave);
     setHoraElegida(null);
-    setPaso("hora");
-  }
-
-  function enviar() {
     setError(null);
-    if (!horaElegida || enEeuu === null) return;
-
+  }
+  function enviar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!horaElegida || !conectada) return;
+    const datos = new FormData(e.currentTarget);
+    const correo = String(datos.get("correo") ?? "")
+      .trim()
+      .toLowerCase();
+    setError(null);
     empezar(async () => {
-      const r = await reservar({
-        iso: horaElegida,
-        nombre,
-        correo,
-        nacionalidad: pais,
-        enEeuu,
-        whatsapp,
-        servicio: servicio.id,
-        /* El estado que eligió, que hasta ahora se usaba sólo para pintar la
-           hora local y se tiraba. La columna existe desde `0007`. */
-        estadoUsa: enEeuu ? (estado?.nombre ?? undefined) : undefined,
-        /* La zona del navegador viaja con la reserva para que el panel pueda
-           enseñar la hora de esa persona además de la de Utah. Nunca se
-           deduce de la IP: una IP puede ser la de una VPN. */
-        zonaHoraria: zonaVisitante,
-      });
-      if (r.ok) {
-        /* La cita viaja a la pantalla de gracias por `sessionStorage`, NO por
-           la URL: una dirección se queda en el historial del teléfono y en el
-           portapapeles de quien la copie. */
+      try {
+        const r = await reservar({
+          iso: horaElegida,
+          nombre: String(datos.get("nombre") ?? ""),
+          correo,
+          whatsapp: String(datos.get("whatsapp") ?? ""),
+          nacionalidad: String(datos.get("pais") ?? ""),
+          enEeuu: enEeuu === "si",
+          estadoUsa:
+            enEeuu === "si" ? String(datos.get("estado") ?? "") : undefined,
+          zonaHoraria: zona,
+          servicio: servicio.id,
+        });
+        if (!r.ok) {
+          setError(r.motivo);
+          return;
+        }
+        const cuando = new Date(horaElegida);
         try {
           sessionStorage.setItem(
             CLAVE_CITA,
-            describirCita(horaElegida, zonaVisitante, servicio, estado?.nombre ?? null),
+            JSON.stringify({
+              completa: `${fechaLarga(cuando, zona)} a las ${horaEnZona(cuando, zona)} (tu hora)`,
+              utah: `${fechaLarga(cuando)} a las ${horaEnZona(cuando)}`,
+              servicio: servicio.nombre,
+              precio: servicio.precioUsd,
+            }),
           );
         } catch {
-          /* modo privado */
+          /* Storage is optional. */
         }
-        /* La hora NO queda apartada: sigue a la venta. Lo que la convierte
-           en cita es el pago, que es el paso siguiente. */
-        setApartada({ solicitudId: r.solicitudId, codigoPago: r.codigoPago });
+        setCorreoPago(correo);
+        setSolicitud(r);
         setPaso("pago");
-      } else setError(r.motivo);
+      } catch {
+        setError(
+          "No pudimos conectar con la agenda. Tus datos siguen aquí; vuelve a intentarlo.",
+        );
+      }
     });
   }
-
-  /* El video y el pago ocupan la pantalla entera y no comparten nada con la
-     agenda, así que salen por su cuenta en vez de sumar dos ramas más al
-     árbol de abajo. */
-  if (paso === "video") {
-    return <PasoVideo servicio={servicio} onContinuar={() => setPaso("dia")} />;
-  }
-
-  if (paso === "pago" && apartada) {
-    return (
-      <PasoPago
-        servicio={servicio}
-        solicitudId={apartada.solicitudId}
-        codigoPago={apartada.codigoPago}
-        correo={correo.trim().toLowerCase()}
-        hayTarjeta={hayTarjeta}
-        onListo={() => router.push("/gracias")}
-      />
-    );
-  }
-
   return (
-    <div className="mt-6 flex flex-1 flex-col lg:mt-8 lg:flex-none">
-      {/* ── Lo ya resuelto, encogido ── */}
-      {diaElegido && dia ? (
-        <Resuelto
-          texto={fechaLarga(new Date(dia.huecos[0].iso))}
-          onCambiar={() => {
-            setPaso("dia");
-            setHoraElegida(null);
-          }}
-        />
-      ) : null}
-
-      {horaElegida && paso === "datos" ? (
-        <Resuelto
-          texto={
-            otraHora
-              ? `${horaEnZona(new Date(horaElegida))} de Henry · para ti las ${horaEnZona(new Date(horaElegida), zonaVisitante)}`
-              : `${horaEnZona(new Date(horaElegida))} · hora de Henry`
-          }
-          onCambiar={() => setPaso("hora")}
-        />
-      ) : null}
-
-      {/* ── Paso 1 · el día ── */}
-      {paso === "dia" ? (
+    <div ref={contenedor} tabIndex={-1} className="booking-flow">
+      <ol className="booking-progress" aria-label="Pasos de la reserva">
+        {["Tu momento", "Tus datos", "El pago"].map((t, i) => (
+          <li key={t} aria-current={i === indice ? "step" : undefined}>
+            <span>{i < indice ? "✓" : i + 1}</span>
+            {t}
+          </li>
+        ))}
+      </ol>
+      {paso === "fecha" ? (
         <>
-          <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:mt-7 lg:text-[40px] lg:leading-[1.12]">
-            ¿Qué día nos vemos?
-          </h1>
-          {/* El mes entero, no los seis próximos días: quien tiene una fecha
-              en la cabeza tiene que poder llegar a ella. */}
-          <CalendarioMes dias={dias} onElegir={elegirDia} />
-        </>
-      ) : null}
-
-      {/* ── Paso 2 · la hora ── */}
-      {paso === "hora" && dia ? (
-        <>
-          <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:mt-7 lg:text-[40px] lg:leading-[1.12]">
-            ¿A qué hora nos vemos?
-          </h1>
-
-          {/* Dónde está quien reserva, ESCRITO y corregible.
-              Antes se adivinaba del navegador y no se decía nunca: si el
-              teléfono venía mal configurado o había una VPN, la segunda hora
-              salía mal y no había forma de que nadie lo notara. */}
-          {eligiendoEstado ? (
-            <div className="mt-5 rounded-[20px] border border-white/20 p-4">
-              <p className="text-[15px] font-semibold">¿En qué estado estás?</p>
-              <div className="mt-3 max-h-[280px] overflow-y-auto">
-                <div className="grid grid-cols-2 gap-2">
-                  {ESTADOS.map((e) => (
-                    <button
-                      key={e.nombre}
-                      type="button"
-                      onClick={() => elegirEstado(e.nombre)}
-                      className={
-                        e.nombre === estado?.nombre
-                          ? "min-h-[44px] rounded-full border border-acento bg-acento/15 px-3 text-[14px] text-tinta"
-                          : "min-h-[44px] rounded-full border border-white/20 px-3 text-[14px] text-tinta-suave"
-                      }
-                    >
-                      {e.nombre}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Pregunta mientras es una SUPOSICIÓN; afirma en cuanto lo ha
-               elegido una persona. La diferencia importa: «Estás en Carolina
-               del Norte» se lee como un hecho comprobado y nadie lo corrige,
-               y el navegador acierta la zona pero no el estado. */
-            <button
-              type="button"
-              onClick={() => setEligiendoEstado(true)}
-              className="caja-estado mt-4 flex min-h-[56px] w-full items-center gap-3 rounded-[18px] border px-4 py-2.5 text-left"
-            >
-              <span aria-hidden="true" className="shrink-0 text-acento">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-              </span>
-
-              <span className="min-w-0 flex-1">
-                <span className="block text-[12px] font-semibold uppercase tracking-[0.1em] text-acento">
-                  {estadoElegido ? "Tu estado" : "¿Es aquí donde estás?"}
-                </span>
-                <span className="mt-0.5 block truncate text-[17px] font-bold text-tinta">
-                  {estado?.nombre}
-                </span>
-              </span>
-
-              <span className="boton-cambiar shrink-0 rounded-full px-3.5 py-2 text-[14px] font-semibold">
-                Cambiar
-              </span>
-            </button>
-          )}
-
-          {/* Y lo que de verdad hace que nadie se vuelva a equivocar: no el
-              número, sino la RELACIÓN. Quien entiende que va dos horas por
-              delante ya lee bien toda la rejilla; quien sólo ve «para ti,
-              las 15:00» tiene que fiarse hueco por hueco. */}
-          {!eligiendoEstado && estado && dia ? (
-            /* En neutro, no en acento. Va justo debajo de la caja del estado
-               y con el mismo color las dos se anulaban: si todo destaca, no
-               destaca nada. El acento se queda donde hay algo que TOCAR; esto
-               sólo se lee. */
-            <p className="mt-2.5 rounded-[18px] border border-white/12 bg-white/[0.04] px-4 py-3 text-[15px] leading-[1.45] text-tinta-suave">
-              {desfase === 0 ? (
-                <>
-                  En {estado.nombre} tienes{" "}
-                  <strong className="font-semibold text-tinta">la misma hora</strong> que
-                  Henry, así que lo que veas es lo que hay.
-                </>
-              ) : (
-                <>
-                  En {estado.nombre} vas{" "}
-                  <strong className="font-semibold text-tinta">
-                    {Math.abs(desfase)} {Math.abs(desfase) === 1 ? "hora" : "horas"}{" "}
-                    {desfase > 0 ? "por delante" : "por detrás"}
-                  </strong>{" "}
-                  de Henry. Sus {horaEnZona(new Date(dia.huecos[0].iso))} son tus{" "}
-                  {horaEnZona(new Date(dia.huecos[0].iso), zonaVisitante)}.
-                </>
-              )}
-            </p>
-          ) : null}
-
-          {/* La segunda pregunta, SÓLO en los doce estados partidos. Con
-              ciudades y no con nombres de zona: «¿más cerca de El Paso o de
-              Houston?» lo contesta cualquiera; «¿Mountain o Central?» no. */}
-          {!eligiendoEstado && estado && estado.zonas.length > 1 ? (
-            <div className="mt-2.5 rounded-[20px] border border-white/15 px-4 py-3">
-              <p className="text-[14px] text-tinta-suave">
-                En {estado.nombre} hay dos horas distintas. ¿Cuál te queda más cerca?
+          <h2>Primero, el día.</h2>
+          <p className="booking-explainer">
+            Elige un espacio para conversar con calma.
+          </p>
+          <CalendarioMes
+            dias={dias}
+            elegido={diaElegido}
+            onElegir={elegirDia}
+          />
+          {dia ? (
+            <div ref={horas} className="booking-hours">
+              <p className="booking-selected-date">
+                <span aria-hidden="true">✓</span>
+                {fechaLarga(new Date(dia.huecos[0].iso))}
               </p>
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                {estado.zonas.map((z, i) => (
+              <h3>Ahora, tu hora.</h3>
+              <label className="zone-control">
+                <span>Mostramos primero la hora donde tú estás</span>
+                <select
+                  aria-label="Tu zona horaria"
+                  value={zona}
+                  onChange={(e) => setZona(e.target.value)}
+                >
+                  {zonas.map(([z, n]) => (
+                    <option key={z} value={z}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="time-grid">
+                {dia.huecos.map((h) => (
                   <button
-                    key={z.zona}
                     type="button"
-                    onClick={() => setMitad(i)}
-                    className={
-                      i === mitad
-                        ? "min-h-[44px] rounded-full border border-acento bg-acento/15 px-4 text-[14px] text-tinta"
-                        : "min-h-[44px] rounded-full border border-white/20 px-4 text-[14px] text-tinta-suave"
-                    }
+                    key={h.iso}
+                    disabled={!h.libre}
+                    aria-pressed={horaElegida === h.iso}
+                    onClick={(event) => {
+                      horaConPuntero.current = event.detail > 0;
+                      setHoraElegida(h.iso);
+                    }}
                   >
-                    {z.donde}
+                    <strong>{horaEnZona(new Date(h.iso), zona)}</strong>
+                    <small>
+                      {h.libre
+                        ? `${horaEnZona(new Date(h.iso))} en Utah`
+                        : "No disponible"}
+                    </small>
                   </button>
                 ))}
               </div>
+              <div ref={siguiente} className="booking-next booking-moment-next">
+                <p
+                  className="booking-moment-status"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {horaElegida ? (
+                    <>
+                      <span>Tu hora seleccionada</span>
+                      <strong>{horaEnZona(new Date(horaElegida), zona)}</strong>
+                    </>
+                  ) : (
+                    <>
+                      <span>Tu siguiente paso</span>
+                      <strong>Elige una hora</strong>
+                    </>
+                  )}
+                </p>
+                <button
+                  type="button"
+                  className="route-button"
+                  disabled={!horaElegida}
+                  onClick={() => setPaso("datos")}
+                >
+                  Continuar con mis datos <Flecha />
+                </button>
+              </div>
             </div>
           ) : null}
-
-          <div className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-3">
-            {dia.huecos.map((h) => {
-              const cuando = new Date(h.iso);
-              return (
-                <button
-                  key={h.iso}
-                  type="button"
-                  disabled={!h.libre}
-                  onClick={() => {
-                    setHoraElegida(h.iso);
-                    setPaso("datos");
-                  }}
-                  className={
-                    h.libre
-                      ? "flex min-h-[84px] flex-col justify-center gap-0.5 rounded-[20px] border border-white/25 px-[18px] py-3 text-left transition-colors hover:border-acento"
-                      : "flex min-h-[84px] flex-col justify-center gap-0.5 rounded-[20px] border border-white/10 px-[18px] py-3 text-left text-apagado"
-                  }
-                >
-                  {/* La hora de Henry, y DICIENDO que es la suya. Ir sin
-                      apellido es lo que costó la cita de Carolina del Sur. */}
-                  <span
-                    className={
-                      h.libre
-                        ? "text-[20px] font-extrabold"
-                        : "text-[20px] font-extrabold line-through"
-                    }
-                  >
-                    {horaEnZona(cuando)}
-                  </span>
-                  <span className="text-[12px] text-tinta-tenue">hora de Henry · Utah</span>
-
-                  {/* Y la de quien reserva, sólo cuando de verdad es otra:
-                      repetir el mismo número con dos etiquetas hace dudar de
-                      si el sitio se equivocó. */}
-                  {h.libre && otraHora ? (
-                    <span className="mt-1.5 text-[13px] text-tinta-suave">
-                      Para ti: {horaEnZona(cuando, zonaVisitante)}
-                    </span>
-                  ) : null}
-                  {!h.libre ? (
-                    <span className="mt-1.5 text-[13px] text-tinta-tenue">apartada</span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
         </>
       ) : null}
-
       {paso === "datos" && horaElegida ? (
         <>
-          <h1 className="mt-6 font-titulo text-[32px] font-semibold leading-[1.14] tracking-[-0.02em] lg:mt-7 lg:text-[40px] lg:leading-[1.12]">
-            Llena tus datos
-          </h1>
-
-          <div className="mt-5 flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:gap-2.5">
-            <Campo
-              etiqueta="Tu nombre"
-              valor={nombre}
-              onCambio={setNombre}
-              autoComplete="name"
-            />
-            <Campo
-              etiqueta="Tu correo"
-              valor={correo}
-              onCambio={setCorreo}
-              tipo="email"
-              autoComplete="email"
-            />
-            <Campo
-              etiqueta="Tu WhatsApp"
-              valor={whatsapp}
-              onCambio={setWhatsapp}
-              tipo="tel"
-              autoComplete="tel"
-              ayuda="Con el código de país, así: +1 385 456 4470. Por ahí le mandas el comprobante y él te manda el enlace."
-            />
-
-            <label className="flex min-h-[56px] items-center rounded-2xl bg-white/[0.07] px-4">
-              <span className="sr-only">Tu nacionalidad</span>
-              <select
-                value={pais}
-                onChange={(e) => setPais(e.target.value)}
-                className="w-full bg-transparent text-[17px] text-tinta outline-none"
-              >
-                <option value="" className="bg-fondo">
-                  Tu nacionalidad
-                </option>
-                {PAISES.map((p) => (
-                  <option key={p.codigo} value={p.codigo} className="bg-fondo">
-                    {p.nombre}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <fieldset className="mt-1">
-              <legend className="text-[15px] text-tinta-tenue">
-                ¿Ya estás en Estados Unidos?
-              </legend>
-              <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-                <Opcion
-                  texto="Sí, ya estoy"
-                  activa={enEeuu === true}
-                  onElegir={() => setEnEeuu(true)}
-                />
-                <Opcion
-                  texto="Todavía no"
-                  activa={enEeuu === false}
-                  onElegir={() => setEnEeuu(false)}
-                />
-              </div>
-            </fieldset>
+          <div className="reservation-detail">
+            <div>
+              {fechaLarga(new Date(horaElegida), zona)}
+              <span>
+                {horaEnZona(new Date(horaElegida), zona)} tu hora ·{" "}
+                {horaEnZona(new Date(horaElegida))} en Utah
+              </span>
+            </div>
+            <button
+              type="button"
+              className="link-button"
+              disabled={enCurso}
+              onClick={() => setPaso("fecha")}
+            >
+              Cambiar
+            </button>
           </div>
-
-          {error ? (
-            <p role="alert" className="mt-4 text-[15px] leading-[1.45] text-aviso">
-              {error}
+          <h2>¿Cómo te contactamos?</h2>
+          <p className="booking-explainer">
+            Solo lo necesario para preparar nuestro encuentro.
+          </p>
+          <form onSubmit={enviar}>
+            <div className="booking-fields">
+              <label>
+                Tu nombre
+                <input
+                  name="nombre"
+                  value={contacto.nombre}
+                  onChange={(e) =>
+                    setContacto({ ...contacto, nombre: e.target.value })
+                  }
+                  disabled={enCurso}
+                  autoComplete="name"
+                  required
+                  minLength={2}
+                  maxLength={120}
+                  placeholder="Cómo te llamas"
+                />
+              </label>
+              <label>
+                Tu correo
+                <input
+                  name="correo"
+                  value={contacto.correo}
+                  onChange={(e) =>
+                    setContacto({ ...contacto, correo: e.target.value })
+                  }
+                  disabled={enCurso}
+                  type="email"
+                  autoComplete="email"
+                  required
+                  maxLength={254}
+                  placeholder="tu@correo.com"
+                />
+              </label>
+              <label>
+                Tu WhatsApp
+                <input
+                  name="whatsapp"
+                  value={contacto.whatsapp}
+                  onChange={(e) =>
+                    setContacto({ ...contacto, whatsapp: e.target.value })
+                  }
+                  disabled={enCurso}
+                  type="tel"
+                  autoComplete="tel"
+                  required
+                  minLength={8}
+                  maxLength={24}
+                  placeholder="+1 385 000 0000"
+                />
+                <small>
+                  Incluye el código de país. Henry te escribirá por aquí.
+                </small>
+              </label>
+              <label>
+                Tu nacionalidad
+                <select
+                  name="pais"
+                  value={contacto.pais}
+                  onChange={(e) =>
+                    setContacto({ ...contacto, pais: e.target.value })
+                  }
+                  disabled={enCurso}
+                  required
+                >
+                  <option value="" disabled>
+                    Selecciona tu país
+                  </option>
+                  {PAISES.map((p) => (
+                    <option key={p.codigo} value={p.codigo}>
+                      {p.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                ¿Estás en Estados Unidos?
+                <select
+                  required
+                  disabled={enCurso}
+                  value={enEeuu}
+                  onChange={(e) => setEnEeuu(e.target.value)}
+                >
+                  <option value="" disabled>
+                    Selecciona una opción
+                  </option>
+                  <option value="si">Sí, estoy en EE. UU.</option>
+                  <option value="no">Estoy en otro país</option>
+                </select>
+              </label>
+              {enEeuu === "si" ? (
+                <label>
+                  Tu estado
+                  <select
+                    name="estado"
+                    value={contacto.estado}
+                    onChange={(e) =>
+                      setContacto({ ...contacto, estado: e.target.value })
+                    }
+                    disabled={enCurso}
+                    required
+                  >
+                    <option value="" disabled>
+                      Selecciona tu estado
+                    </option>
+                    {ESTADOS.map((e) => (
+                      <option key={e.nombre} value={e.nombre}>
+                        {e.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+            </div>
+            <p className="booking-privacy">
+              No necesitas contar tu caso ni enviar documentos aquí. Lo
+              conversarás directamente con Henry.
             </p>
-          ) : null}
-
-          {!conectada ? (
-            <p className="mt-4 text-[15px] leading-[1.45] text-aviso">
-              La agenda todavía no está conectada, así que este botón no puede
-              apartar nada. Está dicho aquí para que no lo descubras después de
-              pulsarlo.
-            </p>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={enviar}
-            disabled={enCurso || !nombre || !correo || !whatsapp || !pais || enEeuu === null}
-            className="mt-6 flex min-h-[60px] w-full items-center justify-between rounded-full bg-acento px-7 text-[18px] font-extrabold tracking-[-0.02em] text-fondo transition-opacity disabled:opacity-40"
-          >
-            <span>{enCurso ? "Guardando tu hora…" : "Guardar mi hora y pagar"}</span>
-            <span>{`$${servicio.precioUsd}`}</span>
-          </button>
+            {error ? (
+              <p className="booking-error" role="alert">
+                {error}
+              </p>
+            ) : null}
+            {!conectada ? (
+              <p className="booking-error" role="status">
+                La agenda no está disponible por el momento. Vuelve a intentarlo
+                más tarde.
+              </p>
+            ) : null}
+            <div className="booking-next">
+              <button
+                className="route-button"
+                type="submit"
+                disabled={enCurso || !conectada}
+              >
+                {enCurso
+                  ? "Preparando tu sesión…"
+                  : `Continuar al pago · $${servicio.precioUsd}`}
+                <Flecha />
+              </button>
+            </div>
+          </form>
         </>
       ) : null}
-
-      {/* Lo que falta, para que nadie se pregunte cuánto queda */}
-      {paso !== "datos" ? (
-        <div className="mt-6 flex items-center gap-2.5 border-t border-white/15 pt-4">
-          <span
-            aria-hidden="true"
-            className="flex size-[22px] shrink-0 items-center justify-center rounded-full border border-white/25 text-[12px] text-tinta-tenue"
-          >
-            {paso === "dia" ? "2" : "1"}
-          </span>
-          <span className="text-[16px] text-tinta-tenue">
-            {paso === "dia"
-              ? "Después: la hora, y tus datos para que Henry te escriba."
-              : "Después sólo te pido tu nombre, tu WhatsApp, tu correo y de dónde eres."}
-          </span>
+      {paso === "pago" && solicitud ? (
+        <div className="payment-panel">
+          <PasoPago
+            servicio={servicio}
+            solicitudId={solicitud.solicitudId}
+            codigoPago={solicitud.codigoPago}
+            correo={correoPago}
+            hayTarjeta={hayTarjeta}
+            onListo={() => router.push("/gracias")}
+          />
         </div>
       ) : null}
     </div>
-  );
-}
-
-/**
- * «viernes 21 de agosto a las 10:00 de Utah (11:00 donde estás)».
- *
- * La hora de Utah es la que Henry tiene en la cabeza y la que va a leer en su
- * panel; la local es la que hay que poner en el despertador. Sólo se dicen
- * las dos cuando de verdad son distintas: repetir la misma hora dos veces
- * hace dudar de si el sitio se ha equivocado.
- */
-function describirCita(
-  iso: string,
-  zonaVisitante: string,
-  servicio: Servicio,
-  estado: string | null,
-): string {
-  const cuando = new Date(iso);
-  const enUtah = horaEnZona(cuando);
-  const enSuCasa = horaEnZona(cuando, zonaVisitante);
-  const fecha = fechaLarga(cuando);
-  /* Con el nombre del estado, no con «donde estás». Quien lo lee en la
-     pantalla de pago acaba de decirnos dónde vive: devolvérselo con su
-     nombre es lo que confirma que le entendimos. */
-  const suSitio = estado ? `en ${estado}` : "donde estás";
-
-  /* Dos formas de la misma cita, y cada una va a un sitio: la larga se pinta
-     en pantalla, la de Utah se manda por WhatsApp. Van juntas en un JSON en
-     vez de en dos claves para que no puedan quedar descolgadas la una de la
-     otra si alguien limpia media sesión. */
-  return JSON.stringify({
-    completa:
-      enUtah === enSuCasa
-        ? `${fecha} a las ${enUtah}`
-        : `${fecha} a las ${enUtah} de Henry, en Utah — para ti las ${enSuCasa} ${suSitio}`,
-    utah: `${fecha} a las ${enUtah}`,
-    /* Qué se apartó y cuánto cuesta viajan con la cita: la pantalla de pago
-       tiene que decir la cifra exacta de ESTA preparación, y con tres
-       precios distintos ya no puede sacarla de una constante. */
-    servicio: nombreLargo(servicio),
-    precio: servicio.precioUsd,
-  });
-}
-
-function Resuelto({ texto, onCambiar }: { texto: string; onCambiar: () => void }) {
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-white/15 pb-3.5 pt-3">
-      <span className="flex items-center gap-2.5">
-        <span
-          aria-hidden="true"
-          className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-acento text-fondo"
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </span>
-        <span className="text-[16px] font-bold first-letter:uppercase">{texto}</span>
-      </span>
-      <button
-        type="button"
-        onClick={onCambiar}
-        className="text-[15px] text-tinta-tenue underline underline-offset-4"
-      >
-        cambiar
-      </button>
-    </div>
-  );
-}
-
-function Campo({
-  etiqueta,
-  valor,
-  onCambio,
-  tipo = "text",
-  autoComplete,
-  ayuda,
-}: {
-  etiqueta: string;
-  valor: string;
-  onCambio: (v: string) => void;
-  tipo?: string;
-  autoComplete?: string;
-  ayuda?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="sr-only">{etiqueta}</span>
-      <input
-        type={tipo}
-        value={valor}
-        onChange={(e) => onCambio(e.target.value)}
-        placeholder={etiqueta}
-        autoComplete={autoComplete}
-        autoCapitalize={tipo === "email" ? "none" : "words"}
-        autoCorrect="off"
-        spellCheck={false}
-        className="min-h-[56px] w-full rounded-2xl bg-white/[0.07] px-4 text-[17px] text-tinta outline-none placeholder:text-tinta-tenue"
-      />
-      {ayuda ? <span className="mt-1.5 block text-[14px] text-tinta-tenue">{ayuda}</span> : null}
-    </label>
-  );
-}
-
-function Opcion({
-  texto,
-  activa,
-  onElegir,
-}: {
-  texto: string;
-  activa: boolean;
-  onElegir: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={activa}
-      onClick={onElegir}
-      className={
-        activa
-          ? "flex min-h-[56px] items-center justify-center rounded-2xl border-2 border-acento bg-acento/15 px-3 text-[17px] font-bold"
-          : "flex min-h-[56px] items-center justify-center rounded-2xl border border-white/25 px-3 text-[17px]"
-      }
-    >
-      {texto}
-    </button>
   );
 }

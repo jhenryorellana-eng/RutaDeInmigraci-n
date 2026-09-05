@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  devIndicators: false,
 
   /*
    * Next 16 escribe por su cuenta un `AGENTS.md` y un `CLAUDE.md` en la raíz
