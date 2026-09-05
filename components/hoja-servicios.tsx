@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import { SERVICIOS } from "@/lib/servicios";
+import { AUDIENCIAS } from "@/lib/servicios";
 
 /**
  * LAS TRES PREPARACIONES, EN UNA HOJA.
@@ -83,16 +83,21 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
           {/* El asa. No hace nada por sí sola —cerrar es tocar fuera o el
               botón— pero es lo que dice «esto es una hoja» antes de leer
               una palabra. */}
-          <div aria-hidden="true" className="mx-auto h-1 w-9 rounded-full bg-tinta/35" />
+          <div
+            aria-hidden="true"
+            className="mx-auto h-1 w-9 rounded-full bg-tinta/35"
+          />
 
           <div className="mt-5 flex items-start justify-between gap-4">
             <div>
-              <h2 id="hoja-titulo" className="font-titulo text-[26px] font-normal leading-[1.15]">
-                Tu espacio con Henry
+              <h2
+                id="hoja-titulo"
+                className="font-titulo text-[26px] font-normal leading-[1.15]"
+              >
+                Preparación de audiencia
               </h2>
               <p className="mt-1.5 text-[15px] leading-[1.45] text-tinta/75">
-                Una sesión personalizada para conversar sobre tus dudas y tu
-                próximo paso.
+                Elige la audiencia que necesitas preparar con Henry.
               </p>
             </div>
 
@@ -121,7 +126,7 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
               que tiene iOS de decir «esto es un grupo de opciones del mismo
               rango», y evita tres tarjetas compitiendo entre ellas. */}
           <div className="mt-6 overflow-hidden rounded-2xl bg-tinta/[0.06]">
-            {SERVICIOS.map((s, i) => (
+            {AUDIENCIAS.map((s, i) => (
               <Link
                 key={s.id}
                 href={`/reservar?servicio=${s.id}`}
@@ -136,7 +141,9 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
                   <span className="block text-[17px] font-semibold tracking-[-0.01em]">
                     {s.nombre}
                   </span>
-                  <span className="mt-0.5 block text-[14px] text-tinta/70">{s.etapa}</span>
+                  <span className="mt-0.5 block text-[14px] text-tinta/70">
+                    {s.etapa}
+                  </span>
                 </span>
 
                 <span className="shrink-0 text-[19px] font-bold tabular-nums text-agua">
@@ -162,7 +169,8 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
           </div>
 
           <p className="mt-4 text-[14px] leading-[1.45] text-tinta/65">
-            45 minutos uno a uno con Henry. La reserva se confirma al verificar el pago.
+            45 minutos uno a uno con Henry. La reserva se confirma al verificar
+            el pago.
           </p>
         </div>
       </dialog>

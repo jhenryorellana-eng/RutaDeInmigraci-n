@@ -54,11 +54,23 @@ export type Enlace = {
 
 export const ENLACES: Enlace[] = [
   {
+    titulo: "Preparación de audiencia",
+    etiqueta: "Tres preparaciones · desde $70",
+    descripcion:
+      "45 minutos uno a uno con Henry para llegar preparado a tu audiencia.",
+    href: "/reservar",
+    interno: true,
+    abreServicios: true,
+    tono: "agua",
+    destacado: true,
+    guia: "Si ya tienes fecha de audiencia: elige la preparación para tu primera, segunda o tercera audiencia.",
+  },
+  {
     titulo: "Asesoría con Henry",
     etiqueta: "Sesión personalizada · $70 USD",
     descripcion:
       "45 minutos uno a uno para conversar sobre tus dudas y tu próximo paso.",
-    href: "/asesoria",
+    href: "/",
     interno: true,
     tono: "agua",
     destacado: true,

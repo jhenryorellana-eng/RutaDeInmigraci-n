@@ -1,6 +1,6 @@
 import { clienteServidor, hayBase } from "@/lib/supabase/servidor";
 import { dentroDelHorario, diasEnRango, type Dia } from "@/lib/horario";
-import { ASESORIA } from "@/lib/servicios";
+import { servicioPorId } from "@/lib/servicios";
 import { leerTramos } from "@/lib/tramos";
 
 /**
@@ -171,10 +171,10 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
   /* El servicio se resuelve contra la lista, nunca se acepta lo que llegue:
      de ahí sale el precio que se va a cobrar, y un identificador inventado
      acabaría en una cita sin precio o con el que quisiera quien la mandó. */
-  if (datos.servicio !== ASESORIA.id) {
-    return { ok: false, motivo: "Esa asesoría no está disponible." };
+  const servicio = servicioPorId(datos.servicio);
+  if (!servicio) {
+    return { ok: false, motivo: "Ese servicio no está disponible." };
   }
-  const servicio = ASESORIA;
 
   if (!hayBase) {
     return {

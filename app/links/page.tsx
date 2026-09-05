@@ -71,7 +71,7 @@ import { ParedGuiada } from "@/components/pared-guiada";
  * (`/links?v=2`) para que la vuelva a pedir.
  */
 const DESCRIPCION =
-  "Asesoría personalizada, servicios migratorios, la comunidad Andex y el bootcamp para jóvenes. Todo en un sitio.";
+  "Preparación de primera, segunda y tercera audiencia, asesoría personalizada, servicios migratorios, la comunidad Andex y el bootcamp para jóvenes. Todo en un sitio.";
 
 export const metadata: Metadata = {
   title: "Henry Orellana D. · Todos sus proyectos",

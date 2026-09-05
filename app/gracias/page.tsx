@@ -4,7 +4,7 @@ import { CitaConfirmada } from "@/components/cita-confirmada";
 import { Sitio } from "@/components/sitio/estructura";
 
 export const metadata: Metadata = {
-  title: "El siguiente paso · Tu asesoría con Henry",
+  title: "El siguiente paso · Tu sesión con Henry",
   robots: { index: false, follow: false },
 };
 
@@ -12,7 +12,7 @@ export default function Gracias() {
   return (
     <Sitio reserva>
       <main id="contenido" className="site-container receipt-page">
-        <span className="eyebrow">TU ASESORÍA CON HENRY</span>
+        <span className="eyebrow">TU SESIÓN CON HENRY</span>
         <h1>
           El siguiente paso:
           <br />

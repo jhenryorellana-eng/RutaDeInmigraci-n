@@ -2,7 +2,7 @@
 
 Revisión del código local realizada el 5 de septiembre de 2026. Referencia inicial: commit `99e2e6c`.
 
-> Este documento registra el diagnóstico previo al rediseño. Posteriormente se implementaron las páginas Inicio, Henry, Asesoría y Reserva, se unificó la oferta pública a $70, se corrigió la zona horaria inicial y se eliminó la falsa confirmación al entrar a `/gracias`. Se añadieron dos imágenes editoriales, revisión visual móvil/escritorio y siete pruebas del cobro (87 en total). Los hallazgos sobre SQL y conciliación no forman parte de este rediseño.
+> Este documento registra el diagnóstico previo al rediseño. La landing incorpora la asesoría de $70 como servicio adicional a las tres audiencias, conservadas con sus identificadores y precios originales. La sustitución accidental del catálogo se corrigió el 5 de septiembre de 2026; véase `docs/SERVICIOS_Y_PAGOS.md`. Las mejoras de páginas, imágenes, movilidad y zona horaria se mantienen. Los hallazgos sobre cobros y conciliación que aparecen abajo describen el diagnóstico original; no equivalen a cambios implementados.
 
 El proyecto tiene una arquitectura pequeña y comprensible, con bastante lógica de negocio en PostgreSQL. Compila y sus pruebas pasan, pero conviven tres generaciones del flujo de reserva: reserva inmediata, retención temporal y solicitud sin bloqueo hasta recibir el pago. Esa transición explica varias discrepancias entre interfaz, documentación y permisos SQL.
 

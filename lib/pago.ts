@@ -32,7 +32,7 @@ export const CLAVE_CITA = "ruta_cita_apartada";
  */
 export function enlaceWhatsapp(cuando?: string): string {
   const texto = cuando
-    ? `Hola Henry, solicité mi asesoría para ${cuando}. Quisiera coordinar la confirmación de mi sesión.`
-    : "Hola Henry, quisiera coordinar la confirmación de mi asesoría.";
+    ? `Hola Henry, solicité mi sesión para ${cuando}. Quisiera coordinar su confirmación.`
+    : "Hola Henry, quisiera coordinar la confirmación de mi sesión.";
   return `https://wa.me/${WHATSAPP_HENRY}?text=${encodeURIComponent(texto)}`;
 }

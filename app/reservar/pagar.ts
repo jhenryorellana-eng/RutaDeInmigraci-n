@@ -1,7 +1,7 @@
 "use server";
 
 import { crearSesionDePago } from "@/lib/pago-stripe";
-import { ASESORIA } from "@/lib/servicios";
+import { servicioPorId, nombreLargo } from "@/lib/servicios";
 import { URL_SITIO } from "@/lib/sitio";
 
 /**
@@ -17,8 +17,8 @@ export async function abrirPagoConTarjeta(datos: {
   servicioId: string;
   correo: string;
 }): Promise<{ url: string } | { error: string }> {
-  if (datos.servicioId !== ASESORIA.id) return { error: "Esa asesoría no está disponible." };
-  const servicio = ASESORIA;
+  const servicio = servicioPorId(datos.servicioId);
+  if (!servicio) return { error: "Ese servicio no está disponible." };
   if (!Number.isInteger(datos.solicitudId) || datos.solicitudId <= 0) {
     return { error: "Esa solicitud no existe." };
   }
@@ -26,7 +26,7 @@ export async function abrirPagoConTarjeta(datos: {
   return crearSesionDePago({
     solicitudId: datos.solicitudId,
     titulo: `${servicio.nombre} · Henry Orellana`,
-    descripcion: "45 minutos de asesoría personalizada con Henry Orellana",
+    descripcion: `45 minutos · ${nombreLargo(servicio)}`,
     precioUsd: servicio.precioUsd,
     correo: datos.correo,
     urlBase: URL_SITIO,

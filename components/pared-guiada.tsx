@@ -35,7 +35,9 @@ import { ENLACES, type Enlace } from "@/lib/enlaces";
  */
 
 /** -1 nada dicho aún · 0-3 los cuatro servicios · 4 la invitación · 5 retirado. */
-type Paso = -1 | 0 | 1 | 2 | 3 | 4 | 5;
+type Paso = number;
+const INVITAR = ENLACES.length;
+const TERMINADO = INVITAR + 1;
 
 const VISTO = "ruta:guia-vista";
 
@@ -79,13 +81,15 @@ export function ParedGuiada() {
   function terminar() {
     parar();
     anotarVisto();
-    setPaso(5);
+    setPaso(TERMINADO);
   }
 
   useEffect(() => {
     /* Quien pide menos movimiento no ve el recorrido. No se pierde nada: la
        pared encendida y la burbuja son el mismo estado al que lleva. */
-    const quieto = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const quieto = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     let yaVisto = false;
     try {
       yaVisto = sessionStorage.getItem(VISTO) === "1";
@@ -95,20 +99,20 @@ export function ParedGuiada() {
     }
 
     if (quieto || yaVisto) {
-      setPaso(5);
+      setPaso(TERMINADO);
       return;
     }
 
     let t = 600;
-    const pasos: Paso[] = [0, 1, 2, 3, 4];
+    const pasos: Paso[] = Array.from({ length: INVITAR + 1 }, (_, i) => i);
     pasos.forEach((p) => {
       relojes.current.push(setTimeout(() => setPaso(p), t));
-      t += duracion(p === 4 ? INVITACION : ENLACES[p].guia);
+      t += duracion(p === INVITAR ? INVITACION : ENLACES[p].guia);
     });
     relojes.current.push(
       setTimeout(() => {
         anotarVisto();
-        setPaso(5);
+        setPaso(TERMINADO);
       }, t),
     );
 
@@ -120,16 +124,17 @@ export function ParedGuiada() {
      tarjeta mientras el guía habla, entra — y la pared que deja atrás ya está
      en su estado final. */
   useEffect(() => {
-    if (paso === 5) return;
+    if (paso === TERMINADO) return;
     const salir = () => terminar();
     /* Se registra sólo mientras el guía habla, así que no hay riesgo de que
        un toque dentro del chat —que aún no existe en ese momento— lo cierre
        por sorpresa. */
     document.addEventListener("pointerdown", salir, { capture: true });
-    return () => document.removeEventListener("pointerdown", salir, { capture: true });
+    return () =>
+      document.removeEventListener("pointerdown", salir, { capture: true });
   }, [paso]);
 
-  const guiando = paso >= 0 && paso <= 3;
+  const guiando = paso >= 0 && paso < INVITAR;
 
   /* Mientras el guía señala, el retrato se desenfoca y el nombre se apaga.
      Se avisa con un atributo en la raíz porque lo que hay que atenuar —la
@@ -195,7 +200,7 @@ export function ParedGuiada() {
 
       {/* La invitación baja a la esquina antes de encogerse, para que el ojo
           siga el movimiento y sepa dónde se quedó. */}
-      {paso === 4 ? (
+      {paso === INVITAR ? (
         <div
           role="status"
           className="globo-guia tono-agua fixed bottom-4 right-4 z-30 w-[268px] rounded-[18px] rounded-br-md border border-agua/30 bg-noche-panel px-3.5 py-3.5 shadow-[0_0_26px_rgba(143,186,242,.2),0_18px_44px_rgba(0,0,0,.55)]"
@@ -210,7 +215,7 @@ export function ParedGuiada() {
           quien toca aquí quiere resolver una duda, no abrir otra aplicación
           y esperar respuesta. Hablar con Henry es la última pregunta del
           guion, para quien la necesite. */}
-      {paso === 5 && !chat ? (
+      {paso === TERMINADO && !chat ? (
         <button
           type="button"
           onClick={() => setChat(true)}
@@ -294,7 +299,11 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
           </span>
         </span>
 
-        <span aria-hidden="true" className="shrink-0" style={{ color: "rgb(var(--tono))" }}>
+        <span
+          aria-hidden="true"
+          className="shrink-0"
+          style={{ color: "rgb(var(--tono))" }}
+        >
           <svg
             width="16"
             height="16"

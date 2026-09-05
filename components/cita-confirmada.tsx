@@ -2,7 +2,12 @@
 import { useEffect, useState } from "react";
 import { CLAVE_CITA, enlaceWhatsapp } from "@/lib/pago";
 
-type Resumen = { completa: string; utah: string };
+type Resumen = {
+  completa: string;
+  utah: string;
+  servicio?: string;
+  precio?: number;
+};
 
 /** El resumen local recuerda la hora solicitada; nunca acredita un pago. */
 export function CitaConfirmada() {
@@ -20,7 +25,20 @@ export function CitaConfirmada() {
         typeof valor.completa === "string" &&
         typeof valor.utah === "string"
       ) {
-        setResumen({ completa: valor.completa, utah: valor.utah });
+        setResumen({
+          completa: valor.completa,
+          utah: valor.utah,
+          servicio:
+            "servicio" in valor && typeof valor.servicio === "string"
+              ? valor.servicio
+              : undefined,
+          precio:
+            "precio" in valor &&
+            typeof valor.precio === "number" &&
+            Number.isFinite(valor.precio)
+              ? valor.precio
+              : undefined,
+        });
       }
     } catch {
       /* El almacenamiento es opcional. */
@@ -40,12 +58,21 @@ export function CitaConfirmada() {
             Horario que solicitaste:
             <br />
             <strong>{resumen.completa}</strong>
+            {resumen.servicio ? (
+              <>
+                <br />
+                {resumen.servicio}
+                {resumen.precio !== undefined
+                  ? ` · $${resumen.precio} USD`
+                  : ""}
+              </>
+            ) : null}
           </p>
         ) : null}
         <p>
           La reserva requiere confirmar el pago y la disponibilidad del horario.
-          Si aún no recibiste la confirmación, espera el mensaje de Henry antes de
-          dar la cita por reservada.
+          Si aún no recibiste la confirmación, espera el mensaje de Henry antes
+          de dar la cita por reservada.
         </p>
         <p>
           Si pagaste con Zelle, puedes enviarle el comprobante para facilitar la

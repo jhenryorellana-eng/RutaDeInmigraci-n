@@ -1,4 +1,4 @@
-import { ASESORIA } from "@/lib/servicios";
+import { ASESORIA, AUDIENCIAS } from "@/lib/servicios";
 import { ZELLE_NOMBRE, ZELLE_TELEFONO } from "@/lib/pago";
 
 /** Respuestas predefinidas del directorio de proyectos. Los precios de la asesoría se leen del catálogo. */
@@ -39,13 +39,12 @@ export type Respuesta = {
   tono?: "agua" | "arena" | "coral" | "verde";
 };
 
-
 /** La membresía de ANDEX. El anual son diez mensualidades, no doce. */
 const ANDEX_MES = 25;
 const ANDEX_ANIO = 250;
 
 export const SALUDO =
-  "Soy la guía de esta página. No soy Henry: respondo lo que él dejó escrito sobre las cuatro cosas de aquí.";
+  "Soy la guía de esta página. No soy Henry: respondo lo que él dejó escrito sobre los servicios de aquí.";
 
 export const RESPUESTAS: Respuesta[] = [
   {
@@ -54,6 +53,7 @@ export const RESPUESTAS: Respuesta[] = [
     corto: "¿Cuál me toca?",
     dice: [
       "Depende de en qué punto estés:",
+      "Si tienes una audiencia → la preparación de primera, segunda o tercera audiencia.",
       "Si quieres conversar sobre tus dudas → la asesoría con Henry.",
       "Si hay un trámite que presentar → los servicios migratorios.",
       "Si quieres acompañamiento durante el año → la comunidad.",
@@ -63,12 +63,38 @@ export const RESPUESTAS: Respuesta[] = [
     /* Con «henry» al final: si ninguna de las cuatro le encaja, esta es
        justo la persona que necesita hablar con él, y sin esta salida se
        queda mirando cuatro botones que ya ha descartado. */
-    luego: ["preparacion", "migratorio", "comunidad", "bootcamp", "otra"],
+    luego: [
+      "preparacion",
+      "asesoria",
+      "migratorio",
+      "comunidad",
+      "bootcamp",
+      "otra",
+    ],
   },
 
   // ── 1 · La preparación de audiencia ────────────────────
   {
     id: "preparacion",
+    pregunta: "La preparación de audiencia",
+    corto: "Las audiencias",
+    tono: "agua",
+    dice: [
+      "Son 45 minutos uno a uno con Henry para preparar tu audiencia.",
+      ...AUDIENCIAS.map(
+        (s) => `${s.nombre} (${s.etapa}): $${s.precioUsd} USD.`,
+      ),
+      "Elige la audiencia que necesitas preparar. La asesoría personalizada es otro servicio.",
+    ],
+    enlaces: AUDIENCIAS.map((s) => ({
+      texto: `${s.nombre} · $${s.precioUsd}`,
+      href: `/reservar?servicio=${s.id}`,
+      interno: true,
+    })),
+    luego: ["pago", "sesion", "abogado", "asesoria", "otra"],
+  },
+  {
+    id: "asesoria",
     pregunta: "La asesoría personalizada",
     corto: "La asesoría",
     tono: "agua",
@@ -103,7 +129,9 @@ export const RESPUESTAS: Respuesta[] = [
       "Las horas de la agenda son de Utah, que es donde está él. Al elegir una, la página te enseña también qué hora es donde tú estás.",
       "Seleccionar una hora no la bloquea. La reserva se confirma al verificar el pago y la disponibilidad; Henry te contacta por WhatsApp.",
     ],
-    enlaces: [{ texto: "Reservar mi asesoría", href: "/reservar", interno: true }],
+    enlaces: [
+      { texto: "Ver todos los servicios", href: "/links", interno: true },
+    ],
     luego: ["pago", "abogado", "cual", "otra"],
   },
   {
@@ -127,7 +155,9 @@ export const RESPUESTAS: Respuesta[] = [
       "Los trámites en sí los lleva el equipo de USALatino Prime. Es a donde vas cuando hay algo que presentar.",
       "Qué trámite te toca y cuánto cuesta lo ven ellos contigo, porque depende de tu caso: no te lo puedo decir yo desde aquí sin conocerlo.",
     ],
-    enlaces: [{ texto: "Ver los servicios", href: "https://www.usalatinoprime.com/" }],
+    enlaces: [
+      { texto: "Ver los servicios", href: "https://www.usalatinoprime.com/" },
+    ],
     luego: ["cual", "preparacion", "comunidad", "otra"],
   },
 
@@ -142,7 +172,9 @@ export const RESPUESTAS: Respuesta[] = [
       `Cuesta $${ANDEX_MES} al mes, o $${ANDEX_ANIO} al año — que son diez mensualidades: pagando de una vez, dos meses no los pagas.`,
       "Ahora mismo funciona como piloto en Utah, en español y en inglés.",
     ],
-    enlaces: [{ texto: "Ver la comunidad", href: "https://andex.usalatinoprime.com/" }],
+    enlaces: [
+      { texto: "Ver la comunidad", href: "https://andex.usalatinoprime.com/" },
+    ],
     luego: ["cual", "preparacion", "migratorio", "otra"],
   },
 
@@ -157,7 +189,10 @@ export const RESPUESTAS: Respuesta[] = [
       "Las fechas, el precio y cómo se entra están en su página, que es donde se apuntan.",
     ],
     enlaces: [
-      { texto: "Ver el bootcamp", href: "https://comunidad.starbizacademy.com/bootcamp" },
+      {
+        texto: "Ver el bootcamp",
+        href: "https://comunidad.starbizacademy.com/bootcamp",
+      },
     ],
     luego: ["cual", "comunidad", "preparacion", "otra"],
   },
@@ -182,7 +217,14 @@ export const RESPUESTAS: Respuesta[] = [
  * la preparación, y sacarlas al menú principal es lo que hacía parecer que
  * el guía sólo sabía de un servicio.
  */
-export const PRIMERAS = ["cual", "preparacion", "migratorio", "comunidad", "bootcamp"];
+export const PRIMERAS = [
+  "cual",
+  "preparacion",
+  "asesoria",
+  "migratorio",
+  "comunidad",
+  "bootcamp",
+];
 
 export function respuestaPorId(id: string): Respuesta | null {
   return RESPUESTAS.find((r) => r.id === id) ?? null;
