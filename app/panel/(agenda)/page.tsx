@@ -1,4 +1,5 @@
-import { Calendario, type CeldaDia, type DiaPintado } from "@/components/panel/calendario";
+import type { CeldaDia, DiaPintado } from "@/lib/agenda";
+import { Calendario } from "@/components/panel/calendario";
 import {
   clave,
   diaCorto,
@@ -17,6 +18,9 @@ import { nombrePais } from "@/lib/paises";
 import { AjustesAgenda } from "@/components/panel/ajustes-agenda";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { leerTramos, leerTramosConId } from "@/lib/tramos";
+import { AvisoMovil } from "@/components/panel/aviso-movil";
+import type { EntradaAgenda } from "@/lib/agenda";
+import { servicioPorId } from "@/lib/servicios";
 
 /**
  * EL CALENDARIO · y ya no hace falta ir a ningún otro sitio.
@@ -59,14 +63,30 @@ type Cita = {
      iguales, Henry contaría como trabajo del jueves algo que puede
      evaporarse en media hora. */
   estado: string;
+  actualizado_en: string;
+  servicio: string | null;
+  precio_usd: number | null;
 };
 
-type Cierre = { id: number; inicia_en: string; termina_en: string; nota: string | null };
+type Cierre = {
+  id: number;
+  inicia_en: string;
+  termina_en: string;
+  nota: string | null;
+};
 
 /* Lo suyo. Vive en su propia tabla y no toca NADA de la lógica de las
    audiencias: no sale en Personas, no entra en la conciliación, no tiene
    precio. Lo único que comparte es la disponibilidad, y sólo cuando `ocupa`. */
-type Evento = { id: number; titulo: string; inicia_en: string; termina_en: string; ocupa: boolean };
+type Evento = {
+  id: number;
+  titulo: string;
+  inicia_en: string;
+  termina_en: string;
+  ocupa: boolean;
+  nota: string | null;
+  actualizado_en: string;
+};
 
 const HORA_MS = 60 * 60 * 1000;
 
@@ -78,27 +98,35 @@ export default async function PantallaCalendario({
   const { s } = await searchParams;
   const salto = acotar(Number.parseInt(s ?? "0", 10));
 
-  const [tramos, tramosConId] = await Promise.all([leerTramos(), leerTramosConId()]);
+  const [tramos, tramosConId] = await Promise.all([
+    leerTramos(),
+    leerTramosConId(),
+  ]);
   const ahora = new Date();
 
   const lunesActual = lunesDe(ahora);
   const lunes = sumaDias(lunesActual, salto * 7);
-  const dias = semanaDesde(lunes, tramos);
-
-  if (dias.length === 0) {
-    return <SinHorario />;
-  }
+  // El panel muestra los siete días, aunque el público no pueda reservarlos.
+  const dias = semanaDesde(lunes, [
+    ...tramos,
+    { diaSemana: 7, desdeHora: 0, hastaHora: 1 },
+  ]);
 
   const desde = instanteEnZona(lunes.anio, lunes.mes, lunes.dia, 0);
   const finLunes = sumaDias(lunes, 7);
   const hasta = instanteEnZona(finLunes.anio, finLunes.mes, finLunes.dia, 0);
 
   const supabase = await clienteServidor();
-  const [{ data: citas }, { data: cierres }, { data: eventos }, { data: cierresVivos }] =
-    await Promise.all([
+  const [
+    { data: citas, error: errorCitas },
+    { data: cierres, error: errorCierres },
+    { data: eventos, error: errorEventos },
+    { data: cierresVivos, error: errorAusencias },
+    { data: versionEditor },
+  ] = await Promise.all([
     supabase
       .from("citas")
-      .select("id, inicia_en, nombre, nacionalidad, en_eeuu, whatsapp, zona_horaria, estado")
+      .select("*")
       .gte("inicia_en", desde.toISOString())
       .lt("inicia_en", hasta.toISOString())
       .neq("estado", "cancelada")
@@ -110,7 +138,7 @@ export default async function PantallaCalendario({
       .gt("termina_en", desde.toISOString()),
     supabase
       .from("eventos")
-      .select("id, titulo, inicia_en, termina_en, ocupa")
+      .select("*")
       .lt("inicia_en", hasta.toISOString())
       .gt("termina_en", desde.toISOString()),
     /* Los cierres largos pueden caer en semanas que no se están viendo, así
@@ -121,10 +149,30 @@ export default async function PantallaCalendario({
       .gte("termina_en", new Date().toISOString())
       .order("inicia_en", { ascending: true })
       .limit(60),
+    supabase.rpc("version_editor_agenda"),
   ]);
 
+  // Una consulta fallida nunca debe presentarse como una agenda vacía.
+  if (errorCitas || errorEventos || errorCierres || errorAusencias) {
+    return (
+      <main className="py-10">
+        <h1 className="font-titulo text-2xl">No se pudo cargar tu agenda</h1>
+        <p role="alert" className="mt-3 text-tinta-suave">
+          Tus registros siguen guardados. Recarga la página para volver a
+          consultar la agenda.
+        </p>
+        <a
+          href="/panel"
+          className="mt-5 inline-flex min-h-12 items-center rounded-xl bg-acento px-5 font-bold text-fondo"
+        >
+          Volver a cargar
+        </a>
+      </main>
+    );
+  }
+
   const porHora = new Map<number, Cita>();
-  for (const c of ((citas ?? []) as Cita[])) {
+  for (const c of (citas ?? []) as Cita[]) {
     porHora.set(new Date(c.inicia_en).getTime(), c);
   }
 
@@ -134,22 +182,82 @@ export default async function PantallaCalendario({
     /* Un cierre de una hora o menos lo puso el propio calendario, y por eso
        se puede reabrir tocándolo. Los largos se quitan desde Mi horario,
        donde se ve entero lo que se está reabriendo. */
-    suelto: new Date(c.termina_en).getTime() - new Date(c.inicia_en).getTime() <= HORA_MS,
+    suelto:
+      new Date(c.termina_en).getTime() - new Date(c.inicia_en).getTime() <=
+      HORA_MS,
   }));
 
   /* Un evento puede durar varias horas, así que se despliega hora a hora
      para poder preguntar por celda. `primera` marca dónde va el título: en
      una tira de tres horas sólo se escribe arriba. */
-  const porHoraEvento = new Map<number, { id: number; titulo: string; ocupa: boolean; primera: boolean }>();
-  for (const e of ((eventos ?? []) as Evento[])) {
+  const porHoraEvento = new Map<
+    number,
+    { id: number; titulo: string; ocupa: boolean; primera: boolean }
+  >();
+  for (const e of (eventos ?? []) as Evento[]) {
     const ini = new Date(e.inicia_en).getTime();
     const fin = new Date(e.termina_en).getTime();
     for (let t = ini; t < fin; t += HORA_MS) {
-      porHoraEvento.set(t, { id: e.id, titulo: e.titulo, ocupa: e.ocupa, primera: t === ini });
+      porHoraEvento.set(t, {
+        id: e.id,
+        titulo: e.titulo,
+        ocupa: e.ocupa,
+        primera: t === ini,
+      });
     }
   }
 
-  const horas = franjaDeHoras(tramos);
+  const entradas: EntradaAgenda[] = [
+    ...((citas ?? []) as Cita[]).map(
+      (c): EntradaAgenda => ({
+        id: c.id,
+        tipo: "cita",
+        titulo: c.nombre,
+        inicio: c.inicia_en,
+        fin: new Date(Date.parse(c.inicia_en) + HORA_MS).toISOString(),
+        version: c.actualizado_en,
+        ocupa: true,
+        nota: "",
+        whatsapp: c.whatsapp ?? "",
+        estado: c.estado,
+        servicio: servicioPorId(c.servicio)?.nombre ?? c.servicio,
+        precio: c.precio_usd,
+        detalle: [
+          nombrePais(c.nacionalidad),
+          c.en_eeuu ? "En EE. UU." : "Fuera de EE. UU.",
+          horaDeQuienReserva(new Date(c.inicia_en), c.zona_horaria)
+            ? `Su hora: ${horaDeQuienReserva(new Date(c.inicia_en), c.zona_horaria)}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      }),
+    ),
+    ...((eventos ?? []) as Evento[]).map(
+      (e): EntradaAgenda => ({
+        id: e.id,
+        tipo: "evento",
+        titulo: e.titulo,
+        inicio: e.inicia_en,
+        fin: e.termina_en,
+        version: e.actualizado_en,
+        ocupa: e.ocupa,
+        nota: e.nota ?? "",
+        whatsapp: "",
+      }),
+    ),
+  ].sort((a, b) => Date.parse(a.inicio) - Date.parse(b.inicio));
+  const horasPresentes = new Set(franjaDeHoras(tramos));
+  for (const e of entradas) {
+    for (
+      let ms = Math.max(Date.parse(e.inicio), desde.getTime());
+      ms < Math.min(Date.parse(e.fin), hasta.getTime());
+      ms += HORA_MS
+    ) {
+      horasPresentes.add(partesEnZona(new Date(ms)).hora);
+    }
+  }
+  const horas = [...horasPresentes].sort((a, b) => a - b);
   const claveDeHoy = claveHoy(ahora);
 
   const pintados: DiaPintado[] = dias.map((d) => {
@@ -157,8 +265,6 @@ export default async function PantallaCalendario({
     const primero = d.huecos[0];
 
     const celdas: CeldaDia[] = horas.map((h) => {
-      if (!ofrece.has(h)) return { estado: "fuera" };
-
       const t = instanteEnZona(d.anio, d.mes, d.dia, h);
       const ms = t.getTime();
       const iso = t.toISOString();
@@ -184,7 +290,7 @@ export default async function PantallaCalendario({
       }
 
       const suyo = porHoraEvento.get(ms);
-      if (suyo) {
+      if (suyo?.ocupa) {
         return {
           estado: "evento",
           iso,
@@ -195,6 +301,7 @@ export default async function PantallaCalendario({
         };
       }
 
+      if (!ofrece.has(h)) return { estado: "fuera" };
       const cerrada = rangos.find((r) => ms >= r.desde && ms < r.hasta);
       if (cerrada) return { estado: "cerrada", iso, suelta: cerrada.suelto };
 
@@ -223,7 +330,8 @@ export default async function PantallaCalendario({
   /* Las retenidas sin pagar NO cuentan como apartadas: el número de arriba
      es lo que Henry tiene que atender, y una retención todavía no lo es. */
   const apartadas = pintados.reduce(
-    (n, d) => n + d.celdas.filter((c) => c.estado === "cita" && !c.pendiente).length,
+    (n, d) =>
+      n + d.celdas.filter((c) => c.estado === "cita" && !c.pendiente).length,
     0,
   );
   const libres = pintados.reduce(
@@ -233,28 +341,35 @@ export default async function PantallaCalendario({
 
   return (
     <>
-    <Calendario
-      /* Cambiar de semana remonta el componente: así lo marcado y el día que
+      <Calendario
+        /* Cambiar de semana remonta el componente: así lo marcado y el día que
          se ve en el teléfono se reinician sin un efecto que también saltara
          cada vez que se recargan los datos. */
-      key={salto}
-      dias={pintados}
-      horas={horas}
-      horasDeDescanso={descanso}
-      titulo={tituloDeSemana(dias[0], dias[dias.length - 1])}
-      apartadas={apartadas}
-      libres={libres}
-      salto={salto}
-      esSemanaActual={salto === 0}
-      puedeRetroceder={salto > -SEMANAS_ATRAS}
-      puedeAvanzar={salto < SEMANAS_ADELANTE}
-      tramosVacios={tramos.length === 0}
-    />
-    <AjustesAgenda
-      tramos={tramosConId}
-      cierres={(cierresVivos ?? []) as Cierre[]}
-      clavePublica={process.env.NEXT_PUBLIC_VAPID_PUBLICA ?? ""}
-    />
+        key={salto}
+        dias={pintados}
+        entradas={entradas}
+        edicionDisponible={versionEditor === 1}
+        horas={horas}
+        horasDeDescanso={descanso}
+        titulo={tituloDeSemana(dias[0], dias[dias.length - 1])}
+        apartadas={apartadas}
+        libres={libres}
+        salto={salto}
+        esSemanaActual={salto === 0}
+        puedeRetroceder={salto > -SEMANAS_ATRAS}
+        puedeAvanzar={salto < SEMANAS_ADELANTE}
+        tramosVacios={tramos.length === 0}
+      />
+      <div className="mt-6">
+        <AvisoMovil
+          clavePublica={process.env.NEXT_PUBLIC_VAPID_PUBLICA ?? ""}
+          recordatoriosDisponibles={versionEditor === 1}
+        />
+      </div>
+      <AjustesAgenda
+        tramos={tramosConId}
+        cierres={(cierresVivos ?? []) as Cierre[]}
+      />
     </>
   );
 }
@@ -294,19 +409,4 @@ function tituloDeSemana(
   return mesA === mesB
     ? `Del ${primero.dia} al ${ultimo.dia} de ${mesB}`
     : `Del ${primero.dia} de ${mesA} al ${ultimo.dia} de ${mesB}`;
-}
-
-function SinHorario() {
-  return (
-    <main className="py-16">
-      <h1 className="font-titulo text-[32px] font-semibold leading-[1.1]">
-        Tu agenda está cerrada
-      </h1>
-      <p className="mt-4 max-w-[52ch] text-tinta-suave">
-        No hay ningún tramo abierto, así que el sitio no ofrece ninguna hora.
-        Añade tus horas en <strong>Mi horario</strong> y la semana vuelve a
-        aparecer aquí.
-      </p>
-    </main>
-  );
 }

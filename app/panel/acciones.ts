@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { instanteEnZona, partesEnZona, sumaDias } from "@/lib/horario";
 import { clienteServidor } from "@/lib/supabase/servidor";
+import { errorAgenda } from "@/lib/agenda";
 
 /**
  * LO QUE HENRY PUEDE HACER CON SU HORARIO.
@@ -65,9 +66,13 @@ function finDelDia(anio: number, mes: number, dia: number): Date {
  * no ser contiguas si en medio hay una cita apartada.
  */
 export async function cerrarHoras(isos: string[]): Promise<Respuesta> {
-  if (isos.length === 0) return { ok: false, motivo: "No hay ninguna hora marcada." };
+  if (isos.length === 0)
+    return { ok: false, motivo: "No hay ninguna hora marcada." };
   if (isos.length > HORAS_MAXIMAS_POR_TACADA) {
-    return { ok: false, motivo: "Son demasiadas horas de una vez. Ciérralas por días." };
+    return {
+      ok: false,
+      motivo: "Son demasiadas horas de una vez. Ciérralas por días.",
+    };
   }
 
   const ahora = Date.now();
@@ -76,7 +81,8 @@ export async function cerrarHoras(isos: string[]): Promise<Respuesta> {
 
   for (const iso of isos) {
     const t = new Date(iso);
-    if (Number.isNaN(t.getTime())) return { ok: false, motivo: "Hay una hora que no entiendo." };
+    if (Number.isNaN(t.getTime()))
+      return { ok: false, motivo: "Hay una hora que no entiendo." };
     if (t.getTime() % HORA_MS !== 0) {
       return { ok: false, motivo: "Sólo se pueden cerrar horas en punto." };
     }
@@ -94,7 +100,8 @@ export async function cerrarHoras(isos: string[]): Promise<Respuesta> {
 
   const supabase = await clienteServidor();
   const { error } = await supabase.from("cierres").insert(filas);
-  if (error) return { ok: false, motivo: "No se pudo cerrar. Vuelve a intentarlo." };
+  if (error)
+    return { ok: false, motivo: "No se pudo cerrar. Vuelve a intentarlo." };
 
   refrescar();
   return { ok: true };
@@ -111,7 +118,8 @@ export async function cerrarHoras(isos: string[]): Promise<Respuesta> {
  */
 export async function reabrirHora(iso: string): Promise<Respuesta> {
   const t = new Date(iso);
-  if (Number.isNaN(t.getTime())) return { ok: false, motivo: "No entiendo esa hora." };
+  if (Number.isNaN(t.getTime()))
+    return { ok: false, motivo: "No entiendo esa hora." };
 
   const supabase = await clienteServidor();
   const { data, error } = await supabase
@@ -121,20 +129,28 @@ export async function reabrirHora(iso: string): Promise<Respuesta> {
 
   if (error) return { ok: false, motivo: "No se pudo reabrir." };
 
-  const cortos = ((data ?? []) as { id: number; inicia_en: string; termina_en: string }[])
+  const cortos = (
+    (data ?? []) as { id: number; inicia_en: string; termina_en: string }[]
+  )
     .filter(
-      (c) => new Date(c.termina_en).getTime() - new Date(c.inicia_en).getTime() <= HORA_MS,
+      (c) =>
+        new Date(c.termina_en).getTime() - new Date(c.inicia_en).getTime() <=
+        HORA_MS,
     )
     .map((c) => c.id);
 
   if (cortos.length === 0) {
     return {
       ok: false,
-      motivo: "Esa hora es parte de un cierre más largo. Quítalo desde Mi horario.",
+      motivo:
+        "Esa hora es parte de un cierre más largo. Quítalo desde Mi horario.",
     };
   }
 
-  const { error: fallo } = await supabase.from("cierres").delete().in("id", cortos);
+  const { error: fallo } = await supabase
+    .from("cierres")
+    .delete()
+    .in("id", cortos);
   if (fallo) return { ok: false, motivo: "No se pudo reabrir." };
 
   refrescar();
@@ -162,7 +178,8 @@ export async function cerrarRestoDeHoy(): Promise<Respuesta> {
     nota: "resto del día",
   });
 
-  if (error) return { ok: false, motivo: "No se pudo cerrar. Vuelve a intentarlo." };
+  if (error)
+    return { ok: false, motivo: "No se pudo cerrar. Vuelve a intentarlo." };
   refrescar();
   return { ok: true };
 }
@@ -194,10 +211,14 @@ export async function cerrar(
 
   const desde = desdeHora ?? 0;
   const hasta = hastaHora ?? 24;
-  if (hasta <= desde) return { ok: false, motivo: "La hora de fin va después de la de inicio." };
+  if (hasta <= desde)
+    return { ok: false, motivo: "La hora de fin va después de la de inicio." };
 
   const inicia = instanteEnZona(anio, mes, num, desde);
-  const termina = hasta === 24 ? finDelDia(anio, mes, num) : instanteEnZona(anio, mes, num, hasta);
+  const termina =
+    hasta === 24
+      ? finDelDia(anio, mes, num)
+      : instanteEnZona(anio, mes, num, hasta);
 
   if (termina.getTime() < Date.now()) {
     return { ok: false, motivo: "Ese día ya pasó." };
@@ -213,7 +234,8 @@ export async function cerrar(
     nota: nota.trim() || null,
   });
 
-  if (error) return { ok: false, motivo: "No se pudo cerrar. Vuelve a intentarlo." };
+  if (error)
+    return { ok: false, motivo: "No se pudo cerrar. Vuelve a intentarlo." };
   refrescar();
   return { ok: true };
 }
@@ -253,7 +275,10 @@ export async function anadirTramo(
     return { ok: false, motivo: "Elige las dos horas." };
   }
   if (desdeHora < 0 || hastaHora > 24 || hastaHora <= desdeHora) {
-    return { ok: false, motivo: "La hora de cierre va después de la de apertura." };
+    return {
+      ok: false,
+      motivo: "La hora de cierre va después de la de apertura.",
+    };
   }
 
   const supabase = await clienteServidor();
@@ -319,9 +344,12 @@ export async function apuntarEvento(
   ocupa = true,
 ): Promise<Respuesta> {
   const limpio = titulo.trim();
-  if (limpio.length === 0) return { ok: false, motivo: "Escribe qué vas a hacer." };
-  if (limpio.length > 80) return { ok: false, motivo: "El título es demasiado largo." };
-  if (isos.length === 0) return { ok: false, motivo: "No hay ninguna hora marcada." };
+  if (limpio.length === 0)
+    return { ok: false, motivo: "Escribe qué vas a hacer." };
+  if (limpio.length > 80)
+    return { ok: false, motivo: "El título es demasiado largo." };
+  if (isos.length === 0)
+    return { ok: false, motivo: "No hay ninguna hora marcada." };
   if (isos.length > HORAS_MAXIMAS_POR_TACADA) {
     return { ok: false, motivo: "Son demasiadas horas de una vez." };
   }
@@ -329,10 +357,13 @@ export async function apuntarEvento(
   const instantes: number[] = [];
   for (const iso of isos) {
     const t = new Date(iso);
-    if (Number.isNaN(t.getTime())) return { ok: false, motivo: "Hay una hora que no entiendo." };
+    if (Number.isNaN(t.getTime()))
+      return { ok: false, motivo: "Hay una hora que no entiendo." };
     if (t.getTime() % HORA_MS !== 0) {
       return { ok: false, motivo: "Sólo se pueden apuntar horas en punto." };
     }
+    if (t.getTime() <= Date.now())
+      return { ok: false, motivo: "Elige horas futuras para agendar." };
     instantes.push(t.getTime());
   }
   instantes.sort((a, b) => a - b);
@@ -357,7 +388,8 @@ export async function apuntarEvento(
     })),
   );
 
-  if (error) return { ok: false, motivo: "No se pudo apuntar. Vuelve a intentarlo." };
+  if (error)
+    return { ok: false, motivo: errorAgenda(error.code, error.message) };
   refrescar();
   return { ok: true };
 }

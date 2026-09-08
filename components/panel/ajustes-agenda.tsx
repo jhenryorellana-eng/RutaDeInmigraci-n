@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { CerrarHoras } from "@/components/cerrar-horas";
-import { AvisoMovil } from "@/components/panel/aviso-movil";
 import { EditorHorario } from "@/components/panel/editor-horario";
 import { describirHorario, type Tramo } from "@/lib/horario";
 import type { TramoConId } from "@/lib/tramos";
@@ -43,11 +42,14 @@ import type { TramoConId } from "@/lib/tramos";
 export function AjustesAgenda({
   tramos,
   cierres,
-  clavePublica,
 }: {
   tramos: TramoConId[];
-  cierres: { id: number; inicia_en: string; termina_en: string; nota: string | null }[];
-  clavePublica: string;
+  cierres: {
+    id: number;
+    inicia_en: string;
+    termina_en: string;
+    nota: string | null;
+  }[];
 }) {
   const [abierto, setAbierto] = useState(false);
 
@@ -64,9 +66,12 @@ export function AjustesAgenda({
         className="flex w-full items-center gap-4 px-5 py-4 text-left"
       >
         <span className="min-w-0 flex-1">
-          <span className="block text-[17px] font-bold">Mis horas y mis ausencias</span>
+          <span className="block text-[17px] font-bold">
+            Mis horas y mis ausencias
+          </span>
           <span className="mt-0.5 block truncate text-[15px] text-tinta-tenue">
-            {enUnaFrase || "No hay ningún tramo abierto: el sitio no ofrece horas."}
+            {enUnaFrase ||
+              "No hay ningún tramo abierto: el sitio no ofrece horas."}
           </span>
         </span>
         <span
@@ -111,10 +116,6 @@ export function AjustesAgenda({
 
             <div className="mt-7">
               <CerrarHoras cierres={cierres} />
-            </div>
-
-            <div className="mt-7">
-              <AvisoMovil clavePublica={clavePublica} />
             </div>
           </div>
         </div>

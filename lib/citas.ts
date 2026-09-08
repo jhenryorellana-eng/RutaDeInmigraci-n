@@ -205,7 +205,7 @@ export async function apartarCita(datos: DatosCita): Promise<Resultado> {
   });
 
   if (error) {
-    if (error.code === "23505" || error.code === "23514") {
+    if (error.code === "23505" || error.code === "23514" || error.code === "23P01") {
       return {
         ok: false,
         motivo: "Alguien compró esa hora hace un momento. Elige otra, quedan más.",

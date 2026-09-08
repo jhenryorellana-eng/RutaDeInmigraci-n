@@ -64,14 +64,17 @@ self.addEventListener("push", (evento) => {
  */
 self.addEventListener("notificationclick", (evento) => {
   evento.notification.close();
-  const destino = (evento.notification.data && evento.notification.data.url) || "/panel";
+  const destino = new URL("/panel", self.location.origin).href;
 
   evento.waitUntil(
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
-      .then((ventanas) => {
+      .then(async (ventanas) => {
         for (const v of ventanas) {
-          if (v.url.includes(destino) && "focus" in v) return v.focus();
+          if (new URL(v.url).origin === self.location.origin && "focus" in v) {
+            await v.navigate(destino);
+            return v.focus();
+          }
         }
         if (self.clients.openWindow) return self.clients.openWindow(destino);
       }),

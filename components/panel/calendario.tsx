@@ -1,77 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
-
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   apuntarEvento,
-  borrarEvento,
   cerrarHoras,
   cerrarRestoDeHoy,
   reabrirHora,
 } from "@/app/panel/acciones";
-import { horaSuelta } from "@/lib/horario";
-
-/**
- * LA REJILLA DE LA SEMANA.
- *
- * Todo lo que sabe de fechas se lo dieron ya resuelto: aquí no se calcula ni
- * una zona horaria. Lo que sí hace, y es su único trabajo de verdad, es el
- * gesto: TOCAR UNA HORA LA CIERRA, y arrastrar por varias las marca todas.
- *
- * ── Por qué dos maquetaciones y no una responsive ──
- *
- * Seis columnas no entran en 390 px. Estrechar la rejilla hasta que quepa da
- * celdas donde no cabe un nombre, y entonces no informa de nada. Así que en
- * el teléfono no se enseña la semana: se enseña UN DÍA en vertical, con la
- * tira de días arriba para cambiar. Son dos vistas del mismo dato, no una
- * encogida.
- */
-
-export type CeldaDia =
-  | {
-      estado: "cita";
-      iso: string;
-      nombre: string;
-      /** Retenida, sin pagar. Ocupa la hora pero todavía no es una cita. */
-      pendiente: boolean;
-      pais: string;
-      enEeuu: boolean;
-      /** En hora de Utah, que es la de Henry. */
-      hora: string;
-      /** La de esa persona. `null` si está a la misma hora que Utah. */
-      horaSuya: string | null;
-      whatsapp: string | null;
-    }
-  | {
-      /* Lo que Henry apuntó: el dentista, un viaje, una llamada. NO es una
-         cita: otra tabla, sin precio, sin pago y fuera de Personas. */
-      estado: "evento";
-      iso: string;
-      eventoId: number;
-      titulo: string;
-      /** Si además le quita la hora al público. */
-      ocupa: boolean;
-      /** Sólo la primera hora de una tira escribe el título. */
-      primera: boolean;
-    }
-  | { estado: "libre"; iso: string }
-  | { estado: "cerrada"; iso: string; suelta: boolean }
-  | { estado: "pasada"; iso: string }
-  | { estado: "fuera" };
-
-export type DiaPintado = {
-  clave: string;
-  abreviatura: string;
-  numero: number;
-  esHoy: boolean;
-  celdas: CeldaDia[];
-};
+import { fechaYHora, instanteAgenda, type EntradaAgenda } from "@/lib/agenda";
+import { horaEnZona, horaSuelta } from "@/lib/horario";
+import { EditorAgenda } from "./editor-agenda";
+import type { DiaPintado } from "@/lib/agenda";
 
 type Props = {
   dias: DiaPintado[];
   horas: number[];
   horasDeDescanso: number[];
+  entradas: EntradaAgenda[];
   titulo: string;
   apartadas: number;
   libres: number;
@@ -80,12 +27,16 @@ type Props = {
   puedeRetroceder: boolean;
   puedeAvanzar: boolean;
   tramosVacios: boolean;
+  edicionDisponible: boolean;
 };
+
+const boton =
+  "inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-3 text-sm font-semibold transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-acento disabled:opacity-40";
 
 export function Calendario({
   dias,
   horas,
-  horasDeDescanso,
+  entradas,
   titulo,
   apartadas,
   libres,
@@ -94,874 +45,720 @@ export function Calendario({
   puedeRetroceder,
   puedeAvanzar,
   tramosVacios,
+  edicionDisponible,
 }: Props) {
-  const [marcadas, setMarcadas] = useState<string[]>([]);
-  /* Lo que se va a apuntar sobre lo marcado. Vacío = todavía no ha escrito. */
-  const [tituloEvento, setTituloEvento] = useState("");
-  const [ocupa, setOcupa] = useState(true);
-  const [arrastrando, setArrastrando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [enCurso, empezar] = useTransition();
-
-  /* El día que se ve en el teléfono. Arranca en hoy si hoy está en esta
-     semana; si no, en el primero. */
-  const [diaVisible, setDiaVisible] = useState(
-    () => dias.find((d) => d.esHoy)?.clave ?? dias[0]?.clave ?? "",
+  const router = useRouter();
+  const [dia, setDia] = useState(
+    () => dias.find((d) => d.esHoy)?.clave ?? dias[0]?.clave,
   );
+  const [editor, setEditor] = useState<{
+    entrada?: EntradaAgenda;
+    inicio: string;
+  } | null>(null);
+  const [mensaje, setMensaje] = useState("");
+  const [error, setError] = useState("");
+  const [seleccion, setSeleccion] = useState<string[]>([]);
+  const [arrastrando, setArrastrando] = useState(false);
+  const [tituloManual, setTituloManual] = useState("");
+  const [ocupa, setOcupa] = useState(true);
+  const [cerrarHoy, setCerrarHoy] = useState(false);
+  const [pendiente, empezar] = useTransition();
+  const [conexion, setConexion] = useState(true);
 
-  /* Cambiar de semana lo reinicia todo, pero no con un efecto: el padre le
-     pone `key={salto}` y React remonta. Con un efecto que mirara a `dias`,
-     cada recarga de datos —cerrar una hora ya provoca una— devolvería al
-     teléfono al día de hoy, y quien estaba mirando el viernes se encontraría
-     de vuelta en el jueves sin haber tocado nada. */
-
-  /* El arrastre acaba aunque se suelte el dedo fuera de la rejilla. Sin
-     esto, salir por el borde deja el gesto pegado y la siguiente celda que
-     se roza se marca sola. */
   useEffect(() => {
-    if (!arrastrando) return;
     const soltar = () => setArrastrando(false);
     window.addEventListener("pointerup", soltar);
     window.addEventListener("pointercancel", soltar);
+    const online = () => {
+      setConexion(true);
+      router.refresh();
+    };
+    const offline = () => setConexion(false);
+    setConexion(navigator.onLine);
+    window.addEventListener("online", online);
+    window.addEventListener("offline", offline);
+    const refrescar = () => {
+      if (document.visibilityState === "visible" && navigator.onLine)
+        router.refresh();
+    };
+    document.addEventListener("visibilitychange", refrescar);
+    const reloj = window.setInterval(refrescar, 60000);
     return () => {
       window.removeEventListener("pointerup", soltar);
       window.removeEventListener("pointercancel", soltar);
+      window.removeEventListener("online", online);
+      window.removeEventListener("offline", offline);
+      document.removeEventListener("visibilitychange", refrescar);
+      window.clearInterval(reloj);
     };
-  }, [arrastrando]);
+  }, [router]);
 
-  const resumen = useMemo(() => describir(marcadas, dias, horas), [marcadas, dias, horas]);
-
-  function alternar(iso: string) {
-    setError(null);
-    setMarcadas((previas) =>
-      previas.includes(iso) ? previas.filter((x) => x !== iso) : [...previas, iso],
+  const visible = dias.find((d) => d.clave === dia) ?? dias[0];
+  function delDia(e: EntradaAgenda, clave: string) {
+    const inicio = instanteAgenda(clave, "00:00");
+    if (!inicio) return false;
+    // El siguiente día puede durar 23 o 25 horas en Utah.
+    const fecha = new Date(`${clave}T12:00:00Z`);
+    fecha.setUTCDate(fecha.getUTCDate() + 1);
+    const fin = instanteAgenda(fecha.toISOString().slice(0, 10), "00:00")!;
+    return (
+      Date.parse(e.inicio) < fin.getTime() &&
+      Date.parse(e.fin) > inicio.getTime()
     );
   }
+  const entradasDelDia = entradas.filter((e) => delDia(e, visible.clave));
+  const libresDelDia = visible.celdas.filter((c) => c.estado === "libre");
 
-  function anadir(iso: string) {
-    setMarcadas((previas) => (previas.includes(iso) ? previas : [...previas, iso]));
+  function agendar(iso?: string) {
+    const libre = visible.celdas.find((c) => c.estado === "libre");
+    let predeterminado =
+      libre?.estado === "libre"
+        ? libre.iso
+        : instanteAgenda(visible.clave, "09:00")!.toISOString();
+    if (Date.parse(predeterminado) <= Date.now()) {
+      const siguiente = dias
+        .flatMap((d) => d.celdas)
+        .find((c) => c.estado === "libre" && Date.parse(c.iso) > Date.now());
+      predeterminado =
+        siguiente?.estado === "libre"
+          ? siguiente.iso
+          : new Date(
+              Math.ceil((Date.now() + 1) / 3600000) * 3600000,
+            ).toISOString();
+    }
+    setEditor({ inicio: iso ?? predeterminado });
+    setMensaje("");
+    setError("");
   }
-
-  function confirmarCierre() {
-    setError(null);
-    const lista = [...marcadas];
+  function editar(e: EntradaAgenda) {
+    setEditor({ entrada: e, inicio: e.inicio });
+    setMensaje("");
+  }
+  function marcar(iso: string) {
+    setSeleccion((s) =>
+      s.includes(iso) ? s.filter((v) => v !== iso) : [...s, iso],
+    );
+  }
+  function ejecutar(
+    accion: () => Promise<{ ok: true } | { ok: false; motivo: string }>,
+    mensaje: string,
+  ) {
+    setError("");
+    setMensaje("");
     empezar(async () => {
-      const r = await cerrarHoras(lista);
-      if (r.ok) setMarcadas([]);
-      else setError(r.motivo);
+      try {
+        const r = await accion();
+        if (!r.ok) setError(r.motivo);
+        else {
+          setMensaje(mensaje);
+          setSeleccion([]);
+          setTituloManual("");
+          setCerrarHoy(false);
+          router.refresh();
+        }
+      } catch {
+        setError("No se pudo conectar con la agenda. Vuelve a intentarlo.");
+      }
     });
   }
-
-  function apuntar() {
-    setError(null);
-    const lista = [...marcadas];
-    const texto = tituloEvento;
-    empezar(async () => {
-      const r = await apuntarEvento(lista, texto, ocupa);
-      if (r.ok) {
-        setMarcadas([]);
-        setTituloEvento("");
-      } else setError(r.motivo);
-    });
-  }
-
-  function quitarEvento(id: number) {
-    setError(null);
-    empezar(async () => {
-      const r = await borrarEvento(id);
-      if (!r.ok) setError(r.motivo);
-    });
-  }
-
-  function abrir(iso: string) {
-    setError(null);
-    empezar(async () => {
-      const r = await reabrirHora(iso);
-      if (!r.ok) setError(r.motivo);
-    });
-  }
-
-  function cerrarHoy() {
-    setError(null);
-    empezar(async () => {
-      const r = await cerrarRestoDeHoy();
-      if (!r.ok) setError(r.motivo);
-    });
-  }
-
-  const delDia = dias.find((d) => d.clave === diaVisible) ?? dias[0];
 
   return (
-    <main className="pt-6">
-      {/* ── Cabecera ── */}
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
-        <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
-          <h1 className="font-titulo text-[26px] font-semibold leading-[1.1] tracking-tight sm:text-[32px]">
-            {titulo}
+    <main className="pt-5 sm:pt-7">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[.18em] text-acento">
+            Tu tiempo, en orden
+          </p>
+          <h1 className="mt-1 font-titulo text-[30px] font-semibold tracking-tight sm:text-4xl">
+            Mi agenda
           </h1>
-          <p className="text-[16px] text-tinta-tenue">
-            {apartadas === 0 ? "Ninguna hora apartada" : `${apartadas} apartadas`} ·{" "}
-            {libres} libres
+        </div>
+        <button
+          type="button"
+          onClick={() => agendar()}
+          className="flex min-h-12 shrink-0 items-center gap-2 rounded-2xl bg-acento px-4 font-extrabold text-fondo shadow-[0_8px_28px_-12px_var(--color-acento)] sm:px-6"
+        >
+          <span className="text-2xl leading-none" aria-hidden="true">
+            +
+          </span>{" "}
+          Agendar
+        </button>
+      </div>
+      <div className="mt-5 grid grid-cols-3 gap-2 sm:max-w-xl sm:gap-3">
+        {[
+          ["Citas", apartadas],
+          ["En mi agenda", entradas.filter((e) => e.tipo === "evento").length],
+          ["Horas libres", libres],
+        ].map(([label, valor]) => (
+          <div
+            key={label}
+            className="rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-3 sm:px-4"
+          >
+            <span className="block text-xl font-semibold tabular-nums sm:text-2xl">
+              {valor}
+            </span>
+            <span className="mt-1 block text-xs text-tinta-suave">
+              {label} · semana
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+        <div>
+          <h2 className="font-titulo text-lg font-semibold sm:text-xl">
+            {titulo}
+          </h2>
+          <p className="mt-1 text-xs text-tinta-suave">
+            Todas las horas en Utah · America/Denver
           </p>
         </div>
-
-        <div className="flex items-center gap-2.5">
-          {esSemanaActual ? (
-            <button
-              type="button"
-              onClick={cerrarHoy}
-              disabled={enCurso}
-              className="flex min-h-11 items-center gap-2 rounded-full border border-aviso/50 px-4 text-[15px] font-bold text-aviso disabled:opacity-50"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7v5l3 2" />
-              </svg>
-              Cerrar lo que queda de hoy
-            </button>
-          ) : null}
-
-          <Flecha
-            hacia={salto - 1}
-            activa={puedeRetroceder}
-            etiqueta="Semana anterior"
-            direccion="atras"
-          />
-          <Flecha
-            hacia={salto + 1}
-            activa={puedeAvanzar}
-            etiqueta="Semana siguiente"
-            direccion="adelante"
-          />
+        <div className="flex items-center gap-2">
+          <Navegar
+            salto={salto - 1}
+            permitido={puedeRetroceder}
+            nombre="Semana anterior"
+          >
+            ‹
+          </Navegar>
+          <Link href="/panel" className={boton}>
+            Hoy
+          </Link>
+          <Navegar
+            salto={salto + 1}
+            permitido={puedeAvanzar}
+            nombre="Semana siguiente"
+          >
+            ›
+          </Navegar>
         </div>
       </div>
-
-      {tramosVacios ? (
-        <p className="mt-4 rounded-2xl border border-aviso/30 bg-aviso/10 px-5 py-3.5 text-[16px] text-aviso">
-          No tienes ningún tramo abierto, así que el sitio no ofrece horas.
-          Añádelos en Mi horario.
+      {!conexion && (
+        <p
+          role="status"
+          className="mt-4 rounded-xl border border-aviso/30 bg-aviso/10 p-3 text-sm text-aviso"
+        >
+          Sin conexión. Reconecta para guardar cambios y consultar la
+          disponibilidad actual.
         </p>
-      ) : (
-        <p className="mt-2.5 hidden text-[16px] text-tinta-tenue md:block">
-          Toca una hora libre para cerrarla. Arrastra por varias para cerrar un
-          rato entero.
+      )}
+      {tramosVacios && (
+        <p className="mt-4 text-sm text-aviso">
+          Las reservas públicas están cerradas. Configura «Mis horas y mis
+          ausencias» para abrirlas. Tu agenda manual sigue disponible.
+        </p>
+      )}
+      {mensaje && (
+        <p
+          role="status"
+          className="mt-4 rounded-xl border border-acento/25 bg-acento/10 p-3 text-sm text-acento"
+        >
+          {mensaje}
+        </p>
+      )}
+      {error && (
+        <p
+          role="alert"
+          className="mt-4 rounded-xl border border-aviso/30 bg-aviso/10 p-3 text-sm text-aviso"
+        >
+          {error}
         </p>
       )}
 
-      {error ? (
-        <p role="alert" className="mt-4 text-[16px] text-aviso">
-          {error}
-        </p>
-      ) : null}
-
-      {/* ══════════ ESCRITORIO: la semana ══════════ */}
-      <div className="mt-5 hidden overflow-hidden rounded-[20px] border border-white/12 md:block">
-        <div
-          className="grid bg-white/[0.045]"
-          style={{ gridTemplateColumns: `80px repeat(${dias.length}, minmax(0, 1fr))` }}
-        >
-          {/* «MT» a secas obligaba a saberse las siglas. Ahora dice de quién
-              es la hora, que es lo que evita el lío: todo el panel va en la
-              hora de Henry, y la de cada persona se enseña aparte. */}
-          <span className="px-3 py-2.5 text-[11px] font-medium leading-tight tracking-[0.1em] text-tinta-tenue">
-            TU HORA
-            <span className="block text-[10px] tracking-[0.08em]">UTAH</span>
-          </span>
+      <div className="mt-5 md:hidden">
+        <div aria-label="Días de la semana" className="grid grid-cols-7 gap-1">
           {dias.map((d) => (
-            <span
+            <button
               key={d.clave}
-              className={
-                d.esHoy
-                  ? "px-2 py-2.5 text-center text-[14px] font-bold text-acento"
-                  : "px-2 py-2.5 text-center text-[14px] font-bold text-tinta-suave"
-              }
+              type="button"
+              aria-label={`${d.abreviatura} ${d.numero}${d.esHoy ? ", hoy" : ""}`}
+              aria-pressed={d.clave === dia}
+              onClick={() => setDia(d.clave)}
+              className={`flex min-h-[72px] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border transition-colors ${d.clave === dia ? "border-acento bg-acento text-fondo" : "border-white/10 bg-white/[.025] text-tinta-suave"}`}
             >
-              {d.abreviatura} {d.numero}
-            </span>
+              <span className="text-[10px] font-bold">{d.abreviatura}</span>
+              <span className="text-lg font-bold tabular-nums">{d.numero}</span>
+              <span
+                aria-hidden="true"
+                className={`size-1 rounded-full ${entradas.some((e) => delDia(e, d.clave)) ? "bg-current" : "bg-transparent"}`}
+              />
+            </button>
           ))}
         </div>
+        <div className="mt-6 flex items-center justify-between">
+          <h3 className="text-base font-semibold">
+            {visible.esHoy
+              ? "Tu día de hoy"
+              : `${visible.abreviatura} ${visible.numero}`}
+          </h3>
+          <span className="text-xs text-tinta-suave">
+            {entradasDelDia.length} en agenda
+          </span>
+        </div>
+        <div className="mt-3 space-y-3">
+          {entradasDelDia.length ? (
+            entradasDelDia.map((e) => (
+              <Tarjeta
+                key={`${e.tipo}-${e.id}`}
+                entrada={e}
+                onEditar={() => editar(e)}
+              />
+            ))
+          ) : (
+            <div className="rounded-2xl border border-dashed border-white/20 px-5 py-6">
+              <p className="font-semibold">Un día con espacio para ti</p>
+              <p className="mt-2 text-sm text-tinta-suave">
+                No tienes citas ni eventos. Elige una hora disponible o añade
+                algo a tu agenda.
+              </p>
+            </div>
+          )}
+        </div>
+        <details
+          className="group mt-5 rounded-2xl border border-white/10 bg-white/[.025]"
+          open
+        >
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-2 px-4 text-sm font-semibold">
+            Horas disponibles{" "}
+            <span className="text-xs font-normal text-tinta-suave">
+              {libresDelDia.length} libres ·{" "}
+              <span className="inline-block transition-transform group-open:rotate-180">
+                ⌄
+              </span>
+            </span>
+          </summary>
+          <div className="space-y-2 border-t border-white/10 p-3">
+            {visible.celdas.map((c, i) =>
+              c.estado === "libre" ? (
+                <div
+                  key={horas[i]}
+                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#16223a] p-2 pl-3"
+                >
+                  <span className="min-w-0 flex-1 text-sm font-semibold tabular-nums">
+                    {horaSuelta(horas[i])}
+                    <span className="ml-2 text-xs font-normal text-tinta-tenue">
+                      Libre
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => agendar(c.iso)}
+                    aria-label={`Agendar a las ${horaSuelta(horas[i])}`}
+                    className="min-h-11 rounded-xl bg-acento/15 px-3 text-sm font-bold text-acento"
+                  >
+                    Agendar
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Cerrar las ${horaSuelta(horas[i])}`}
+                    disabled={pendiente}
+                    onClick={() =>
+                      ejecutar(() => cerrarHoras([c.iso]), "Hora cerrada.")
+                    }
+                    className="min-h-11 rounded-xl px-2 text-xs text-tinta-suave"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              ) : c.estado === "cerrada" ? (
+                <div
+                  key={horas[i]}
+                  className="flex min-h-12 items-center gap-2 px-3 text-sm text-tinta-tenue"
+                >
+                  <span className="flex-1">
+                    {horaSuelta(horas[i])} · Cerrada
+                  </span>
+                  {c.suelta && (
+                    <button
+                      type="button"
+                      disabled={pendiente}
+                      onClick={() =>
+                        ejecutar(() => reabrirHora(c.iso), "Hora reabierta.")
+                      }
+                      className="min-h-11 px-2 text-acento"
+                    >
+                      Reabrir
+                    </button>
+                  )}
+                </div>
+              ) : null,
+            )}
+            {!libresDelDia.length && (
+              <p className="px-1 py-2 text-sm text-tinta-suave">
+                No quedan horas disponibles en este día. Puedes elegir otro día.
+              </p>
+            )}
+          </div>
+        </details>
+      </div>
 
-        {horas.map((h, fila) => {
-          const esDescanso = horasDeDescanso.includes(h);
-
-          return (
+      <div className="mt-5 hidden md:block">
+        <p className="mb-3 text-xs text-tinta-suave">
+          Toca una cita para editarla. Marca o arrastra horas libres para
+          agendar o cerrar.
+        </p>
+        <div className="overflow-hidden rounded-2xl border border-white/12">
+          <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))] bg-white/5">
+            <span className="p-3 text-[10px] text-tinta-tenue">UTAH</span>
+            {dias.map((d) => (
+              <span
+                key={d.clave}
+                className={`p-3 text-center text-xs font-bold ${d.esHoy ? "text-acento" : "text-tinta-suave"}`}
+              >
+                {d.abreviatura} {d.numero}
+              </span>
+            ))}
+          </div>
+          {horas.map((h, i) => (
             <div
               key={h}
-              className={
-                esDescanso
-                  ? "grid border-t border-white/[0.07] bg-aviso/[0.045]"
-                  : "grid border-t border-white/[0.07]"
-              }
-              style={{ gridTemplateColumns: `80px repeat(${dias.length}, minmax(0, 1fr))` }}
+              className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))] border-t border-white/10"
             >
-              <span
-                className={
-                  esDescanso
-                    ? "px-3 py-3.5 text-[15px] text-aviso"
-                    : "px-3 py-3.5 text-[15px] text-tinta-tenue"
-                }
-              >
+              <span className="p-3 text-sm text-tinta-suave">
                 {horaSuelta(h)}
               </span>
-
-              {esDescanso ? (
-                <span
-                  className="m-[3px] flex items-center gap-3 rounded-xl px-4 py-2.5"
-                  style={{ gridColumn: `span ${dias.length}`, background: FRANJA_AVISO }}
-                >
-                  <span className="text-[15px] font-bold text-aviso">
-                    Tu descanso, todos los días
-                  </span>
-                  <span className="hidden text-[15px] text-tinta-suave lg:inline">
-                    se cambia en «Mi horario»
-                  </span>
-                </span>
-              ) : (
-                dias.map((d) => (
-                  <Celda
-                    key={d.clave + fila}
-                    celda={d.celdas[fila]}
-                    etiqueta={`${d.abreviatura} ${d.numero}, ${horaSuelta(h)}`}
-                    marcada={
-                      d.celdas[fila].estado === "libre" &&
-                      marcadas.includes(d.celdas[fila].iso)
-                    }
-                    ocupado={enCurso}
-                    arrastrando={arrastrando}
-                    onEmpezar={(iso) => {
-                      setArrastrando(true);
-                      alternar(iso);
-                    }}
-                    onEntrar={anadir}
-                    onAlternar={alternar}
-                    onReabrir={abrir}
-                    onQuitarEvento={quitarEvento}
-                  />
-                ))
-              )}
+              {dias.map((d) => {
+                const c = d.celdas[i];
+                const iso = instanteAgenda(
+                  d.clave,
+                  `${String(h).padStart(2, "0")}:00`,
+                )?.toISOString();
+                const registros = iso
+                  ? entradas.filter(
+                      (e) =>
+                        Date.parse(e.inicio) <= Date.parse(iso) &&
+                        Date.parse(e.fin) > Date.parse(iso),
+                    )
+                  : [];
+                return (
+                  <div
+                    key={d.clave}
+                    className="min-h-[76px] min-w-0 border-l border-white/[.06] p-1"
+                  >
+                    {registros.length ? (
+                      <div className="space-y-1">
+                        {registros.map((e) => (
+                          <button
+                            key={`${e.tipo}-${e.id}`}
+                            type="button"
+                            onClick={() => editar(e)}
+                            title={`Editar ${e.titulo}`}
+                            className={`min-h-[66px] w-full min-w-0 rounded-xl border p-2 text-left ${e.tipo === "evento" ? "border-personal/40 bg-personal/10" : e.estado === "pendiente" ? "border-aviso/40 bg-aviso/10" : "border-acento/30 bg-acento/10"}`}
+                          >
+                            <span className="block text-[10px] text-tinta-suave">
+                              {etiqueta(e)}
+                            </span>
+                            <span className="mt-1 block break-words text-sm font-semibold">
+                              {e.titulo}
+                            </span>
+                            <span className="mt-1 block text-[10px] text-tinta-suave">
+                              Editar ↗
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : c.estado === "libre" ? (
+                      <button
+                        type="button"
+                        disabled={pendiente}
+                        aria-label={`${d.abreviatura} ${d.numero}, ${horaSuelta(h)}: marcar hora libre`}
+                        aria-pressed={seleccion.includes(c.iso)}
+                        onPointerDown={(event) => {
+                          if (
+                            event.pointerType === "mouse" &&
+                            event.button === 0
+                          ) {
+                            event.preventDefault();
+                            setArrastrando(true);
+                            marcar(c.iso);
+                          }
+                        }}
+                        onPointerEnter={() => {
+                          if (arrastrando)
+                            setSeleccion((s) =>
+                              s.includes(c.iso) ? s : [...s, c.iso],
+                            );
+                        }}
+                        onClick={(event) => {
+                          if (
+                            event.detail === 0 ||
+                            (event.nativeEvent instanceof PointerEvent &&
+                              event.nativeEvent.pointerType !== "mouse")
+                          )
+                            marcar(c.iso);
+                        }}
+                        className={`min-h-[66px] w-full rounded-xl border border-dashed px-2 text-left text-xs ${seleccion.includes(c.iso) ? "border-acento bg-acento/20 text-acento" : "border-white/15 text-tinta-tenue hover:border-acento/50"}`}
+                      >
+                        {seleccion.includes(c.iso) ? "Seleccionada" : "+ Libre"}
+                      </button>
+                    ) : c.estado === "cerrada" ? (
+                      <button
+                        type="button"
+                        disabled={!c.suelta || pendiente}
+                        title={
+                          c.suelta
+                            ? "Reabrir hora"
+                            : "Cambia este cierre en Mis horas y mis ausencias"
+                        }
+                        onClick={() =>
+                          ejecutar(() => reabrirHora(c.iso), "Hora reabierta.")
+                        }
+                        className="min-h-[66px] w-full rounded-xl bg-white/5 text-xs text-tinta-tenue"
+                      >
+                        Cerrada
+                        {c.suelta && (
+                          <span className="mt-1 block text-acento">
+                            Reabrir
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="block p-2 text-xs text-tinta-tenue">
+                        {c.estado === "pasada" ? "Ya pasó" : "—"}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
-
-      {/* ── La barra de lo marcado ──
-
-          Arrastrar por la rejilla marca horas, y aquí se decide qué hacer con
-          ellas. Son DOS cosas distintas y por eso hay dos caminos:
-
-          · escribir un título → queda apuntado en su calendario
-          · no escribir nada  → se cierran, como siempre
-
-          El campo de texto se lleva el foco solo al marcar, así que el gesto
-          entero es: arrastrar, escribir, Enter. Sin tocar el ratón otra vez.
-          Y si no escribe nada, Enter no hace nada: cerrar es una decisión
-          distinta y tiene su botón. ── */}
-      {marcadas.length > 0 ? (
-        <div className="mt-3.5 hidden flex-col gap-3 rounded-[18px] border border-acento/40 bg-panel px-6 py-4 md:flex">
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-            <span className="text-[17px]">{resumen}</span>
-            <button
-              type="button"
-              onClick={() => {
-                setMarcadas([]);
-                setTituloEvento("");
-              }}
-              className="min-h-11 rounded-full px-4 text-[15px] text-tinta-suave"
-            >
-              Quitar la marca
-            </button>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <input
-              type="text"
-              value={tituloEvento}
-              onChange={(e) => setTituloEvento(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && tituloEvento.trim()) apuntar();
-                if (e.key === "Escape") {
-                  setMarcadas([]);
-                  setTituloEvento("");
-                }
-              }}
-              autoFocus
-              maxLength={80}
-              placeholder="¿Qué vas a hacer? Dentista, viaje, comida…"
-              className="min-h-12 flex-1 basis-[16rem] rounded-full bg-white/[0.07] px-5 text-[16px] text-tinta outline-none placeholder:text-tinta-tenue"
-            />
-
-            <button
-              type="button"
-              onClick={apuntar}
-              disabled={enCurso || !tituloEvento.trim()}
-              className="min-h-12 rounded-full bg-acento px-6 text-[16px] font-extrabold text-fondo disabled:opacity-40"
-            >
-              {enCurso ? "Guardando…" : "Apuntar"}
-            </button>
-
-            <span aria-hidden="true" className="h-7 w-px bg-white/15" />
-
-            <button
-              type="button"
-              onClick={confirmarCierre}
-              disabled={enCurso}
-              className="min-h-12 rounded-full border border-white/25 px-5 text-[15px] disabled:opacity-50"
-            >
-              {enCurso ? "Cerrando…" : "Cerrar sin apuntar"}
-            </button>
-          </div>
-
-          {/* El interruptor. Por defecto ocupa, porque casi todo lo que uno
-              apunta en un calendario es algo que va a estar haciendo. */}
-          <label className="flex cursor-pointer items-center gap-2.5 text-[15px] text-tinta-suave">
-            <input
-              type="checkbox"
-              checked={ocupa}
-              onChange={(e) => setOcupa(e.target.checked)}
-              className="size-[18px] accent-[var(--color-acento)]"
-            />
-            {ocupa
-              ? "Ocupa mi hora — nadie podrá reservarla"
-              : "Sólo es un apunte — la hora se sigue vendiendo"}
-          </label>
-        </div>
-      ) : null}
-
-      <Leyenda />
-
-      {/* ══════════ TELÉFONO: un día ══════════ */}
-      <div className="md:hidden">
-        <div className="mt-4 flex gap-1.5">
-          {dias.map((d) => (
-            <button
-              key={d.clave}
-              type="button"
-              onClick={() => setDiaVisible(d.clave)}
-              aria-pressed={d.clave === diaVisible}
-              className={
-                d.clave === diaVisible
-                  ? "flex min-h-[58px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl bg-acento text-fondo"
-                  : "flex min-h-[58px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl border border-white/15"
-              }
-            >
-              <span
-                className={
-                  d.clave === diaVisible
-                    ? "text-[11px] font-extrabold tracking-[0.08em]"
-                    : "text-[11px] font-extrabold tracking-[0.08em] text-tinta-tenue"
-                }
-              >
-                {d.abreviatura}
-              </span>
-              <span className="text-[17px] font-bold tabular-nums">{d.numero}</span>
-            </button>
           ))}
-        </div>
-
-        <div className="mt-5 flex flex-col gap-2">
-          {delDia?.celdas.map((celda, i) =>
-            celda.estado === "fuera" ? null : (
-              <FilaTelefono
-                key={delDia.clave + i}
-                hora={horas[i]}
-                celda={celda}
-                descanso={horasDeDescanso.includes(horas[i])}
-                ocupado={enCurso}
-                onCerrar={(iso) =>
-                  empezar(async () => {
-                    const r = await cerrarHoras([iso]);
-                    if (!r.ok) setError(r.motivo);
-                  })
-                }
-                onReabrir={abrir}
-                onQuitarEvento={quitarEvento}
-              />
-            ),
+          {!horas.length && (
+            <p className="p-6 text-sm text-tinta-suave">
+              Tu semana está vacía. Usa «Agendar» para añadir tu primer evento.
+            </p>
           )}
-
-          {/* El descanso no pertenece a ningún día, así que en la lista de un
-              día concreto se pinta una vez, con su rango entero. */}
-          {horasDeDescanso.length > 0 ? (
-            <div
-              className="flex items-center gap-3.5 rounded-2xl border border-aviso/25 px-4 py-3.5"
-              style={{ background: FRANJA_AVISO }}
-            >
-              <span className="w-[52px] shrink-0 text-[14px] leading-tight text-aviso tabular-nums">
-                {horaSuelta(horasDeDescanso[0])}
-                <br />
-                {horaSuelta(horasDeDescanso[horasDeDescanso.length - 1] + 1)}
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[16px] font-bold text-aviso">Tu descanso</span>
-                <span className="block text-[14px] text-tinta-suave">
-                  todos los días · cámbialo en Mi horario
-                </span>
-              </span>
-            </div>
-          ) : null}
         </div>
+        {!!seleccion.length && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              ejecutar(
+                () => apuntarEvento(seleccion, tituloManual, ocupa),
+                "Evento añadido a la agenda.",
+              );
+            }}
+            className="mt-4 rounded-2xl border border-acento/30 bg-panel p-4"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold">
+                {seleccion.length}{" "}
+                {seleccion.length === 1
+                  ? "hora seleccionada"
+                  : "horas seleccionadas"}
+              </p>
+              <button
+                type="button"
+                onClick={() => setSeleccion([])}
+                className={boton}
+              >
+                Quitar selección
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <input
+                required
+                maxLength={80}
+                value={tituloManual}
+                onChange={(e) => setTituloManual(e.target.value)}
+                aria-label="Nombre del evento seleccionado"
+                placeholder="Nombre de la cita o evento"
+                className="min-h-12 min-w-0 flex-1 rounded-xl border border-white/15 bg-white/5 px-3 text-base"
+              />
+              <button
+                type="submit"
+                disabled={pendiente || !tituloManual.trim()}
+                className={`${boton} border-acento bg-acento text-fondo`}
+              >
+                Agendar selección
+              </button>
+              <button
+                type="button"
+                disabled={pendiente}
+                onClick={() =>
+                  ejecutar(() => cerrarHoras(seleccion), "Horas cerradas.")
+                }
+                className={boton}
+              >
+                Cerrar horas
+              </button>
+            </div>
+            <label className="mt-3 flex min-h-11 items-center gap-2 text-sm text-tinta-suave">
+              <input
+                type="checkbox"
+                checked={ocupa}
+                onChange={(e) => setOcupa(e.target.checked)}
+                className="size-4 accent-[var(--color-acento)]"
+              />
+              Bloquear estas horas para reservas públicas
+            </label>
+          </form>
+        )}
       </div>
+      {esSemanaActual && (
+        <div className="mt-5 border-t border-white/10 pt-4">
+          {cerrarHoy ? (
+            <div className="rounded-xl border border-aviso/30 p-4">
+              <p className="text-sm">
+                ¿Cerrar las horas que quedan libres hoy? Las citas existentes
+                siguen en pie.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCerrarHoy(false)}
+                  className={boton}
+                >
+                  Volver
+                </button>
+                <button
+                  type="button"
+                  disabled={pendiente}
+                  onClick={() =>
+                    ejecutar(
+                      cerrarRestoDeHoy,
+                      "Las horas libres de hoy están cerradas.",
+                    )
+                  }
+                  className={`${boton} text-aviso`}
+                >
+                  Confirmar cierre
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCerrarHoy(true)}
+              className="min-h-11 text-sm text-tinta-suave underline decoration-white/20 underline-offset-4"
+            >
+              Cerrar lo que queda de hoy
+            </button>
+          )}
+        </div>
+      )}
+      {editor && (
+        <EditorAgenda
+          {...editor}
+          disponible={edicionDisponible}
+          onCerrar={() => setEditor(null)}
+          onGuardado={(texto) => {
+            setEditor(null);
+            setMensaje(texto);
+            setSeleccion([]);
+          }}
+        />
+      )}
     </main>
   );
 }
 
-/* El rayado va aquí y no en una clase de Tailwind porque un degradado
-   repetido no se puede expresar con utilidades. Usa los mismos tokens de
-   color que el resto: no hay ningún hex nuevo. */
-const FRANJA_AVISO =
-  "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-aviso) 13%, transparent) 0 7px, transparent 7px 14px)";
-const FRANJA_GRIS =
-  "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-tinta) 7%, transparent) 0 6px, transparent 6px 12px)";
+function etiqueta(e: EntradaAgenda) {
+  return e.tipo === "evento"
+    ? e.ocupa
+      ? "Agenda manual · ocupa la hora"
+      : "Apunte · no bloquea"
+    : e.estado === "pendiente"
+      ? "Pendiente de pago"
+      : e.estado === "atendida"
+        ? "Atendida"
+        : "Reserva confirmada";
+}
 
-function Celda({
-  celda,
-  etiqueta,
-  marcada,
-  ocupado,
-  arrastrando,
-  onEmpezar,
-  onEntrar,
-  onAlternar,
-  onReabrir,
-  onQuitarEvento,
+function Tarjeta({
+  entrada: e,
+  onEditar,
 }: {
-  celda: CeldaDia;
-  etiqueta: string;
-  marcada: boolean;
-  ocupado: boolean;
-  arrastrando: boolean;
-  onEmpezar: (iso: string) => void;
-  onEntrar: (iso: string) => void;
-  onAlternar: (iso: string) => void;
-  onReabrir: (iso: string) => void;
-  onQuitarEvento: (id: number) => void;
+  entrada: EntradaAgenda;
+  onEditar: () => void;
 }) {
-  if (celda.estado === "fuera") {
-    return <span className="m-[3px] rounded-xl bg-white/[0.03]" aria-hidden="true" />;
-  }
-
-  if (celda.estado === "evento") {
-    return (
+  return (
+    <article
+      className={`overflow-hidden rounded-2xl border ${e.tipo === "evento" ? "border-personal/35 bg-personal/[.07]" : e.estado === "pendiente" ? "border-aviso/30 bg-aviso/[.06]" : "border-acento/30 bg-acento/[.06]"}`}
+    >
       <button
         type="button"
-        onClick={() => onQuitarEvento(celda.eventoId)}
-        title={`${celda.titulo}${celda.ocupa ? "" : " · no ocupa la hora"} — pulsa para quitarlo`}
-        /* Rayado y en malva: se distingue de una cita sin leer una palabra.
-           El que NO ocupa va más apagado, porque esa hora sigue a la venta y
-           no debe parecer bloqueada. */
-        className={
-          celda.ocupa
-            ? "m-[3px] flex min-w-0 items-start rounded-xl border border-dashed border-personal/60 bg-personal/[0.14] px-2.5 py-2 text-left"
-            : "m-[3px] flex min-w-0 items-start rounded-xl border border-dashed border-personal/30 bg-personal/[0.06] px-2.5 py-2 text-left"
-        }
+        onClick={onEditar}
+        aria-label={`Editar ${e.titulo}`}
+        className="w-full p-4 text-left"
       >
-        {celda.primera ? (
-          <span className="min-w-0">
-            <span className="block truncate text-[15px] font-bold text-personal">
-              {celda.titulo}
+        <span className="flex items-center justify-between gap-3">
+          <span
+            className={`text-lg font-bold tabular-nums ${e.tipo === "evento" ? "text-personal" : "text-acento"}`}
+          >
+            {horaEnZona(new Date(e.inicio))}
+            <span className="ml-1 text-xs font-normal text-tinta-suave">
+              –{" "}
+              {horaEnZona(
+                new Date(
+                  e.tipo === "cita" ? Date.parse(e.inicio) + 45 * 60000 : e.fin,
+                ),
+              )}
             </span>
-            {!celda.ocupa ? (
-              <span className="block text-[12px] text-tinta-tenue">no ocupa</span>
-            ) : null}
           </span>
-        ) : (
-          <span className="text-[13px] text-personal/70">·</span>
+          <span className="rounded-lg border border-white/15 px-2 py-1.5 text-xs text-tinta-suave">
+            Editar ↗
+          </span>
+        </span>
+        <span className="mt-3 block break-words text-lg font-semibold">
+          {e.titulo}
+        </span>
+        <span className="mt-1 block text-xs text-tinta-suave">
+          {etiqueta(e)}
+        </span>
+        {e.servicio && (
+          <span className="mt-2 block text-sm text-tinta-suave">
+            {e.servicio}
+          </span>
+        )}
+        {e.detalle && (
+          <span className="mt-1 block text-xs leading-relaxed text-tinta-tenue">
+            {e.detalle}
+          </span>
+        )}
+        {e.nota && (
+          <span className="mt-2 line-clamp-2 block text-sm leading-relaxed text-tinta-suave">
+            {e.nota}
+          </span>
         )}
       </button>
-    );
-  }
-
-  if (celda.estado === "cita") {
-    return (
-      <span
-        /* La retenida va con borde punteado y apagada: ocupa el hueco, pero
-           todavía no es tuya. Pintarla igual que una cita pagada haría contar
-           como trabajo del jueves algo que puede evaporarse en media hora. */
-        className={
-          celda.pendiente
-            ? "m-[3px] min-w-0 rounded-xl border border-dashed border-aviso/60 bg-aviso/[0.08] px-2.5 py-2"
-            : "m-[3px] min-w-0 rounded-xl border border-acento/45 bg-acento/[0.16] px-2.5 py-2"
-        }
-        title={
-          (celda.pendiente ? "SIN PAGAR · " : "") +
-          (celda.horaSuya
-            ? `${celda.nombre} · ${celda.hora} tu hora · ${celda.horaSuya} la suya`
-            : `${celda.nombre} · ${celda.hora}`)
-        }
-      >
-        {celda.pendiente ? (
-          <span className="block text-[11px] font-extrabold uppercase tracking-[0.1em] text-aviso">
-            Sin pagar
-          </span>
-        ) : null}
-        <span className="block truncate text-[16px] font-bold">{celda.nombre}</span>
-        <span
-          className={
-            celda.enEeuu
-              ? "block truncate text-[14px] text-tinta-suave"
-              : "block truncate text-[14px] text-aviso"
-          }
+      {e.whatsapp && (
+        <a
+          href={`https://wa.me/${e.whatsapp}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex min-h-11 items-center justify-center border-t border-white/10 text-sm font-semibold text-acento"
         >
-          {celda.pais}
-        </span>
-      </span>
-    );
-  }
-
-  if (celda.estado === "pasada") {
-    return (
-      <span className="m-[3px] rounded-xl bg-white/[0.045] px-2.5 py-2 text-[15px] text-tinta-tenue">
-        ya pasó
-      </span>
-    );
-  }
-
-  if (celda.estado === "cerrada") {
-    if (!celda.suelta) {
-      return (
-        <span
-          className="m-[3px] rounded-xl px-2.5 py-2 text-[15px] text-tinta-suave"
-          style={{ background: FRANJA_GRIS }}
-          title="Parte de un cierre más largo. Se quita desde Mi horario."
-        >
-          cerrado
-        </span>
-      );
-    }
-    return (
-      <button
-        type="button"
-        disabled={ocupado}
-        aria-label={`${etiqueta}: cerrada. Reabrir`}
-        onClick={() => onReabrir(celda.iso)}
-        style={{ background: FRANJA_GRIS }}
-        className="m-[3px] rounded-xl px-2.5 py-2 text-left text-[15px] text-tinta-suave disabled:opacity-50"
-      >
-        cerrado
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      disabled={ocupado}
-      aria-pressed={marcada}
-      aria-label={`${etiqueta}: libre. Marcar para cerrar`}
-      onPointerDown={(e) => {
-        /* `preventDefault` para que arrastrar no seleccione texto por toda la
-           rejilla. Bloquea también el `click` del ratón, y por eso el toggle
-           vive aquí y no en `onClick`. */
-        e.preventDefault();
-        onEmpezar(celda.iso);
-      }}
-      onPointerEnter={() => {
-        if (arrastrando) onEntrar(celda.iso);
-      }}
-      onClick={(e) => {
-        /* Un clic hecho con el teclado —Intro o Espacio sobre el botón— no
-           pasa por ningún puntero, así que llega aquí y sólo aquí. Se
-           reconoce porque `detail` vale 0; los del ratón traen el número de
-           pulsaciones. Sin esto, la rejilla sería inalcanzable sin ratón. */
-        if (e.detail === 0) onAlternar(celda.iso);
-      }}
-      className={
-        marcada
-          ? "m-[3px] rounded-xl border-2 border-acento bg-acento/20 px-2.5 py-2 text-left text-[15px] font-bold text-acento disabled:opacity-50"
-          : "m-[3px] rounded-xl border border-dashed border-white/20 px-2.5 py-2 text-left text-[15px] text-tinta-tenue disabled:opacity-50"
-      }
-    >
-      {marcada ? "marcada" : "libre"}
-    </button>
+          Abrir WhatsApp ↗
+        </a>
+      )}
+    </article>
   );
 }
 
-function FilaTelefono({
-  hora,
-  celda,
-  descanso,
-  ocupado,
-  onCerrar,
-  onReabrir,
-  onQuitarEvento,
-}: {
-  hora: number;
-  celda: Exclude<CeldaDia, { estado: "fuera" }>;
-  descanso: boolean;
-  ocupado: boolean;
-  onCerrar: (iso: string) => void;
-  onReabrir: (iso: string) => void;
-  onQuitarEvento: (id: number) => void;
-}) {
-  if (descanso) return null;
-
-  if (celda.estado === "evento") {
-    return (
-      <button
-        type="button"
-        onClick={() => onQuitarEvento(celda.eventoId)}
-        className="flex w-full items-center gap-3.5 rounded-2xl border border-dashed border-personal/60 bg-personal/[0.12] px-4 py-3.5 text-left"
-      >
-        <span className="w-[52px] shrink-0 text-[16px] text-personal tabular-nums">
-          {horaSuelta(hora)}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[17px] font-bold text-personal">{celda.titulo}</span>
-          <span className="block text-[14px] text-tinta-tenue">
-            {celda.ocupa ? "lo tuyo · ocupa la hora" : "lo tuyo · no ocupa"}
-          </span>
-        </span>
-      </button>
-    );
-  }
-
-  if (celda.estado === "cita") {
-    return (
-      <div
-        className={
-          celda.pendiente
-            ? "rounded-2xl border border-dashed border-aviso/60 bg-aviso/[0.08] px-4 py-3.5"
-            : "rounded-2xl border border-acento/45 bg-acento/[0.16] px-4 py-3.5"
-        }
-      >
-        <div className="flex items-center gap-3.5">
-          <span
-            className={
-              celda.pendiente
-                ? "w-[52px] shrink-0 text-[16px] text-aviso tabular-nums"
-                : "w-[52px] shrink-0 text-[16px] text-acento tabular-nums"
-            }
-          >
-            {horaSuelta(hora)}
-          </span>
-          <span className="min-w-0 flex-1">
-            {celda.pendiente ? (
-              <span className="block text-[11px] font-extrabold uppercase tracking-[0.1em] text-aviso">
-                Retenida · sin pagar
-              </span>
-            ) : null}
-            <span className="block truncate text-[17px] font-bold">{celda.nombre}</span>
-            <span
-              className={
-                celda.enEeuu
-                  ? "block text-[14px] text-tinta-suave"
-                  : "block text-[14px] text-aviso"
-              }
-            >
-              {celda.pais} · {celda.enEeuu ? "ya está aquí" : "todavía no está aquí"}
-            </span>
-          </span>
-        </div>
-
-        {/* La hora que ve ESA persona, cuando no vive a tu hora. Es la línea
-            que evita el «nos vemos a las 11» que cada uno entiende a una hora
-            distinta. */}
-        {celda.horaSuya ? (
-          <p className="mt-2 pl-[66px] text-[14px] text-tinta-suave">
-            Para esa persona son las <strong className="font-bold">{celda.horaSuya}</strong>
-          </p>
-        ) : null}
-
-        {celda.whatsapp ? (
-          <a
-            href={`https://wa.me/${celda.whatsapp}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-full border border-acento/50 text-[15px] font-bold text-acento"
-          >
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.87 9.87 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.38.11-.5.11-.11.25-.29.37-.44.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.47c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.11-.22-.17-.47-.29Z" />
-            </svg>
-            Escribirle por WhatsApp
-          </a>
-        ) : null}
-      </div>
-    );
-  }
-
-  if (celda.estado === "pasada") {
-    return (
-      <div className="flex items-center gap-3.5 rounded-2xl bg-white/[0.04] px-4 py-3">
-        <span className="w-[52px] shrink-0 text-[16px] text-tinta-tenue tabular-nums">
-          {horaSuelta(hora)}
-        </span>
-        <span className="text-[16px] text-tinta-tenue">ya pasó</span>
-      </div>
-    );
-  }
-
-  if (celda.estado === "cerrada") {
-    return (
-      <div
-        className="flex items-center gap-3.5 rounded-2xl px-4 py-3"
-        style={{ background: FRANJA_GRIS }}
-      >
-        <span className="w-[52px] shrink-0 text-[16px] text-tinta-suave tabular-nums">
-          {horaSuelta(hora)}
-        </span>
-        <span className="text-[16px] text-tinta-suave">cerrado</span>
-        {celda.suelta ? (
-          <button
-            type="button"
-            disabled={ocupado}
-            onClick={() => onReabrir(celda.iso)}
-            className="ml-auto min-h-11 shrink-0 rounded-full px-4 text-[15px] font-bold text-acento disabled:opacity-50"
-          >
-            Reabrir
-          </button>
-        ) : null}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-3.5 rounded-2xl border border-dashed border-white/20 py-2.5 pl-4 pr-2.5">
-      <span className="w-[52px] shrink-0 text-[16px] text-tinta-tenue tabular-nums">
-        {horaSuelta(hora)}
-      </span>
-      <span className="text-[16px] text-tinta-tenue">libre</span>
-      <button
-        type="button"
-        disabled={ocupado}
-        onClick={() => onCerrar(celda.iso)}
-        className="ml-auto min-h-11 shrink-0 rounded-full bg-white/[0.09] px-4 text-[15px] font-bold disabled:opacity-50"
-      >
-        Cerrar
-      </button>
-    </div>
-  );
-}
-
-function Flecha({
-  hacia,
-  activa,
-  etiqueta,
-  direccion,
-}: {
-  hacia: number;
-  activa: boolean;
-  etiqueta: string;
-  direccion: "atras" | "adelante";
-}) {
-  const punta =
-    direccion === "atras" ? "M15 18 9 12l6-6" : "m9 18 6-6-6-6";
-
-  if (!activa) {
-    return (
-      <span
-        aria-hidden="true"
-        className="flex size-11 items-center justify-center rounded-full border border-white/12 text-tinta-tenue opacity-40"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d={punta} />
-        </svg>
-      </span>
-    );
-  }
-
-  return (
-    <Link
-      href={hacia === 0 ? "/panel" : `/panel?s=${hacia}`}
-      aria-label={etiqueta}
-      className="flex size-11 items-center justify-center rounded-full border border-white/25"
-    >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d={punta} />
-      </svg>
-    </Link>
-  );
-}
-
-function Leyenda() {
-  return (
-    <div className="mt-4 hidden flex-wrap items-center gap-x-6 gap-y-2 md:flex">
-      <Marca clase="border border-acento bg-acento/20">apartada por alguien</Marca>
-      <Marca clase="border border-dashed border-personal/60 bg-personal/20">lo tuyo · tócalo para quitarlo</Marca>
-      <Marca clase="border border-dashed border-white/30">libre · arrástrala para apuntar o cerrar</Marca>
-      <Marca estilo={FRANJA_GRIS}>cerrada por ti · tócala para reabrirla</Marca>
-      <Marca estilo={FRANJA_AVISO}>tu descanso fijo</Marca>
-      <Marca clase="bg-white/[0.05]">fuera de tu horario</Marca>
-    </div>
-  );
-}
-
-function Marca({
-  clase = "",
-  estilo,
+function Navegar({
+  salto,
+  permitido,
+  nombre,
   children,
 }: {
-  clase?: string;
-  estilo?: string;
+  salto: number;
+  permitido: boolean;
+  nombre: string;
   children: string;
 }) {
-  return (
-    <span className="flex items-center gap-2 text-[15px] text-tinta-tenue">
-      <span
-        className={`size-3.5 shrink-0 rounded ${clase}`}
-        style={estilo ? { background: estilo } : undefined}
-        aria-hidden="true"
-      />
+  return permitido ? (
+    <Link
+      href={salto === 0 ? "/panel" : `/panel?s=${salto}`}
+      aria-label={nombre}
+      className={`${boton} w-11 px-0 text-2xl`}
+    >
+      {children}
+    </Link>
+  ) : (
+    <span
+      aria-hidden="true"
+      className={`${boton} w-11 px-0 text-2xl opacity-30`}
+    >
       {children}
     </span>
   );
-}
-
-/**
- * «Martes 25 · de 15:00 a 17:00 · 2 horas marcadas».
- *
- * Sólo se atreve con el rango cuando lo marcado es un bloque seguido de un
- * mismo día. Si hay huecos —porque en medio había una cita— dice el número y
- * ya: mentir con un rango que no es continuo sería peor que no decirlo.
- */
-function describir(marcadas: string[], dias: DiaPintado[], horas: number[]): string {
-  if (marcadas.length === 0) return "";
-  const cuenta = `${marcadas.length} ${marcadas.length === 1 ? "hora marcada" : "horas marcadas"}`;
-
-  const juego = new Set(marcadas);
-  for (const d of dias) {
-    const indices = d.celdas
-      .map((c, i) => (c.estado === "libre" && juego.has(c.iso) ? i : -1))
-      .filter((i) => i >= 0);
-
-    if (indices.length !== marcadas.length) continue;
-
-    const seguido = indices.every((v, k) => k === 0 || v === indices[k - 1] + 1);
-    const titulo = `${d.abreviatura} ${d.numero}`;
-
-    if (!seguido) return `${titulo} · ${cuenta}`;
-
-    const primera = horas[indices[0]];
-    const ultima = horas[indices[indices.length - 1]];
-    return `${titulo} · de ${horaSuelta(primera)} a ${horaSuelta(ultima + 1)} · ${cuenta}`;
-  }
-
-  return cuenta;
 }

@@ -1,55 +1,64 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import {
+  cambiarRecordatorio,
+  consultarAviso,
+  guardarAviso,
+  probarAviso,
+  quitarAviso,
+} from "@/app/panel/avisos";
 
-import { guardarAviso, quitarAviso } from "@/app/panel/avisos";
+type Estado =
+  | "cargando"
+  | "imposible"
+  | "bloqueado"
+  | "apagado"
+  | "encendido"
+  | "error";
 
-/**
- * EL AVISO EN EL TELÉFONO.
- *
- * Un interruptor: encendido, cada vez que alguien aparta una hora el
- * teléfono de Henry suena.
- *
- * ── Los tres estados que hay que distinguir, y por qué ──
- *
- * «No se puede», «no lo has activado» y «lo has bloqueado» son cosas muy
- * distintas y llevan a acciones distintas. Un botón que en los tres casos
- * dice «activar» y no hace nada es el peor de los mundos: se toca, no pasa
- * nada, y no hay forma de saber por qué.
- *
- *   · si el navegador no puede, se dice y no se ofrece el botón;
- *   · si está bloqueado, se explica que hay que desbloquearlo en los ajustes
- *     del navegador, porque desde aquí ya no se puede volver a preguntar —
- *     una vez que alguien dice que no, el navegador no vuelve a mostrar el
- *     diálogo;
- *   · y si sólo falta activarlo, el botón hace su trabajo.
- *
- * ── En iPhone hay un paso previo ──
- *
- * Safari sólo deja avisar si la web está INSTALADA en la pantalla de inicio.
- * Desde una pestaña normal, `Notification` ni siquiera existe, así que la
- * pantalla lo dice en vez de dejar a alguien tocando un botón que nunca va a
- * funcionar.
- */
+async function registroPush() {
+  await navigator.serviceWorker.register("/sw.js");
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<never>((_, rechazar) => {
+        timer = setTimeout(
+          () => rechazar(new Error("La app no está lista")),
+          10000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-type Estado = "cargando" | "imposible" | "bloqueado" | "apagado" | "encendido";
-
-export function AvisoMovil({ clavePublica }: { clavePublica: string }) {
+export function AvisoMovil({
+  clavePublica,
+  recordatoriosDisponibles,
+}: {
+  clavePublica: string;
+  recordatoriosDisponibles: boolean;
+}) {
   const [estado, setEstado] = useState<Estado>("cargando");
-  const [error, setError] = useState<string | null>(null);
-  const [enCurso, empezar] = useTransition();
+  const [endpoint, setEndpoint] = useState("");
+  const [minutos, setMinutos] = useState<0 | 5 | null>(5);
+  const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState("");
+  const [intento, setIntento] = useState(0);
+  const [pendiente, empezar] = useTransition();
 
   useEffect(() => {
     let vivo = true;
-
     (async () => {
-      const puede =
-        typeof window !== "undefined" &&
-        "serviceWorker" in navigator &&
-        "PushManager" in window &&
-        "Notification" in window;
-
-      if (!puede || !clavePublica) {
+      if (
+        !("serviceWorker" in navigator) ||
+        !("PushManager" in window) ||
+        !("Notification" in window) ||
+        !clavePublica
+      ) {
         if (vivo) setEstado("imposible");
         return;
       }
@@ -57,147 +66,328 @@ export function AvisoMovil({ clavePublica }: { clavePublica: string }) {
         if (vivo) setEstado("bloqueado");
         return;
       }
-
       try {
-        const registro = await navigator.serviceWorker.ready;
-        const suscrito = await registro.pushManager.getSubscription();
-        if (vivo) setEstado(suscrito ? "encendido" : "apagado");
+        const registro = await registroPush();
+        const s = await registro.pushManager.getSubscription();
+        if (!vivo) return;
+        if (!s) {
+          setEstado("apagado");
+          return;
+        }
+        const r = await consultarAviso(s.endpoint);
+        if (!vivo) return;
+        if (!r.ok) {
+          setError(r.motivo);
+          setEstado("error");
+          return;
+        }
+        setEndpoint(s.endpoint);
+        setMinutos(r.registrado ? r.minutos : 5);
+        setEstado(r.registrado ? "encendido" : "apagado");
       } catch {
-        if (vivo) setEstado("imposible");
+        if (vivo) {
+          setEstado("error");
+          setError(
+            "No se pudo comprobar este dispositivo. Revisa tu conexión y vuelve a intentarlo.",
+          );
+        }
       }
     })();
-
     return () => {
       vivo = false;
     };
-  }, [clavePublica]);
+  }, [clavePublica, intento]);
 
-  function encender() {
-    setError(null);
+  function activar() {
+    setError("");
+    setMensaje("");
     empezar(async () => {
       try {
+        // El permiso se solicita inmediatamente desde el gesto del usuario (iOS).
         const permiso = await Notification.requestPermission();
         if (permiso === "denied") {
           setEstado("bloqueado");
           return;
         }
-        if (permiso !== "granted") return;
-
-        const registro = await navigator.serviceWorker.ready;
-        const suscripcion = await registro.pushManager.subscribe({
-          /* Obligatorio en todos los navegadores: promete que cada aviso que
-             llegue se le va a ENSEÑAR a la persona. Sin esto, la suscripción
-             se rechaza — y con razón: un push silencioso es un rastreador. */
-          userVisibleOnly: true,
-          applicationServerKey: aBytes(clavePublica),
-        });
-
-        const bruto = suscripcion.toJSON();
+        if (permiso !== "granted") {
+          setMensaje(
+            "Acepta el permiso para recibir avisos en este dispositivo.",
+          );
+          return;
+        }
+        const registro = await registroPush();
+        const s =
+          (await registro.pushManager.getSubscription()) ??
+          (await registro.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: aBytes(clavePublica),
+          }));
+        const bruto = s.toJSON();
         const r = await guardarAviso({
-          endpoint: suscripcion.endpoint,
+          endpoint: s.endpoint,
           p256dh: bruto.keys?.p256dh ?? "",
           auth: bruto.keys?.auth ?? "",
           descripcion: navigator.userAgent.slice(0, 80),
         });
-
-        if (r.ok) setEstado("encendido");
-        else {
+        if (!r.ok) {
           setError(r.motivo);
-          /* Si no se pudo guardar, se deshace la suscripción del navegador:
-             dejarla viva significaría que el teléfono cree que está avisado
-             y la base no sabe de él. */
-          await suscripcion.unsubscribe().catch(() => {});
+          return;
         }
+        if (recordatoriosDisponibles) {
+          const preferencia = await cambiarRecordatorio(s.endpoint, minutos);
+          if (!preferencia.ok) {
+            setError(preferencia.motivo);
+            return;
+          }
+        }
+        setEndpoint(s.endpoint);
+        setEstado("encendido");
+        setMensaje(
+          recordatoriosDisponibles
+            ? "Avisos activados. Puedes probarlos ahora."
+            : "Avisos de nuevas reservas activados.",
+        );
       } catch {
-        setError("No se pudo activar en este teléfono.");
+        setError(
+          "No se pudo activar. Comprueba tu conexión y los permisos de la app.",
+        );
       }
     });
   }
 
-  function apagar() {
-    setError(null);
+  function desactivar() {
+    setError("");
+    setMensaje("");
     empezar(async () => {
       try {
-        const registro = await navigator.serviceWorker.ready;
-        const suscripcion = await registro.pushManager.getSubscription();
-        if (suscripcion) {
-          await quitarAviso(suscripcion.endpoint);
-          await suscripcion.unsubscribe();
+        const r = await quitarAviso(endpoint);
+        if (!r.ok) {
+          setError(r.motivo);
+          return;
         }
+        // Tras quitarlo del servidor ya no puede recibir avisos, aunque falle
+        // la baja local. Activar reutiliza y vuelve a registrar esa suscripción.
+        const registro = await registroPush();
+        const s = await registro.pushManager.getSubscription();
+        await s?.unsubscribe().catch(() => false);
         setEstado("apagado");
+        setMensaje("Avisos desactivados en este dispositivo.");
       } catch {
-        setError("No se pudo desactivar.");
+        setError(
+          "No se pudo completar la desactivación. Comprueba la conexión.",
+        );
+        setIntento((v) => v + 1);
       }
     });
   }
 
-  if (estado === "cargando") return null;
-
   return (
-    <div className="rounded-[20px] border border-white/12 px-5 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3">
-        <div className="min-w-0">
-          <p className="text-[17px] font-bold">Avisarme en el teléfono</p>
-          <p className="mt-1 max-w-[52ch] text-[16px] leading-[1.45] text-tinta-suave">
-            {estado === "encendido"
-              ? "Este teléfono suena cuando alguien aparta una hora."
-              : estado === "bloqueado"
-                ? "Los avisos están bloqueados en este navegador. Se desbloquean en sus ajustes, en los permisos de este sitio — desde aquí ya no se puede volver a preguntar."
-                : estado === "imposible"
-                  ? "Este navegador no puede avisar. En un iPhone hay que instalar antes la agenda en la pantalla de inicio: compartir y «Añadir a inicio»."
-                  : "Cuando alguien aparte una hora, este teléfono te avisa con su nombre y la hora."}
+    <section
+      aria-labelledby="recordatorios-titulo"
+      className="rounded-[22px] border border-acento/20 bg-gradient-to-br from-acento/[.07] to-transparent p-4 sm:p-5"
+    >
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-acento/10 text-acento"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+          >
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4M12 2V1" />
+          </svg>
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2
+            id="recordatorios-titulo"
+            className="font-titulo text-xl font-semibold"
+          >
+            Que no se te pase una cita
+          </h2>
+          <p className="mt-1 text-sm leading-relaxed text-tinta-suave">
+            Recibe un recordatorio en este dispositivo, incluso con la agenda
+            cerrada.
           </p>
         </div>
-
-        {estado === "encendido" ? (
-          <button
-            type="button"
-            onClick={apagar}
-            disabled={enCurso}
-            className="min-h-11 shrink-0 rounded-full border border-white/25 px-5 text-[15px] font-bold disabled:opacity-50"
-          >
-            {enCurso ? "…" : "Desactivar"}
-          </button>
-        ) : estado === "apagado" ? (
-          <button
-            type="button"
-            onClick={encender}
-            disabled={enCurso}
-            className="min-h-11 shrink-0 rounded-full bg-acento px-6 text-[15px] font-extrabold text-fondo disabled:opacity-50"
-          >
-            {enCurso ? "Activando…" : "Activar"}
-          </button>
-        ) : null}
       </div>
-
-      {error ? (
-        <p role="alert" className="mt-3 text-[16px] text-aviso">
+      <div className="mt-4 rounded-xl border border-white/10 bg-[#16223a]/60 p-3 sm:p-4">
+        <p className="flex items-center gap-2 text-xs font-semibold">
+          <span
+            aria-hidden="true"
+            className={`size-2 rounded-full ${estado === "encendido" ? "bg-acento" : "bg-aviso"}`}
+          />
+          {estado === "cargando"
+            ? "Comprobando dispositivo…"
+            : estado === "encendido"
+              ? "Notificaciones activas en este dispositivo"
+              : estado === "bloqueado"
+                ? "Permiso bloqueado en el navegador"
+                : estado === "imposible"
+                  ? "Requiere una app o navegador compatible"
+                  : estado === "error"
+                    ? "No se pudo comprobar la suscripción"
+                    : "Notificaciones desactivadas"}
+        </p>
+        {!recordatoriosDisponibles && (
+          <p className="mt-3 text-sm text-aviso">
+            Los recordatorios de horario están pendientes de activación. Los
+            avisos de nuevas reservas mantienen su configuración.
+          </p>
+        )}
+        {recordatoriosDisponibles &&
+          (estado === "encendido" || estado === "apagado") && (
+            <>
+              <label className="mt-4 block text-sm font-semibold">
+                Recordarme
+                <select
+                  aria-label="Cuándo recibir el recordatorio"
+                  disabled={pendiente}
+                  value={minutos === null ? "no" : minutos}
+                  onChange={(e) => {
+                    const valor =
+                      e.target.value === "no"
+                        ? null
+                        : (Number(e.target.value) as 0 | 5);
+                    if (estado !== "encendido") {
+                      setMinutos(valor);
+                      return;
+                    }
+                    setError("");
+                    setMensaje("");
+                    empezar(async () => {
+                      try {
+                        const r = await cambiarRecordatorio(endpoint, valor);
+                        if (r.ok) {
+                          setMinutos(valor);
+                          setMensaje(
+                            "Preferencia guardada para este dispositivo.",
+                          );
+                        } else setError(r.motivo);
+                      } catch {
+                        setError("No se pudo guardar la preferencia.");
+                      }
+                    });
+                  }}
+                  className="mt-2 min-h-12 w-full rounded-xl border border-white/20 bg-[#16223a] px-3 text-base font-normal [color-scheme:dark]"
+                >
+                  <option value={5}>5 minutos antes</option>
+                  <option value={0}>A la hora de la cita</option>
+                  <option value="no">Sin recordatorios de horario</option>
+                </select>
+              </label>
+              <p className="mt-2 text-xs leading-relaxed text-tinta-tenue">
+                Incluye reservas confirmadas y tu agenda manual. Los avisos de
+                nuevas reservas siguen activos.
+              </p>
+            </>
+          )}
+        {estado === "bloqueado" && (
+          <p className="mt-3 text-sm leading-relaxed text-tinta-suave">
+            Permite las notificaciones en los ajustes de este sitio o de la app.
+            Después vuelve a comprobar el permiso.
+          </p>
+        )}
+        {estado === "imposible" && (
+          <p className="mt-3 text-sm leading-relaxed text-tinta-suave">
+            {!clavePublica
+              ? "Falta configurar la clave de notificaciones del sitio."
+              : "En iPhone (iOS 16.4 o posterior), abre la agenda en Safari, toca Compartir → Añadir a pantalla de inicio. Abre la app instalada y activa los avisos. En Android puedes usar Chrome o instalar la app."}
+          </p>
+        )}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {estado === "apagado" && (
+            <button
+              type="button"
+              disabled={pendiente}
+              onClick={activar}
+              className="min-h-12 w-full rounded-xl bg-acento px-4 text-sm font-extrabold text-fondo sm:w-auto"
+            >
+              {pendiente ? "Activando…" : "Activar notificaciones"}
+            </button>
+          )}
+          {estado === "encendido" && (
+            <>
+              {recordatoriosDisponibles && (
+                <button
+                  type="button"
+                  disabled={pendiente}
+                  onClick={() => {
+                    setError("");
+                    setMensaje("");
+                    empezar(async () => {
+                      try {
+                        const r = await probarAviso(endpoint);
+                        if (r.ok)
+                          setMensaje(
+                            "Prueba solicitada al servidor. Comprueba si aparece el aviso en este dispositivo; puede tardar unos segundos.",
+                          );
+                        else setError(r.motivo);
+                      } catch {
+                        setError("No se pudo solicitar la prueba.");
+                      }
+                    });
+                  }}
+                  className="min-h-11 rounded-xl bg-acento px-4 text-sm font-bold text-fondo disabled:opacity-50"
+                >
+                  Probar notificación
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={pendiente}
+                onClick={desactivar}
+                className="min-h-11 rounded-xl border border-white/20 px-4 text-sm disabled:opacity-50"
+              >
+                Desactivar
+              </button>
+            </>
+          )}
+          {["bloqueado", "imposible", "error"].includes(estado) && (
+            <button
+              type="button"
+              disabled={pendiente}
+              onClick={() => {
+                setError("");
+                setEstado("cargando");
+                setIntento((v) => v + 1);
+              }}
+              className="min-h-11 rounded-xl border border-white/20 px-4 text-sm"
+            >
+              Volver a comprobar
+            </button>
+          )}
+        </div>
+      </div>
+      {mensaje && (
+        <p role="status" className="mt-3 text-sm leading-relaxed text-acento">
+          {mensaje}
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-aviso">
           {error}
         </p>
-      ) : null}
-    </div>
+      )}
+      <p className="mt-3 text-xs leading-relaxed text-tinta-tenue">
+        La entrega depende de tu conexión y los permisos del teléfono. Revisa
+        también el modo «No molestar».
+      </p>
+    </section>
   );
 }
 
-/**
- * La clave VAPID, de texto a bytes.
- *
- * `applicationServerKey` no acepta la cadena tal cual: quiere los bytes. Y
- * la clave viene en base64 «de URL», que cambia `+` por `-`, `/` por `_` y
- * se come el relleno — hay que deshacer las tres cosas antes de decodificar,
- * o el navegador rechaza la suscripción con un error que no explica nada.
- */
 function aBytes(base64Url: string): Uint8Array<ArrayBuffer> {
-  const relleno = "=".repeat((4 - (base64Url.length % 4)) % 4);
-  const base64 = (base64Url + relleno).replace(/-/g, "+").replace(/_/g, "/");
-  const crudo = atob(base64);
-
-  /* El `ArrayBuffer` se crea a mano y no se deja al constructor: desde
-     TypeScript 5.7 un `Uint8Array` suelto puede ir sobre memoria compartida,
-     y `applicationServerKey` no la acepta. Diciéndolo aquí, el tipo cuadra
-     sin castings. */
-  const buffer = new ArrayBuffer(crudo.length);
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < crudo.length; i += 1) bytes[i] = crudo.charCodeAt(i);
+  const texto = atob(
+    (base64Url + "=".repeat((4 - (base64Url.length % 4)) % 4))
+      .replace(/-/g, "+")
+      .replace(/_/g, "/"),
+  );
+  const bytes = new Uint8Array(new ArrayBuffer(texto.length));
+  for (let i = 0; i < texto.length; i++) bytes[i] = texto.charCodeAt(i);
   return bytes;
 }
