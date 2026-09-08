@@ -36,10 +36,13 @@ los campos originales: las **14 citas, 9 eventos y 9 cierres** permanecieron
 idénticos. El único registro añadido fue una cita manual solicitada expresamente.
 
 La función Edge está desplegada y el cron corre cada minuto. La autenticación
-está verificada. **El envío push sigue pendiente de configuración:** la respuesta
-del worker es HTTP 503 porque faltan `VAPID_PUBLICA`, `VAPID_PRIVADA` y
-`VAPID_CONTACTO` en los secretos Edge del proyecto. No se considera activada la
-entrega de avisos hasta resolver ese requisito y probar un dispositivo real.
+y las tres variables VAPID quedaron configuradas el 8 de septiembre de 2026.
+La ejecución automática de las 05:59 UTC respondió **HTTP 200, sin errores**.
+La clave pública se sincronizó en la copia local y en los dos despliegues de
+producción de este repositorio, incluido `links.usalatinoprime.com`.
+No había dispositivos registrados al configurar el par de claves.
+**Falta comprobar la recepción en el teléfono de Henry:** el funcionamiento
+del worker no equivale a una confirmación de entrega en un dispositivo.
 
 ## Recordatorios PWA
 
@@ -56,6 +59,7 @@ los dispositivos expirados se retiran y los avisos caducan dos minutos después
 de la hora. Una reprogramación invalida el aviso anterior.
 
 Se usan las variables Edge `VAPID_PUBLICA`, `VAPID_PRIVADA` y `VAPID_CONTACTO`.
+El contacto VAPID usa la URL HTTPS del sitio, un formato admitido por Web Push.
 La pública debe coincidir con `NEXT_PUBLIC_VAPID_PUBLICA` del frontend. Hay que
 configurar el par original si está disponible; no sustituir unilateralmente
 claves de dispositivos registrados. Ninguna clave privada se incluye en el
@@ -96,8 +100,9 @@ por dobles locales; un reloj controlado permite probar ventanas de envío exacta
 No se conecta a Supabase ni usa datos de clientes. El SQL transaccional está en
 `supabase/tests/agenda_editor.sql` y revierte todos sus registros sintéticos.
 
-Para completar la activación, configurar las tres variables VAPID en los
-secretos Edge y comprobar la siguiente respuesta del cron: debe ser HTTP 200.
-Registrar el dispositivo de Henry y verificar **Probar notificación** desde la
-PWA. Comprobar también un recordatorio a cinco minutos y otro al comienzo en un
-entorno de prueba, sin modificar las citas de clientes.
+Para comprobar el teléfono, abrir `https://links.usalatinoprime.com/panel`,
+instalar la PWA si corresponde y activar **Que no se te pase una cita**. Elegir
+cinco minutos antes o al empezar, y pulsar **Probar notificación**. Comprobar
+también un recordatorio a cinco minutos y otro al comienzo en un entorno de
+prueba, sin modificar las citas de clientes. Los secretos privados permanecen
+en Supabase y fuera de Git; Vercel recibe únicamente la clave pública VAPID.

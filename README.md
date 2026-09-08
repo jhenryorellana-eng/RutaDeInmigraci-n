@@ -143,7 +143,7 @@ Secrets**:
 |---|---|
 | `VAPID_PUBLICA` | la misma que `NEXT_PUBLIC_VAPID_PUBLICA` |
 | `VAPID_PRIVADA` | su pareja. **Nunca** en el repo ni en Vercel |
-| `VAPID_CONTACTO` | `mailto:` con un correo real, que es lo que pide el estándar |
+| `VAPID_CONTACTO` | URL HTTPS de contacto del sitio o `mailto:` con un correo real |
 | `AVISO_SECRETO` | el mismo que lleva el trigger de `0005_avisar.sql` |
 
 Las dos llaves VAPID se generan de una vez:
@@ -157,7 +157,10 @@ La **pública** va también en `.env.local` y en Vercel como
 nunca mandar un aviso, así que puede vivir en el navegador. La **privada** es
 la que firma, y sólo la conoce la función.
 
-Con eso, Henry entra al panel, va a **Mi horario** y le da a *Activar*.
+Con eso, Henry entra al panel y activa **Que no se te pase una cita**. Puede
+elegir recordatorio cinco minutos antes o al empezar y comprobar el dispositivo
+con **Probar notificación**. La configuración y verificación de los
+recordatorios está documentada en [Agenda móvil](docs/panel-agenda-mobile.md).
 
 **En iPhone hay un paso previo**: Safari sólo deja avisar si la web está
 instalada en la pantalla de inicio (compartir → «Añadir a inicio»). Desde una
