@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { ParedGuiada } from "@/components/pared-guiada";
+import { PRECIO_DESDE } from "@/lib/servicios";
 
 /**
  * LA PARED DE ENLACES · vitral.
@@ -52,16 +53,23 @@ import { ParedGuiada } from "@/components/pared-guiada";
  *
  * ── Qué dice la descripción ──
  *
- * Los servicios por su nombre, en el mismo orden que la pared. Quien
- * lo lee tiene que reconocer LO SUYO antes de tocar: alguien que busca sus
- * trámites no entra a algo que sólo promete «asesoría personalizada».
+ * Lo que hay detrás de las dos tarjetas, en el mismo orden que la pared:
+ * preparar la audiencia con Henry, con lo que cuesta, y los trámites.
+ * Quien lo lee tiene que reconocer LO SUYO antes de tocar.
+ *
+ * ── La imagen ──
+ *
+ * `og-ruta.jpg`, 1200 × 630: Henry en Utah —la foto de la portada de La
+ * ruta— con la marca, la frase y el «desde» del precio. Se generó a partir
+ * de `public/imagenes/henry-utah.webp`; si cambia el precio más bajo, hay
+ * que volver a generarla, porque el texto va dentro de la foto.
  *
  * ── Lo que WhatsApp exige, y no perdona ──
  *
  * · La imagen en dirección ABSOLUTA. La construye Next desde `metadataBase`,
  *   que está en el layout y sale de `lib/sitio.ts`.
- * · Que no pese mucho. Ésta son 316 KB, por debajo del límite al que deja de
- *   traerse la vista previa.
+ * · Que no pese mucho. Ésta son 84 KB, muy por debajo del límite al que deja
+ *   de traerse la vista previa.
  * · `width` y `height` declarados: sin ellos algunos clientes reservan mal
  *   el hueco y la tarjeta sale con la foto recortada.
  *
@@ -70,11 +78,17 @@ import { ParedGuiada } from "@/components/pared-guiada";
  * etiquetas, va a seguir enseñando lo viejo — hay que probar con algo detrás
  * (`/links?v=2`) para que la vuelva a pedir.
  */
-const DESCRIPCION =
-  "Preparación de tu segunda y tercera audiencia con Henry, La ruta del inmigrante y servicios migratorios. Todo en un sitio.";
+const TITULO = "Henry Orellana · La ruta del inmigrante";
+const DESCRIPCION = `Prepara tu audiencia con Henry Orellana: 45 minutos uno a uno, en español, desde $${PRECIO_DESDE}. Y tus trámites migratorios con Contygo.`;
+const IMAGEN = {
+  url: "/og-ruta.jpg",
+  width: 1200,
+  height: 630,
+  alt: "Henry Orellana en Utah. La ruta del inmigrante: prepara tu audiencia con Henry.",
+};
 
 export const metadata: Metadata = {
-  title: "Henry Orellana D. · Todos sus proyectos",
+  title: TITULO,
   description: DESCRIPCION,
   alternates: { canonical: "/links" },
   openGraph: {
@@ -82,25 +96,18 @@ export const metadata: Metadata = {
     locale: "es_US",
     url: "/links",
     siteName: "Orellana Group",
-    title: "Henry Orellana D. · Todos sus proyectos",
+    title: TITULO,
     description: DESCRIPCION,
-    images: [
-      {
-        url: "/og-links.jpg",
-        width: 1600,
-        height: 902,
-        alt: "Henry Orellana Domínguez en la oficina de USALatino Prime.",
-      },
-    ],
+    images: [IMAGEN],
   },
   /* Para X y para todo lo que lee las de Twitter antes que las de Open
      Graph. `summary_large_image` es la que enseña la foto ancha; con
      `summary` a secas sale una miniatura cuadrada del tamaño de un sello. */
   twitter: {
     card: "summary_large_image",
-    title: "Henry Orellana D. · Todos sus proyectos",
+    title: TITULO,
     description: DESCRIPCION,
-    images: ["/og-links.jpg"],
+    images: [IMAGEN.url],
   },
 };
 
