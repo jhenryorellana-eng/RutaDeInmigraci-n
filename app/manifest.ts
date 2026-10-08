@@ -19,7 +19,7 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Agenda · La ruta del inmigrante",
+    name: "Agenda · Preparación de audiencia",
     short_name: "Mi agenda",
     description:
       "Las citas de Henry: quién viene, a qué hora y cuándo está abierto.",

@@ -31,16 +31,16 @@ describe("catálogo de preparaciones", () => {
     expect(nombreDeServicio("incorrecto")).toBeNull();
   });
 
-  it("deja en links La ruta del inmigrante, que lleva a su web, y los trámites", () => {
+  it("deja en links la preparación de audiencia, que lleva a su web, y los trámites", () => {
     expect(ENLACES.find((e) => e.href === "/")).toMatchObject({
-      titulo: "La ruta del inmigrante",
+      titulo: "Preparación de audiencia",
       interno: true,
     });
     expect(ENLACES.map((e) => e.href)).toEqual([
       "/",
       "https://landing.contygo.app",
     ]);
-    expect(respuestaPorId("ruta")?.enlaces?.map((e) => e.href)).toEqual([
+    expect(respuestaPorId("preparacion")?.enlaces?.map((e) => e.href)).toEqual([
       "/",
       "/reservar?servicio=segunda",
       "/reservar?servicio=tercera",

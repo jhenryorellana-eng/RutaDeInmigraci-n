@@ -112,7 +112,7 @@ export function NavegacionSitio() {
             >
               <div className="mobile-menu-top">
                 <span>
-                  LA RUTA <i>DEL INMIGRANTE</i>
+                  PREPARACIÓN <i>DE AUDIENCIA</i>
                 </span>
                 <button
                   type="button"

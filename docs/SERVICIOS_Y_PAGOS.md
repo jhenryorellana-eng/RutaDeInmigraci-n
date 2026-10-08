@@ -7,7 +7,7 @@ Sólo se ofrecen y se cobran dos servicios, y sus precios viven en `lib/servicio
 | Segunda audiencia · Preliminar | segunda | 150 |
 | Tercera audiencia · Mérito | tercera | 350 |
 
-`/links` enseña dos tarjetas: La ruta del inmigrante, que lleva a la landing `/` —donde están los precios de las dos preparaciones, y de ahí las horas libres y la reserva—, y Servicio Migratorio (Contygo). Comunidad Andex y el bootcamp de Starbiz se quitaron por ahora; el historial de git los conserva. Cada audiencia entra por `/reservar?servicio=…`; `/reservar` sin parámetro enseña primero las dos preparaciones para elegir. Los identificadores desconocidos producen un 404.
+`/links` enseña dos tarjetas: Preparación de audiencia, que lleva a la landing `/` —donde están los precios de las dos preparaciones, y de ahí las horas libres y la reserva—, y Servicio Migratorio (Contygo). Comunidad Andex y el bootcamp de Starbiz se quitaron por ahora; el historial de git los conserva. Cada audiencia entra por `/reservar?servicio=…`; `/reservar` sin parámetro enseña primero las dos preparaciones para elegir. Los identificadores desconocidos producen un 404.
 
 La reserva y el checkout resuelven el precio desde el catálogo del servidor. Se conserva `pedir_hora`, el código de solicitud para Zelle, Stripe, sus webhooks, la conciliación y la agenda compartida. No se generan pagos ni reservas reales en las pruebas.
 

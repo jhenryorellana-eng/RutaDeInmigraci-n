@@ -6,7 +6,7 @@ import {
   Sitio,
 } from "@/components/sitio/estructura";
 export const metadata: Metadata = {
-  title: "Conoce a Henry · La ruta del inmigrante",
+  title: "Conoce a Henry · Preparación de audiencia",
   description:
     "Conoce a Henry Orellana y su preparación de audiencias, en español y de persona a persona.",
 };

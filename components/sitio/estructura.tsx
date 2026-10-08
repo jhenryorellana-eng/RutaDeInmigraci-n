@@ -31,7 +31,7 @@ export function Marca() {
     <Link
       href="/"
       className="site-brand"
-      aria-label="La ruta del inmigrante, inicio"
+      aria-label="Preparación de audiencia con Henry Orellana, inicio"
     >
       <span className="brand-symbol" aria-hidden="true">
         <svg viewBox="0 0 42 42" fill="none">
@@ -44,7 +44,7 @@ export function Marca() {
         </svg>
       </span>
       <span>
-        LA RUTA<span>DEL INMIGRANTE</span>
+        PREPARACIÓN<span>DE AUDIENCIA</span>
       </span>
     </Link>
   );

@@ -59,8 +59,8 @@ import { PRECIO_DESDE } from "@/lib/servicios";
  *
  * ── La imagen ──
  *
- * `og-ruta.jpg`, 1200 × 630: Henry en Utah —la foto de la portada de La
- * ruta— con la marca, la frase y el «desde» del precio. Se generó a partir
+ * `og-preparacion.jpg`, 1200 × 630: Henry en Utah —la foto de la portada—
+ * con el nombre del servicio, la frase y el «desde» del precio. Se generó a partir
  * de `public/imagenes/henry-utah.webp`; si cambia el precio más bajo, hay
  * que volver a generarla, porque el texto va dentro de la foto.
  *
@@ -78,13 +78,13 @@ import { PRECIO_DESDE } from "@/lib/servicios";
  * etiquetas, va a seguir enseñando lo viejo — hay que probar con algo detrás
  * (`/links?v=2`) para que la vuelva a pedir.
  */
-const TITULO = "Henry Orellana · La ruta del inmigrante";
+const TITULO = "Henry Orellana · Preparación de audiencia";
 const DESCRIPCION = `Prepara tu audiencia con Henry Orellana: 45 minutos uno a uno, en español, desde $${PRECIO_DESDE}. Y tus trámites migratorios con Contygo.`;
 const IMAGEN = {
-  url: "/og-ruta.jpg",
+  url: "/og-preparacion.jpg",
   width: 1200,
   height: 630,
-  alt: "Henry Orellana en Utah. La ruta del inmigrante: prepara tu audiencia con Henry.",
+  alt: "Henry Orellana en Utah. Preparación de audiencia: 45 minutos uno a uno con Henry.",
 };
 
 export const metadata: Metadata = {

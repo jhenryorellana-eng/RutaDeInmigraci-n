@@ -49,31 +49,31 @@ export const RESPUESTAS: Respuesta[] = [
     corto: "¿Cuál me toca?",
     dice: [
       "Depende de en qué punto estés:",
-      "Si tienes una audiencia → La ruta del inmigrante: ahí eliges tu preparación con Henry y su hora.",
+      "Si tienes una audiencia → la preparación de audiencia con Henry: ahí eliges la tuya y su hora.",
       "Si hay un trámite que presentar → los servicios migratorios.",
       "Dime cuál te suena y te cuento más.",
     ],
     /* Con «otra» al final: si ninguno le encaja, esta es justo la persona
        que necesita hablar con Henry, y sin esta salida se queda mirando
        botones que ya ha descartado. */
-    luego: ["ruta", "migratorio", "otra"],
+    luego: ["preparacion", "migratorio", "otra"],
   },
 
-  // ── 1 · La ruta del inmigrante: la preparación de audiencia ──
+  // ── 1 · La preparación de audiencia ────────────────────
   {
-    id: "ruta",
-    pregunta: "La ruta del inmigrante",
-    corto: "La ruta",
-    tono: "arena",
+    id: "preparacion",
+    pregunta: "La preparación de audiencia",
+    corto: "Las audiencias",
+    tono: "agua",
     dice: [
-      "Es el espacio de Henry para preparar tu audiencia: 45 minutos uno a uno.",
+      "Son 45 minutos uno a uno con Henry para preparar tu audiencia.",
       ...AUDIENCIAS.map(
         (s) => `${s.nombre} (${s.etapa}): $${s.precioUsd} USD.`,
       ),
-      "En su web eliges la que vas a preparar y ves sus horas libres.",
+      "En su página eliges la que vas a preparar y ves sus horas libres.",
     ],
     enlaces: [
-      { texto: "Ir a La ruta del inmigrante", href: "/", interno: true },
+      { texto: "Ver la preparación", href: "/", interno: true },
       ...AUDIENCIAS.map((s) => ({
         texto: `${s.nombre} · $${s.precioUsd}`,
         href: `/reservar?servicio=${s.id}`,
@@ -116,7 +116,7 @@ export const RESPUESTAS: Respuesta[] = [
       "No. Henry no es abogado y esto no es asesoría legal.",
       "La sesión ofrece orientación personal. Para cuestiones legales o representación, consulta a un profesional autorizado.",
     ],
-    luego: ["ruta", "cual", "otra"],
+    luego: ["preparacion", "cual", "otra"],
   },
 
   // ── 2 · Los trámites ───────────────────────────────────
@@ -132,7 +132,7 @@ export const RESPUESTAS: Respuesta[] = [
     enlaces: [
       { texto: "Ver los servicios", href: "https://landing.contygo.app" },
     ],
-    luego: ["cual", "ruta", "otra"],
+    luego: ["cual", "preparacion", "otra"],
   },
 
 
@@ -146,7 +146,7 @@ export const RESPUESTAS: Respuesta[] = [
       "Lo que no encuentres aquí lo ve él contigo en la sesión: son 45 minutos y puedes llevar tus dudas apuntadas.",
     ],
     enlaces: [{ texto: "Ver horas libres", href: "/reservar", interno: true }],
-    luego: ["cual", "ruta", "pago"],
+    luego: ["cual", "preparacion", "pago"],
   },
 ];
 
@@ -156,7 +156,7 @@ export const RESPUESTAS: Respuesta[] = [
  * la preparación, y sacarlas al menú principal es lo que hacía parecer que
  * el guía sólo sabía de un servicio.
  */
-export const PRIMERAS = ["cual", "ruta", "migratorio"];
+export const PRIMERAS = ["cual", "preparacion", "migratorio"];
 
 export function respuestaPorId(id: string): Respuesta | null {
   return RESPUESTAS.find((r) => r.id === id) ?? null;

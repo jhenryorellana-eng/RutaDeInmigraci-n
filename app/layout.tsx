@@ -12,11 +12,11 @@ import { MINUTOS_SESION, PRECIO_DESDE } from "@/lib/servicios";
 import { URL_SITIO } from "@/lib/sitio";
 
 export const metadata: Metadata = {
-  /* La base con la que Next convierte `/og-ruta.jpg` en una dirección
+  /* La base con la que Next convierte `/og-preparacion.jpg` en una dirección
      absoluta. Sin esto, WhatsApp recibe una ruta relativa, no sabe de qué
      servidor pedir la foto y enseña el enlace pelado. */
   metadataBase: new URL(URL_SITIO),
-  title: "Prepara tu audiencia con Henry · La ruta del inmigrante",
+  title: "Prepara tu audiencia con Henry Orellana",
   description: `${MINUTOS_SESION} minutos uno a uno con Henry Orellana, en español, para llegar con calma a tu segunda audiencia o a tu audiencia de mérito. Desde $${PRECIO_DESDE} USD.`,
   /* La misma vista previa que /links para todo el sitio: compartir la
      portada o la reserva también enseña a Henry y la marca, no una
@@ -24,17 +24,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_US",
-    siteName: "La ruta del inmigrante",
+    siteName: "Preparación de audiencia · Henry Orellana",
     images: [
       {
-        url: "/og-ruta.jpg",
+        url: "/og-preparacion.jpg",
         width: 1200,
         height: 630,
-        alt: "Henry Orellana en Utah. La ruta del inmigrante: prepara tu audiencia con Henry.",
+        alt: "Henry Orellana en Utah. Preparación de audiencia: 45 minutos uno a uno con Henry.",
       },
     ],
   },
-  twitter: { card: "summary_large_image", images: ["/og-ruta.jpg"] },
+  twitter: { card: "summary_large_image", images: ["/og-preparacion.jpg"] },
 };
 
 export const viewport: Viewport = {

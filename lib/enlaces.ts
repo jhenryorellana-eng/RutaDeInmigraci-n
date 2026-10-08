@@ -46,23 +46,20 @@ export type Enlace = {
 };
 
 export const ENLACES: Enlace[] = [
-  /* La ruta del inmigrante es la puerta a todo lo de la audiencia: lleva a
-     su web, y el recorrido entero ocurre allí — los precios de las dos
-     preparaciones, las horas libres y la reserva. Sin ventanas por medio:
-     quien toca entra en La ruta y ya no sale de ella hasta reservar.
-
-     Va en el tono arena porque es el oro de esa página, y así se reconoce
-     al llegar. */
+  /* La preparación de audiencia es el servicio de Henry y la puerta a todo
+     lo suyo: lleva a su web, y el recorrido entero ocurre allí — los precios
+     de las dos preparaciones, las horas libres y la reserva. Sin ventanas
+     por medio: quien toca entra y ya no sale hasta reservar. */
   {
-    titulo: "La ruta del inmigrante",
+    titulo: "Preparación de audiencia",
     etiqueta: `Prepara tu audiencia · desde $${PRECIO_DESDE}`,
     /* Corta a propósito: en una tarjeta del teléfono, una frase que acaba
        en «…» parece rota. El precio va aquí porque es lo primero que se
        pregunta. */
-    descripcion: `Prepara tu audiencia · desde $${PRECIO_DESDE}`,
+    descripcion: `Desde $${PRECIO_DESDE} · 45 min con Henry`,
     href: "/",
     interno: true,
-    tono: "arena",
+    tono: "agua",
     destacado: true,
     guia: "Si tienes fecha de audiencia: aquí preparas tu audiencia con Henry — precios, horas libres y reserva.",
   },

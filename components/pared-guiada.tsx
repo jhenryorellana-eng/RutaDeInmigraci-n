@@ -14,10 +14,9 @@ import { ENLACES, type Enlace } from "@/lib/enlaces";
  *
  * ── Por qué hace falta ──
  *
- * Porque se parecen. «Preparación de audiencia», «La ruta del inmigrante» y
- * «Servicio Migratorio» son tres cosas distintas para tres momentos
- * distintos, y quien llega de una biografía de Instagram no tiene
- * forma de saber cuál es el suyo. Antes se resolvía con un párrafo que nadie
+ * Porque se parecen. «Preparación de audiencia» y «Servicio Migratorio»
+ * son dos cosas distintas para dos momentos distintos, y quien llega de
+ * una biografía de Instagram no tiene forma de saber cuál es el suyo. Antes se resolvía con un párrafo que nadie
  * leía; ahora se resuelve señalando.
  *
  * ── Lo que NO hace ──
