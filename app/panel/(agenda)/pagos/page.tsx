@@ -1,7 +1,7 @@
 import { TablaPagos, type CorreoPago, type SolicitudEsperando, type Devolucion } from "@/components/panel/tabla-pagos";
 import { fechaCorta, horaEnZona, ZONA } from "@/lib/horario";
 import { clienteServidor } from "@/lib/supabase/servidor";
-import { servicioPorId } from "@/lib/servicios";
+import { nombreDeServicio } from "@/lib/servicios";
 
 /**
  * PAGOS · lo que el sistema no supo colocar solo.
@@ -86,7 +86,7 @@ export default async function PantallaPagos() {
       /* Formateado aquí, en hora de Utah: el panel enseña siempre la hora que
          Henry tiene en la cabeza. */
       cuando: `${fechaCorta(cuando)} · ${horaEnZona(cuando)}`,
-      servicio: servicioPorId(s.servicio)?.nombre ?? s.servicio,
+      servicio: nombreDeServicio(s.servicio) ?? s.servicio,
       precioUsd: s.precio_usd,
       codigoPago: s.codigo_pago,
       estado: s.estado,

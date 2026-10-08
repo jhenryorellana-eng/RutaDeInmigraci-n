@@ -1,3 +1,5 @@
+import { PRECIO_DESDE } from "@/lib/servicios";
+
 /**
  * LOS TRES SITIOS DE HENRY.
  *
@@ -18,7 +20,7 @@ export type Enlace = {
   href: string;
   interno?: boolean;
   /**
-   * En vez de llevar a un sitio, abre la hoja de las tres preparaciones.
+   * En vez de llevar a un sitio, abre la hoja de las preparaciones.
    *
    * Es lo que hace que elegir entre tres precios no cueste perder la
    * pared: se ven las tres, se elige una y se sale hacia la reserva ya
@@ -46,8 +48,7 @@ export type Enlace = {
    * Lo que el guía dice de este servicio cuando lo señala.
    *
    * Una frase, y que empiece por el CASO y no por el nombre: quien lee esto
-   * no está eligiendo un producto, está intentando saber cuál de los cuatro
-   * es el suyo.
+   * no está eligiendo un producto, está intentando saber cuál es el suyo.
    */
   guia: string;
 };
@@ -55,54 +56,38 @@ export type Enlace = {
 export const ENLACES: Enlace[] = [
   {
     titulo: "Preparación de audiencia",
-    etiqueta: "Tres preparaciones · desde $70",
-    descripcion:
-      "45 minutos uno a uno con Henry para llegar preparado a tu audiencia.",
+    etiqueta: `Dos preparaciones · desde $${PRECIO_DESDE}`,
+    /* Corta a propósito: en una tarjeta del teléfono, una frase que acaba
+       en «…» parece rota. El precio va aquí porque es lo primero que se
+       pregunta. */
+    descripcion: `Desde $${PRECIO_DESDE} · 45 min con Henry`,
     href: "/reservar",
     interno: true,
     abreServicios: true,
     tono: "agua",
     destacado: true,
-    guia: "Si ya tienes fecha de audiencia: elige la preparación para tu primera, segunda o tercera audiencia.",
+    guia: "Si ya tienes fecha de audiencia: elige la preparación para tu segunda o tercera audiencia.",
   },
+  /* La página de Henry, para quien quiere conocerlo antes de elegir. Va en
+     el tono arena porque es el oro de esa página, y así se reconoce al
+     llegar. */
   {
-    titulo: "Asesoría con Henry",
-    etiqueta: "Sesión personalizada · $70 USD",
-    descripcion:
-      "45 minutos uno a uno para conversar sobre tus dudas y tu próximo paso.",
+    titulo: "La ruta del inmigrante",
+    etiqueta: "Conoce a Henry",
+    descripcion: "Conoce a Henry y cómo trabaja",
     href: "/",
     interno: true,
-    tono: "agua",
+    tono: "arena",
     destacado: true,
-    guia: "Si quieres orientación personal: 45 minutos con Henry para conversar sobre lo que hoy necesitas.",
+    guia: "Si quieres conocer a Henry y ver cómo es la sesión antes de reservar, empieza por aquí.",
   },
-  /* Los trámites van ANTES que la comunidad, y el orden de esta lista es el
-     orden de la pared. Es lo que más se pide de los tres que no son la
-     preparación, y en una pantalla que se recorre con el pulgar el segundo
-     sitio vale mucho más que el tercero. */
   {
     titulo: "Servicio Migratorio",
     etiqueta: "Trámites",
-    descripcion: "Los trámites migratorios, con el equipo de UsaLatino Prime.",
-    href: "https://www.usalatinoprime.com/",
+    descripcion: "Trámites con Contygo",
+    href: "https://landing.contygo.app",
     tono: "coral",
     destacado: true,
     guia: "Los trámites en sí, con el equipo de Henry. Es a donde vas cuando hay algo que presentar.",
-  },
-  {
-    titulo: "Comunidad Andex",
-    etiqueta: "Familias",
-    descripcion: "Tu camino seguro hacia el sueño americano.",
-    href: "https://andex.usalatinoprime.com/",
-    tono: "arena",
-    guia: "El acompañamiento de todo el año: tus documentos, tus fechas y gente en tu misma situación.",
-  },
-  {
-    titulo: "Bootcamp para Jóvenes 2027",
-    etiqueta: "Emprendimiento",
-    descripcion: "Emprendimiento, liderazgo y transformación familiar.",
-    href: "https://comunidad.starbizacademy.com/bootcamp",
-    tono: "verde",
-    guia: "Para tus hijos: emprender y liderar, para que no repitan el camino largo.",
   },
 ];

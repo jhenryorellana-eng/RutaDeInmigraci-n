@@ -1,4 +1,4 @@
-import { ASESORIA, AUDIENCIAS } from "@/lib/servicios";
+import { AUDIENCIAS } from "@/lib/servicios";
 import { ZELLE_NOMBRE, ZELLE_TELEFONO } from "@/lib/pago";
 
 /** Respuestas predefinidas del directorio de proyectos. Los precios de la asesoría se leen del catálogo. */
@@ -30,7 +30,7 @@ export type Respuesta = {
   /**
    * El color del servicio, para el punto de su botón.
    *
-   * Sólo lo llevan las cuatro que son un servicio. Es lo que ata cada botón
+   * Sólo lo llevan las que son un servicio. Es lo que ata cada botón
    * al cuadro que le corresponde en la pared: quien vio pasar la luz coral
    * por el borde de «Servicio Migratorio» reconoce el punto coral sin leer.
    * Las preguntas sueltas —el pago, la sesión— no llevan ninguno, porque no
@@ -38,10 +38,6 @@ export type Respuesta = {
    */
   tono?: "agua" | "arena" | "coral" | "verde";
 };
-
-/** La membresía de ANDEX. El anual son diez mensualidades, no doce. */
-const ANDEX_MES = 25;
-const ANDEX_ANIO = 250;
 
 export const SALUDO =
   "Soy la guía de esta página. No soy Henry: respondo lo que él dejó escrito sobre los servicios de aquí.";
@@ -53,24 +49,15 @@ export const RESPUESTAS: Respuesta[] = [
     corto: "¿Cuál me toca?",
     dice: [
       "Depende de en qué punto estés:",
-      "Si tienes una audiencia → la preparación de primera, segunda o tercera audiencia.",
-      "Si quieres conversar sobre tus dudas → la asesoría con Henry.",
+      "Si tienes una audiencia → la preparación de segunda o tercera audiencia.",
+      "Si quieres conocer antes a Henry y cómo trabaja → La ruta del inmigrante.",
       "Si hay un trámite que presentar → los servicios migratorios.",
-      "Si quieres acompañamiento durante el año → la comunidad.",
-      "Si es para un hijo tuyo → el bootcamp.",
       "Dime cuál te suena y te cuento más.",
     ],
-    /* Con «henry» al final: si ninguna de las cuatro le encaja, esta es
-       justo la persona que necesita hablar con él, y sin esta salida se
-       queda mirando cuatro botones que ya ha descartado. */
-    luego: [
-      "preparacion",
-      "asesoria",
-      "migratorio",
-      "comunidad",
-      "bootcamp",
-      "otra",
-    ],
+    /* Con «otra» al final: si ninguno le encaja, esta es justo la persona
+       que necesita hablar con Henry, y sin esta salida se queda mirando
+       botones que ya ha descartado. */
+    luego: ["preparacion", "ruta", "migratorio", "otra"],
   },
 
   // ── 1 · La preparación de audiencia ────────────────────
@@ -84,28 +71,13 @@ export const RESPUESTAS: Respuesta[] = [
       ...AUDIENCIAS.map(
         (s) => `${s.nombre} (${s.etapa}): $${s.precioUsd} USD.`,
       ),
-      "Elige la audiencia que necesitas preparar. La asesoría personalizada es otro servicio.",
+      "Elige la audiencia que necesitas preparar.",
     ],
     enlaces: AUDIENCIAS.map((s) => ({
       texto: `${s.nombre} · $${s.precioUsd}`,
       href: `/reservar?servicio=${s.id}`,
       interno: true,
     })),
-    luego: ["pago", "sesion", "abogado", "asesoria", "otra"],
-  },
-  {
-    id: "asesoria",
-    pregunta: "La asesoría personalizada",
-    corto: "La asesoría",
-    tono: "agua",
-    dice: [
-      "Son 45 minutos, tú y Henry, para conversar sobre tus dudas, ordenar tus prioridades y orientar tu próximo paso.",
-      `La asesoría personalizada cuesta $${ASESORIA.precioUsd} USD por sesión. No necesitas tener una audiencia programada.`,
-    ],
-    enlaces: [{ texto: "Ver horas libres", href: "/reservar", interno: true }],
-    /* Con «henry» y sin «cual»: éste es el servicio que se paga, así que la
-       salida a él tiene que estar a un toque. Volver a los cuatro sigue
-       estando en las tres siguientes. */
     luego: ["pago", "sesion", "abogado", "otra"],
   },
   {
@@ -156,45 +128,23 @@ export const RESPUESTAS: Respuesta[] = [
       "Qué trámite te toca y cuánto cuesta lo ven ellos contigo, porque depende de tu caso: no te lo puedo decir yo desde aquí sin conocerlo.",
     ],
     enlaces: [
-      { texto: "Ver los servicios", href: "https://www.usalatinoprime.com/" },
+      { texto: "Ver los servicios", href: "https://landing.contygo.app" },
     ],
-    luego: ["cual", "preparacion", "comunidad", "otra"],
+    luego: ["cual", "preparacion", "ruta", "otra"],
   },
 
-  // ── 3 · La comunidad ───────────────────────────────────
+  // ── 3 · La página de Henry ─────────────────────────────
   {
-    id: "comunidad",
-    pregunta: "La comunidad Andex",
-    corto: "La comunidad",
+    id: "ruta",
+    pregunta: "La ruta del inmigrante",
+    corto: "La ruta",
     tono: "arena",
     dice: [
-      "Es la membresía para tu familia, y funciona como una app: allí guardas tus documentos, tienes la academia de inglés y los talleres en vivo de la comunidad.",
-      `Cuesta $${ANDEX_MES} al mes, o $${ANDEX_ANIO} al año — que son diez mensualidades: pagando de una vez, dos meses no los pagas.`,
-      "Ahora mismo funciona como piloto en Utah, en español y en inglés.",
+      "Es la página de Henry: quién es, cómo es la preparación y qué esperar de la sesión.",
+      "Desde allí también puedes elegir tu audiencia y reservar.",
     ],
-    enlaces: [
-      { texto: "Ver la comunidad", href: "https://andex.usalatinoprime.com/" },
-    ],
-    luego: ["cual", "preparacion", "migratorio", "otra"],
-  },
-
-  // ── 4 · El bootcamp ────────────────────────────────────
-  {
-    id: "bootcamp",
-    pregunta: "El bootcamp para jóvenes",
-    corto: "El bootcamp",
-    tono: "verde",
-    dice: [
-      "Es para tus hijos: emprendimiento, liderazgo y transformación familiar. La edición que viene es la de 2027.",
-      "Las fechas, el precio y cómo se entra están en su página, que es donde se apuntan.",
-    ],
-    enlaces: [
-      {
-        texto: "Ver el bootcamp",
-        href: "https://comunidad.starbizacademy.com/bootcamp",
-      },
-    ],
-    luego: ["cual", "comunidad", "preparacion", "otra"],
+    enlaces: [{ texto: "Ir a La ruta del inmigrante", href: "/", interno: true }],
+    luego: ["preparacion", "abogado", "otra"],
   },
 
   // ── La salida ──────────────────────────────────────────
@@ -212,19 +162,12 @@ export const RESPUESTAS: Respuesta[] = [
 ];
 
 /**
- * Lo que se ofrece nada más abrir: los cuatro servicios y la pregunta que
+ * Lo que se ofrece nada más abrir: los servicios de la pared y la pregunta que
  * orienta entre ellos. Las de precio, pago y sesión no salen aquí — son de
  * la preparación, y sacarlas al menú principal es lo que hacía parecer que
  * el guía sólo sabía de un servicio.
  */
-export const PRIMERAS = [
-  "cual",
-  "preparacion",
-  "asesoria",
-  "migratorio",
-  "comunidad",
-  "bootcamp",
-];
+export const PRIMERAS = ["cual", "preparacion", "ruta", "migratorio"];
 
 export function respuestaPorId(id: string): Respuesta | null {
   return RESPUESTAS.find((r) => r.id === id) ?? null;

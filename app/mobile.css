@@ -339,60 +339,6 @@
     font-size: 12px;
     max-width: none;
   }
-  .session-ticket,
-  .asesoria-site[data-motion="on"] .session-ticket:hover {
-    position: absolute;
-    inset: auto 0 0;
-    width: 100%;
-    transform: none;
-    border-radius: 16px;
-    padding: 13px 17px;
-    min-height: 68px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    gap: 0 15px;
-    align-items: center;
-    background: linear-gradient(110deg, #ffe291, #efc44d 70%);
-    box-shadow: inset 0 0 0 1px #ffeaa966;
-  }
-  .ticket-top {
-    grid-row: 1;
-    grid-column: 1;
-    font-size: 10px;
-    letter-spacing: 0.025em;
-  }
-  .ticket-top svg {
-    display: none;
-  }
-  .session-ticket strong {
-    grid-column: 2;
-    grid-row: 1 / 3;
-    font-size: 36px;
-    margin: 0;
-    line-height: 1;
-    letter-spacing: -0.07em;
-  }
-  .session-ticket small {
-    font-size: 9px;
-    letter-spacing: 0;
-    margin-left: 1px;
-  }
-  .ticket-bottom {
-    grid-column: 1;
-    grid-row: 2;
-    border: 0;
-    margin: 0;
-    padding: 3px 0 0;
-    font-size: 9px;
-    justify-content: flex-start;
-    gap: 10px;
-    letter-spacing: 0.015em;
-  }
-  .ticket-bottom > span {
-    padding-left: 10px;
-    border-left: 1px solid #061b3d40;
-  }
   .photo-location {
     display: none;
   }
@@ -880,23 +826,6 @@
   }
   .service-hero .eyebrow {
     font-size: 10px;
-  }
-  .service-price {
-    border-radius: 20px;
-  }
-  .service-price > strong {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 5px;
-    font-size: clamp(58px, 16vw, 68px);
-    line-height: 0.92;
-    margin: 0;
-    white-space: nowrap;
-  }
-  .service-price > strong small {
-    font-size: 10px;
-    line-height: 1.1;
   }
   .service-wide-photo {
     border-radius: 20px;

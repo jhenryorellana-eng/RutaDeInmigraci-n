@@ -9,11 +9,11 @@ import { abrirPagoConTarjeta } from "./pagar";
 const crearCheckout = vi.mocked(crearSesionDePago);
 const solicitud = {
   solicitudId: 123,
-  servicioId: "asesoria",
+  servicioId: "segunda",
   correo: "prueba@example.com",
 };
 
-describe("pago público de audiencias y asesoría", () => {
+describe("pago público de las preparaciones", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     crearCheckout.mockResolvedValue({
@@ -21,7 +21,7 @@ describe("pago público de audiencias y asesoría", () => {
     });
   });
 
-  it.each(["", "inventado"])(
+  it.each(["", "inventado", "primera", "asesoria"])(
     "no permite cobrar el servicio desconocido %s",
     async (servicioId) => {
       expect(
@@ -41,23 +41,22 @@ describe("pago público de audiencias y asesoría", () => {
     },
   );
 
-  it("cobra 70 USD definidos en servidor aunque el cliente envíe otro importe", async () => {
+  it("cobra el precio del servidor aunque el cliente envíe otro importe", async () => {
     const datosManipulados = { ...solicitud, precioUsd: 1 };
     await abrirPagoConTarjeta(datosManipulados);
     expect(crearCheckout).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({
         solicitudId: 123,
-        servicioId: "asesoria",
-        precioUsd: 70,
-        titulo: "Asesoría personalizada · Henry Orellana",
+        servicioId: "segunda",
+        precioUsd: 150,
+        titulo: "Segunda audiencia · Henry Orellana",
       }),
     );
   });
 
   it.each([
-    ["primera", 70, "Primera audiencia"],
     ["segunda", 150, "Segunda audiencia"],
-    ["tercera", 250, "Tercera audiencia"],
+    ["tercera", 350, "Tercera audiencia"],
   ])(
     "mantiene la reserva de %s y su precio en servidor",
     async (servicioId, precioUsd, nombre) => {

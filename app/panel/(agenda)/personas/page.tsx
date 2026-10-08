@@ -1,7 +1,7 @@
 import { TablaPersonas, type Persona } from "@/components/panel/tabla-personas";
 import { diaCorto, horaDeQuienReserva, horaEnZona, partesEnZona, ZONA } from "@/lib/horario";
 import { nombrePais } from "@/lib/paises";
-import { servicioPorId } from "@/lib/servicios";
+import { nombreDeServicio } from "@/lib/servicios";
 import { clienteServidor } from "@/lib/supabase/servidor";
 
 /**
@@ -74,7 +74,7 @@ export default async function PantallaPersonas() {
       /* El nombre sale de la lista, pero el PRECIO sale de la cita: si la
          tercera audiencia sube mañana, esta tiene que seguir diciendo lo que
          costaba el día que se apartó. */
-      servicio: servicioPorId(f.servicio)?.nombre ?? null,
+      servicio: nombreDeServicio(f.servicio),
       precio: f.precio_usd,
       apartoEl: diaYMes(new Date(f.creado_en)),
       cancelada: f.estado === "cancelada",

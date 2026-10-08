@@ -5,33 +5,8 @@ import { Flecha } from "./estructura";
 import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { useMovimiento } from "./experiencia";
 import { useMobile } from "./use-mobile";
+import { TEMAS } from "@/lib/temas";
 
-const TEMAS = [
-  {
-    titulo: "No sé por dónde empezar.",
-    etiqueta: "PONER ORDEN",
-    frase: "No hace falta tener todas las respuestas.",
-    texto:
-      "Podemos empezar por lo que hoy te preocupa. Un espacio para poner tus preguntas sobre la mesa y entender qué necesitas aclarar primero.",
-    nota: "Tu punto de partida también merece tiempo.",
-  },
-  {
-    titulo: "Quiero mirar mis opciones.",
-    etiqueta: "GANAR PERSPECTIVA",
-    frase: "Dale espacio a lo que viene.",
-    texto:
-      "Conversa sobre tu situación y tus prioridades. Ordena tus ideas con Henry y habla de los próximos pasos que quieres explorar.",
-    nota: "Una conversación centrada en tu momento.",
-  },
-  {
-    titulo: "Tengo preguntas concretas.",
-    etiqueta: "CONVERSARLO CONTIGO",
-    frase: "Trae eso que te da vueltas.",
-    texto:
-      "Anota tus dudas y dedica la sesión a lo que más te importa. Si tu situación necesita atención especializada, conversa sobre a quién acudir.",
-    nota: "Tus preguntas marcan la conversación.",
-  },
-];
 export function TemasAsesoria() {
   const movimiento = useMovimiento();
   const movil = useMobile();
@@ -85,7 +60,7 @@ export function TemasAsesoria() {
             <span>0{i + 1}</span>
             <strong>{t.titulo}</strong>
             <strong className="topic-short-label">
-              {["Empezar", "Mis opciones", "Mis dudas"][i]}
+              {t.corto}
             </strong>
             <Flecha diagonal />
           </button>
@@ -139,7 +114,7 @@ export function TemasAsesoria() {
             <h3>{tema.frase}</h3>
             <p>{tema.texto}</p>
             <span className="topic-note">{tema.nota}</span>
-            <Link href="/reservar" className="text-link">
+            <Link href={`/reservar?tema=${tema.id}`} className="text-link">
               Hablemos de esto <Flecha />
             </Link>
           </motion.div>

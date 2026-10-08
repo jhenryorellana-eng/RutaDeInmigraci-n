@@ -1,24 +1,37 @@
 import { describe, expect, it } from "vitest";
-import { AUDIENCIAS, ASESORIA, servicioPorId, nombreLargo } from "./servicios";
+import {
+  AUDIENCIAS,
+  PRECIO_DESDE,
+  servicioPorId,
+  nombreDeServicio,
+  nombreLargo,
+} from "./servicios";
 import { ENLACES } from "./enlaces";
 import { respuestaPorId } from "./guia-respuestas";
 
-describe("servicios originales y nueva landing", () => {
-  it("conserva las tres audiencias con sus identificadores y precios originales", () => {
+describe("catálogo de preparaciones", () => {
+  it("ofrece la segunda y la tercera audiencia con sus precios", () => {
     expect(AUDIENCIAS.map((s) => [s.id, s.nombre, s.precioUsd])).toEqual([
-      ["primera", "Primera audiencia", 70],
       ["segunda", "Segunda audiencia", 150],
-      ["tercera", "Tercera audiencia", 250],
+      ["tercera", "Tercera audiencia", 350],
     ]);
-    expect(nombreLargo(servicioPorId("primera")!)).toBe(
-      "Preparación · Primera audiencia (Preliminar)",
+    expect(nombreLargo(servicioPorId("segunda")!)).toBe(
+      "Preparación · Segunda audiencia (Preliminar)",
     );
-    expect(ASESORIA.id).toBe("asesoria");
-    expect(ASESORIA.precioUsd).toBe(70);
+    expect(PRECIO_DESDE).toBe(150);
     expect(servicioPorId("incorrecto")).toBeNull();
   });
 
-  it("mantiene en links el selector de audiencias y añade la landing sin quitar los otros proyectos", () => {
+  it("ya no ofrece la primera audiencia ni la asesoría de $70, pero el panel sigue nombrando sus citas", () => {
+    expect(servicioPorId("primera")).toBeNull();
+    expect(servicioPorId("asesoria")).toBeNull();
+    expect(nombreDeServicio("primera")).toBe("Primera audiencia");
+    expect(nombreDeServicio("asesoria")).toBe("Asesoría personalizada");
+    expect(nombreDeServicio("tercera")).toBe("Tercera audiencia");
+    expect(nombreDeServicio("incorrecto")).toBeNull();
+  });
+
+  it("deja en links la preparación, La ruta del inmigrante y los trámites", () => {
     expect(ENLACES.filter((e) => e.abreServicios)).toHaveLength(1);
     expect(ENLACES.find((e) => e.abreServicios)?.titulo).toBe(
       "Preparación de audiencia",
@@ -26,15 +39,12 @@ describe("servicios originales y nueva landing", () => {
     expect(ENLACES.map((e) => e.href)).toEqual([
       "/reservar",
       "/",
-      "https://www.usalatinoprime.com/",
-      "https://andex.usalatinoprime.com/",
-      "https://comunidad.starbizacademy.com/bootcamp",
+      "https://landing.contygo.app",
     ]);
     expect(respuestaPorId("preparacion")?.enlaces?.map((e) => e.href)).toEqual([
-      "/reservar?servicio=primera",
       "/reservar?servicio=segunda",
       "/reservar?servicio=tercera",
     ]);
-    expect(respuestaPorId("asesoria")).not.toBeNull();
+    expect(respuestaPorId("asesoria")).toBeNull();
   });
 });

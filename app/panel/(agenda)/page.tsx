@@ -20,7 +20,7 @@ import { clienteServidor } from "@/lib/supabase/servidor";
 import { leerTramos, leerTramosConId } from "@/lib/tramos";
 import { AvisoMovil } from "@/components/panel/aviso-movil";
 import type { EntradaAgenda } from "@/lib/agenda";
-import { servicioPorId } from "@/lib/servicios";
+import { nombreDeServicio } from "@/lib/servicios";
 
 /**
  * EL CALENDARIO · y ya no hace falta ir a ningún otro sitio.
@@ -220,7 +220,7 @@ export default async function PantallaCalendario({
         nota: "",
         whatsapp: c.whatsapp ?? "",
         estado: c.estado,
-        servicio: servicioPorId(c.servicio)?.nombre ?? c.servicio,
+        servicio: nombreDeServicio(c.servicio) ?? c.servicio,
         precio: c.precio_usd,
         detalle: [
           nombrePais(c.nacionalidad),

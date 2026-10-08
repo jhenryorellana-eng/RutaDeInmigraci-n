@@ -56,17 +56,21 @@ export function iniciarAnimaciones(root: HTMLElement) {
           },
           0.05,
         );
-      const tarjetas = seleccionar(".session-ticket, .service-price");
+      const tarjetas = seleccionar(
+        ".hero-boletos .boleto, .service-boletos .boleto",
+      );
       if (tarjetas.length)
         inicio.from(
           tarjetas,
           {
             opacity: 0,
+            y: esMovil() ? 14 : 34,
             clipPath: "inset(0 0 100% 0)",
-            duration: esMovil() ? 0.4 : 0.9,
-            // Entrance and pointer tilt own different CSS properties, so a
-            // breakpoint cleanup cannot restore an unfinished entrance pose.
-            clearProps: "clipPath,opacity",
+            duration: esMovil() ? 0.45 : 0.9,
+            stagger: 0.12,
+            // The entrance moves `.boleto`; the pointer tilt moves the
+            // `.boleto-cara` inside it, so neither undoes the other.
+            clearProps: "clipPath,opacity,transform",
           },
           esMovil() ? 0.25 : 0.65,
         );
@@ -87,7 +91,7 @@ export function iniciarAnimaciones(root: HTMLElement) {
     });
 
     seleccionar(
-      ".section-heading, .feature-copy, .journey-heading, .about-statement .site-container, .includes-section > div, .how-section h2, .faq-section > div:first-child, .closing-overline, .closing-link, .closing-bottom",
+      ".section-heading, .feature-copy, .journey-heading, .about-statement .site-container, .includes-section > div, .how-section h2, .faq-section > div:first-child, .closing-overline, .closing-bottom",
     ).forEach((element) => {
       gsap.from(element, {
         y: esMovil() ? 20 : 46,
@@ -111,6 +115,80 @@ export function iniciarAnimaciones(root: HTMLElement) {
         scrollTrigger: { trigger: group, start: "top 88%", once: true },
       });
     });
+
+    // The two tickets are dealt onto the table, then stamped.
+    seleccionar(".audiencias-boletos").forEach((grupo) => {
+      const disparo = { trigger: grupo, start: "top 85%", once: true };
+      gsap.from(grupo.querySelectorAll(".boleto"), {
+        y: esMovil() ? 40 : 90,
+        rotation: (i: number) => (i % 2 ? 7 : -7),
+        opacity: 0,
+        duration: esMovil() ? 0.6 : 1.1,
+        stagger: 0.16,
+        ease: "power3.out",
+        clearProps: "transform,opacity",
+        scrollTrigger: disparo,
+      });
+      gsap.from(grupo.querySelectorAll(".boleto-sello"), {
+        scale: 1.9,
+        rotation: -40,
+        opacity: 0,
+        transformOrigin: "50% 50%",
+        duration: 0.7,
+        delay: esMovil() ? 0.3 : 0.6,
+        stagger: 0.16,
+        ease: "back.out(2.2)",
+        clearProps: "transform,opacity",
+        scrollTrigger: disparo,
+      });
+    });
+
+    // Henry's signature writes itself from left to right.
+    seleccionar(".henry-signature").forEach((firma) => {
+      gsap.fromTo(
+        firma,
+        { clipPath: "inset(-20% 100% -20% 0)" },
+        {
+          clipPath: "inset(-20% 0% -20% 0)",
+          duration: 1.8,
+          ease: "power2.inOut",
+          clearProps: "clipPath",
+          scrollTrigger: { trigger: firma, start: "top 92%", once: true },
+        },
+      );
+    });
+
+    const letras = seleccionar(".closing-link .letra");
+    if (letras.length)
+      gsap.from(letras, {
+        yPercent: 60,
+        rotation: 6,
+        opacity: 0,
+        stagger: 0.035,
+        duration: esMovil() ? 0.5 : 0.8,
+        ease: "power3.out",
+        clearProps: "transform,opacity",
+        scrollTrigger: { trigger: letras[0], start: "top 90%", once: true },
+      });
+
+    // The statement on /henry lights up word by word as it is read.
+    const palabras = seleccionar(".about-statement h2 .palabra");
+    if (palabras.length)
+      gsap.fromTo(
+        palabras,
+        { opacity: 0.16 },
+        {
+          opacity: 1,
+          stagger: 0.12,
+          ease: "none",
+          scrollTrigger: {
+            trigger: palabras[0].closest("h2"),
+            start: "top 82%",
+            end: "bottom 46%",
+            scrub: 0.6,
+          },
+        },
+      );
 
     const progress = root.querySelector(".reading-progress span");
     if (progress)
@@ -288,33 +366,36 @@ export function iniciarAnimaciones(root: HTMLElement) {
         });
       });
 
-      seleccionar<HTMLElement>(".session-ticket, .service-price").forEach(
+      seleccionar<HTMLElement>(".boleto").forEach(
         (card) => {
-          const x = gsap.quickTo(card, "rotationX", {
+          const cara = card.querySelector<HTMLElement>(".boleto-cara");
+          if (!cara) return;
+          const fuerza = card.classList.contains("is-grande") ? 7 : 12;
+          const x = gsap.quickTo(cara, "rotationX", {
             duration: 0.6,
             ease: "power3.out",
           });
-          const y = gsap.quickTo(card, "rotationY", {
+          const y = gsap.quickTo(cara, "rotationY", {
             duration: 0.6,
             ease: "power3.out",
           });
-          const shineX = gsap.quickTo(card, "--shine-x", { duration: 0.4 });
-          const shineY = gsap.quickTo(card, "--shine-y", { duration: 0.4 });
-          gsap.set(card, { transformPerspective: 850 });
+          const shineX = gsap.quickTo(cara, "--shine-x", { duration: 0.4 });
+          const shineY = gsap.quickTo(cara, "--shine-y", { duration: 0.4 });
+          gsap.set(cara, { transformPerspective: 900 });
           const move = (event: PointerEvent) => {
             const bounds = card.getBoundingClientRect();
             const dx = (event.clientX - bounds.left) / bounds.width;
             const dy = (event.clientY - bounds.top) / bounds.height;
-            x((0.5 - dy) * 13);
-            y((dx - 0.5) * 13);
+            x((0.5 - dy) * fuerza);
+            y((dx - 0.5) * fuerza);
             shineX(dx * 100);
             shineY(dy * 100);
           };
           const leave = () => {
             x(0);
             y(0);
-            shineX(50);
-            shineY(50);
+            shineX(30);
+            shineY(0);
           };
           card.addEventListener("pointermove", move);
           card.addEventListener("pointerleave", leave);

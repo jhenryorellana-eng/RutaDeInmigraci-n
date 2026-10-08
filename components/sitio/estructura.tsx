@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ASESORIA, MINUTOS_SESION } from "@/lib/servicios";
+import { MINUTOS_SESION, PRECIO_DESDE } from "@/lib/servicios";
 import { NavegacionInferior, NavegacionSitio } from "./navegacion";
 import { ControlMovimiento, ExperienciaSitio } from "./experiencia";
 
@@ -25,6 +25,7 @@ export function Flecha({ diagonal = false }: { diagonal?: boolean }) {
     </svg>
   );
 }
+
 export function Marca() {
   return (
     <Link
@@ -51,15 +52,14 @@ export function Marca() {
 export function BotonReserva({
   texto = "Reservar mi asesoría",
   claro = false,
+  href = "/reservar",
 }: {
   texto?: string;
   claro?: boolean;
+  href?: string;
 }) {
   return (
-    <Link
-      className={`route-button ${claro ? "is-light" : ""}`}
-      href="/reservar"
-    >
+    <Link className={`route-button ${claro ? "is-light" : ""}`} href={href}>
       <span>{texto}</span>
       <span className="button-arrow">
         <Flecha diagonal />
@@ -151,7 +151,19 @@ export function CierreInvitacion() {
           <span className="eyebrow">01 PERSONA. TODA LA ATENCIÓN.</span>
         </div>
         <Link href="/reservar" className="closing-link">
-          <h2>¿Lo hablamos?</h2>
+          <h2>
+            <span className="sr-only">¿Lo hablamos?</span>
+            {Array.from("¿Lo hablamos?").map((letra, i) => (
+              <span
+                key={i}
+                className="letra"
+                aria-hidden="true"
+                style={{ "--i": i } as React.CSSProperties}
+              >
+                {letra === " " ? "\u00a0" : letra}
+              </span>
+            ))}
+          </h2>
           <span className="closing-arrow">
             <Flecha diagonal />
           </span>
@@ -163,7 +175,7 @@ export function CierreInvitacion() {
             Henry pone el tiempo y la escucha.
           </p>
           <span>
-            {MINUTOS_SESION} MINUTOS <i /> ${ASESORIA.precioUsd} USD
+            {MINUTOS_SESION} MINUTOS <i /> DESDE ${PRECIO_DESDE} USD
           </span>
           <Link href="/reservar" className="text-link">
             Elegir mi momento <Flecha />

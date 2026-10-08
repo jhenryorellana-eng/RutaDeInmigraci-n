@@ -3,15 +3,16 @@ import { useId, useState } from "react";
 import { motion } from "motion/react";
 import { useMovimiento } from "./experiencia";
 import { Flecha } from "./estructura";
+import { AUDIENCIAS } from "@/lib/servicios";
 
 const PASOS = [
   [
     "Elige tu momento",
-    "Encuentra un día y una hora. La agenda te muestra tu hora local y la de Henry en Utah.",
+    "Elige tu audiencia, un día y una hora. La agenda te muestra tu hora local y la de Henry en Utah.",
   ],
   [
     "Completa tu reserva",
-    "Deja tus datos y realiza el pago de $70. La sesión se confirma al verificar el pago y el horario.",
+    `Deja tus datos y paga tu preparación: ${AUDIENCIAS.map((s) => `$${s.precioUsd} la ${s.nombre.toLowerCase()}`).join(" o ")}. La sesión se confirma al verificar el pago.`,
   ],
   [
     "Trae tus preguntas",

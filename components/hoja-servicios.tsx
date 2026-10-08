@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { AUDIENCIAS } from "@/lib/servicios";
 
 /**
- * LAS TRES PREPARACIONES, EN UNA HOJA.
+ * LAS PREPARACIONES, EN UNA HOJA.
  *
- * Se abre desde la pared de enlaces. Tres opciones, tres precios y una sola
- * agenda detrás: da igual cuál se elija, la hora queda ocupada para las
- * tres.
+ * Se abre desde la pared de enlaces. Una opción por audiencia, cada una con
+ * su precio y una sola agenda detrás: da igual cuál se elija, la hora queda
+ * ocupada para todas.
  *
  * ── Por qué una hoja y no otra pantalla ──
  *
@@ -122,9 +122,9 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
             </button>
           </div>
 
-          {/* Las tres, en una lista con separadores de un pelo: es la forma
+          {/* Las opciones, en una lista con separadores de un pelo: es la forma
               que tiene iOS de decir «esto es un grupo de opciones del mismo
-              rango», y evita tres tarjetas compitiendo entre ellas. */}
+              rango», y evita tarjetas compitiendo entre ellas. */}
           <div className="mt-6 overflow-hidden rounded-2xl bg-tinta/[0.06]">
             {AUDIENCIAS.map((s, i) => (
               <Link
@@ -172,6 +172,13 @@ export function HojaServicios({ children }: { children: React.ReactNode }) {
             45 minutos uno a uno con Henry. La reserva se confirma al verificar
             el pago.
           </p>
+          <Link
+            href="/"
+            onClick={cerrar}
+            className="mt-3 inline-flex min-h-11 items-center gap-2 text-[15px] font-semibold text-agua underline underline-offset-4"
+          >
+            Cómo funciona la preparación
+          </Link>
         </div>
       </dialog>
     </>

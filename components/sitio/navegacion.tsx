@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ControlMovimiento, useMovimiento } from "./experiencia";
 import { useMobile } from "./use-mobile";
-import { ASESORIA, MINUTOS_SESION } from "@/lib/servicios";
+import { MINUTOS_SESION, PRECIO_DESDE } from "@/lib/servicios";
 
 const ENLACES = [
   { href: "/", texto: "Inicio", nota: "Tu punto de partida" },
@@ -163,8 +163,7 @@ export function NavegacionSitio() {
                   <span>{MINUTOS_SESION} min · En español</span>
                 </div>
                 <strong>
-                  ${ASESORIA.precioUsd}
-                  <small> USD</small>
+                  <small>desde </small>${PRECIO_DESDE}
                 </strong>
               </div>
               <Link
@@ -261,11 +260,11 @@ export function NavegacionInferior() {
       <Link
         href="/reservar"
         className="dock-reserve"
-        aria-label={"Reservar asesoría por " + ASESORIA.precioUsd + " dólares"}
+        aria-label={`Reservar, desde ${PRECIO_DESDE} dólares`}
       >
         <DockIcon tipo="reserva" />
         <span>
-          Reservar<small>${ASESORIA.precioUsd} USD</small>
+          Reservar<small>desde ${PRECIO_DESDE}</small>
         </span>
       </Link>
     </nav>

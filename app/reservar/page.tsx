@@ -2,11 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FormularioReserva } from "@/components/formulario-reserva";
+import { Boleto } from "@/components/sitio/boleto";
 import { FotoHenry, Sitio } from "@/components/sitio/estructura";
 import { diasDisponibles } from "@/lib/citas";
+import { enlacePregunta } from "@/lib/pago";
 import { hayBase } from "@/lib/supabase/servidor";
 import { sePuedeCobrarConTarjeta } from "@/lib/pago-stripe";
-import { ASESORIA, servicioPorId } from "@/lib/servicios";
+import {
+  AUDIENCIAS,
+  MINUTOS_SESION,
+  PRECIO_DESDE,
+  servicioPorId,
+} from "@/lib/servicios";
+import { temaPorId, type Tema } from "@/lib/temas";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Reserva tu sesión con Henry",
@@ -14,17 +22,21 @@ export const metadata: Metadata = {
 export default async function Reservar({
   searchParams,
 }: {
-  searchParams: Promise<{ servicio?: string | string[] }>;
+  searchParams: Promise<{
+    servicio?: string | string[];
+    tema?: string | string[];
+    pago?: string | string[];
+  }>;
 }) {
-  const { servicio: id } = await searchParams;
-  const servicio =
-    id === undefined
-      ? ASESORIA
-      : typeof id === "string"
-        ? servicioPorId(id)
-        : null;
+  const { servicio: id, tema: idTema, pago } = await searchParams;
+  const tema = typeof idTema === "string" ? temaPorId(idTema) : null;
+  const cancelado = pago === "cancelado";
+  /* Sin servicio no se enseña una hora: primero se elige qué audiencia se
+     prepara, porque de eso depende el precio. */
+  if (id === undefined)
+    return <ElegirAudiencia tema={tema} cancelado={cancelado} />;
+  const servicio = typeof id === "string" ? servicioPorId(id) : null;
   if (!servicio) notFound();
-  const audiencia = servicio.id !== ASESORIA.id;
   const dias = await diasDisponibles();
   const disponibles = dias.some((d) => d.huecos.some((h) => h.libre));
   return (
@@ -32,28 +44,17 @@ export default async function Reservar({
       <main id="contenido" className="site-container">
         <div className="booking-heading">
           <span className="eyebrow">TU PRÓXIMO PASO EMPIEZA AQUÍ</span>
-          {audiencia ? (
-            <h1>
-              {servicio.nombre}
-              <br />
-              <em>{servicio.etapa}.</em>
-            </h1>
-          ) : (
-            <h1>
-              Hagamos un espacio
-              <br />
-              <em>para conversar.</em>
-            </h1>
-          )}
-          <p>
-            {audiencia
-              ? servicio.descripcion
-              : "Elige tu momento. Nosotros nos ocupamos de acompañarte."}
-          </p>
-          {audiencia ? (
-            <Link href="/links">← Volver a los servicios</Link>
-          ) : null}
+          <h1>
+            {servicio.nombre}
+            <br />
+            <em>{servicio.etapa}.</em>
+          </h1>
+          <p>{servicio.descripcion}</p>
+          <Link href={tema ? `/reservar?tema=${tema.id}` : "/reservar"}>
+            ← Elegir otra audiencia
+          </Link>
         </div>
+        {cancelado ? <AvisoCancelado /> : null}
         <div className="booking-layout">
           <section className="booking-card" aria-label="Reserva tu sesión">
             <div className="booking-mobile-summary">
@@ -66,7 +67,7 @@ export default async function Reservar({
               </div>
               <div>
                 <strong>{servicio.nombre}</strong>
-                <span>45 min · Atención individual</span>
+                <span>{MINUTOS_SESION} min · Atención individual</span>
               </div>
               <span className="booking-mobile-price">
                 <strong>${servicio.precioUsd}</strong>
@@ -79,6 +80,7 @@ export default async function Reservar({
                 dias={dias}
                 conectada={hayBase}
                 servicio={servicio}
+                temaInicial={tema?.id ?? null}
                 hayTarjeta={sePuedeCobrarConTarjeta}
               />
             ) : (
@@ -91,36 +93,120 @@ export default async function Reservar({
               </>
             )}
           </section>
-          <aside className="booking-summary">
-            <div className="booking-portrait">
-              <FotoHenry alt="Henry Orellana" />
-            </div>
-            <h2>
-              {audiencia ? "Prepara tu audiencia." : "Un espacio para ti."}
-            </h2>
-            <p>
-              {servicio.nombre}{audiencia ? ` · ${servicio.etapa}` : ""}
-              <br />
-              con Henry Orellana
-            </p>
-            <div className="summary-price">
-              <span>
-                45 minutos
-                <br />
-                Atención individual
-              </span>
-              <strong>
-                ${servicio.precioUsd}
-                <small> USD</small>
-              </strong>
-            </div>
-            <p className="summary-note">
-              Tu hora se confirma cuando se verifica el pago. Henry te contacta
-              por WhatsApp para coordinar la sesión.
-            </p>
-          </aside>
+          <Resumen
+            detalle={`${servicio.nombre} · ${servicio.etapa}`}
+            precio={`$${servicio.precioUsd}`}
+          />
         </div>
       </main>
     </Sitio>
+  );
+}
+
+function ElegirAudiencia({
+  tema,
+  cancelado,
+}: {
+  tema: Tema | null;
+  cancelado: boolean;
+}) {
+  return (
+    <Sitio reserva>
+      <main id="contenido" className="site-container">
+        <div className="booking-heading">
+          <span className="eyebrow">TU PRÓXIMO PASO EMPIEZA AQUÍ</span>
+          <h1>
+            ¿Qué audiencia
+            <br />
+            <em>vas a preparar?</em>
+          </h1>
+          <p>Elige la preparación y después verás las horas libres.</p>
+        </div>
+        {cancelado ? <AvisoCancelado /> : null}
+        <div className="booking-layout">
+          <section
+            className="booking-card booking-picker"
+            aria-label="Elige tu audiencia"
+          >
+            <h2>Primero, tu audiencia.</h2>
+            <p className="booking-explainer">
+              Cada preparación es una sesión de {MINUTOS_SESION} minutos, solo
+              tú y Henry.
+            </p>
+            <div className="audiencias-boletos">
+              {AUDIENCIAS.map((s) => (
+                <Boleto
+                  key={s.id}
+                  servicio={s}
+                  href={`/reservar?servicio=${s.id}${tema ? `&tema=${tema.id}` : ""}`}
+                />
+              ))}
+            </div>
+            <p className="booking-picker-ayuda">
+              ¿No sabes cuál es la tuya?{" "}
+              <a href={enlacePregunta()} target="_blank" rel="noopener noreferrer">
+                Pregúntale a Henry por WhatsApp
+              </a>
+              .
+            </p>
+          </section>
+          <Resumen
+            detalle="Segunda audiencia o audiencia de mérito"
+            precio={`$${PRECIO_DESDE}`}
+            desde
+          />
+        </div>
+      </main>
+    </Sitio>
+  );
+}
+
+function Resumen({
+  detalle,
+  precio,
+  desde = false,
+}: {
+  detalle: string;
+  precio: string;
+  desde?: boolean;
+}) {
+  return (
+    <aside className="booking-summary">
+      <div className="booking-portrait">
+        <FotoHenry alt="Henry Orellana" />
+      </div>
+      <h2>Prepara tu audiencia.</h2>
+      <p>
+        {detalle}
+        <br />
+        con Henry Orellana
+      </p>
+      <div className="summary-price">
+        <span>
+          {MINUTOS_SESION} minutos
+          <br />
+          Atención individual
+        </span>
+        <strong>
+          {desde ? <small className="summary-desde">desde</small> : null}
+          {precio}
+          <small> USD</small>
+        </strong>
+      </div>
+      <p className="summary-note">
+        Tu hora se confirma cuando se verifica el pago. Henry te contacta por
+        WhatsApp para coordinar la sesión.
+      </p>
+    </aside>
+  );
+}
+
+function AvisoCancelado() {
+  return (
+    <p className="booking-notice" role="status">
+      <strong>El pago con tarjeta no se completó.</strong> No se hizo ningún
+      cobro y tu hora no quedó reservada. Puedes elegirla de nuevo y pagar con
+      tarjeta o por Zelle.
+    </p>
   );
 }

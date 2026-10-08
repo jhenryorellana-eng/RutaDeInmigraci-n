@@ -6,7 +6,9 @@ import "lenis/dist/lenis.css";
 import "./movimiento.css";
 import "./mobile.css";
 import "./reserva-mobile.css";
+import "./boletos.css";
 
+import { MINUTOS_SESION, PRECIO_DESDE } from "@/lib/servicios";
 import { URL_SITIO } from "@/lib/sitio";
 
 export const metadata: Metadata = {
@@ -14,9 +16,8 @@ export const metadata: Metadata = {
      absoluta. Sin esto, WhatsApp recibe una ruta relativa, no sabe de qué
      servidor pedir la foto y enseña el enlace pelado. */
   metadataBase: new URL(URL_SITIO),
-  title: "Tu próximo paso, con Henry · La ruta del inmigrante",
-  description:
-    "Una asesoría personalizada de 45 minutos con Henry Orellana para escucharte, ordenar tus dudas y conversar sobre tu próximo paso. $70 USD.",
+  title: "Prepara tu audiencia con Henry · La ruta del inmigrante",
+  description: `${MINUTOS_SESION} minutos uno a uno con Henry Orellana, en español, para llegar con calma a tu segunda audiencia o a tu audiencia de mérito. Desde $${PRECIO_DESDE} USD.`,
 };
 
 export const viewport: Viewport = {

@@ -6,7 +6,7 @@ import { ParedGuiada } from "@/components/pared-guiada";
 /**
  * LA PARED DE ENLACES · vitral.
  *
- * Una puerta a los cuatro sitios de Henry. Quien llega aquí viene de una
+ * Una puerta a los tres sitios de Henry. Quien llega aquí viene de una
  * biografía de Instagram o de un mensaje, con el pulgar en el borde de la
  * pantalla y ganas de tocar UNA cosa.
  *
@@ -21,12 +21,12 @@ import { ParedGuiada } from "@/components/pared-guiada";
  * los extremos. Un borde encendido de punta a punta parece un subrayado; un
  * canto iluminado por el centro parece vidrio.
  *
- * ── Los cuatro colores ──
+ * ── Los colores ──
  *
  * Cada servicio se queda encendido con su tono. Antes el color era un
- * detalle —un filo y un punto— y los cuatro paneles parecían el mismo botón
+ * detalle —un filo y un punto— y los paneles parecían el mismo botón
  * repetido; ahora la temperatura de cada uno es lo que dice, sin leer, que
- * son cuatro cosas distintas. El recorrido del guía (`ParedGuiada`) no pinta
+ * son cosas distintas. El recorrido del guía (`ParedGuiada`) no pinta
  * nada: sólo levanta una tarjeta cada vez y las devuelve como estaban.
  *
  * ── Lo que NO tiene, aunque un linktree suela tenerlo ──
@@ -50,9 +50,9 @@ import { ParedGuiada } from "@/components/pared-guiada";
  * tiene alguien para decidir si entra. Sin estas etiquetas, WhatsApp enseña
  * la dirección pelada, que no dice nada y parece un enlace sospechoso.
  *
- * ── Qué dice la descripción, y por qué esos cuatro ──
+ * ── Qué dice la descripción ──
  *
- * Los cuatro servicios por su nombre, en el mismo orden que la pared. Quien
+ * Los servicios por su nombre, en el mismo orden que la pared. Quien
  * lo lee tiene que reconocer LO SUYO antes de tocar: alguien que busca sus
  * trámites no entra a algo que sólo promete «asesoría personalizada».
  *
@@ -71,7 +71,7 @@ import { ParedGuiada } from "@/components/pared-guiada";
  * (`/links?v=2`) para que la vuelva a pedir.
  */
 const DESCRIPCION =
-  "Preparación de primera, segunda y tercera audiencia, asesoría personalizada, servicios migratorios, la comunidad Andex y el bootcamp para jóvenes. Todo en un sitio.";
+  "Preparación de tu segunda y tercera audiencia con Henry, La ruta del inmigrante y servicios migratorios. Todo en un sitio.";
 
 export const metadata: Metadata = {
   title: "Henry Orellana D. · Todos sus proyectos",
@@ -109,7 +109,7 @@ export default function Links() {
     <>
       <div aria-hidden="true" className="pared-luz fixed inset-0 -z-10" />
 
-      <main className="relative mx-auto flex min-h-dvh w-full max-w-[30rem] flex-col overflow-hidden">
+      <main className="pared-main relative mx-auto flex min-h-dvh w-full max-w-[30rem] flex-col overflow-hidden">
         {/* ── El retrato, a sangre ──
 
             Ocupa el 58% del alto y se funde hacia el fondo por su borde
@@ -125,7 +125,7 @@ export default function Links() {
             height={1672}
             priority
             sizes="(min-width: 480px) 480px, 100vw"
-            className="absolute inset-0 size-full object-cover object-[50%_12%]"
+            className="retrato-imagen absolute inset-0 size-full object-cover object-[50%_12%]"
           />
           <div
             aria-hidden="true"
@@ -139,15 +139,15 @@ export default function Links() {
             fotografía y deja las tarjetas a plena luz. */}
         <div aria-hidden="true" className="velo-guia fixed inset-0" />
 
-        <div className="relative flex min-h-dvh flex-col px-5 pb-7 pt-9">
-          <p className="cabecera-pared text-[10px] font-bold uppercase tracking-[0.3em] text-tinta/90">
+        <div className="pared-contenido relative flex min-h-dvh flex-col px-5 pb-7 pt-9">
+          <p className="cabecera-pared pared-marca text-[10px] font-bold uppercase tracking-[0.3em] text-tinta/90">
             Orellana Group
           </p>
 
           {/* `mt-auto` empuja el nombre hasta justo encima de los paneles:
               así queda apoyado en el pecho del retrato y no flotando en
               mitad de la cara, sea cual sea el alto del teléfono. */}
-          <div className="cabecera-pared mt-auto">
+          <div className="cabecera-pared pared-nombre mt-auto">
             <h1 className="font-titulo text-[46px] font-normal leading-[1] tracking-[-0.01em]">
               Henry
               <br />
@@ -161,8 +161,8 @@ export default function Links() {
                 sitios es deliberado: quien salta de uno a otro reconoce a la
                 misma persona. */}
             {/* Tres palabras en oro, y son las tres que la pared cumple a
-                dos dedos de aquí: trámites, comunidad y formación son los
-                servicios de abajo dichos por su nombre. El oro las ata a los
+                dos dedos de aquí: dicen lo que Henry construye, más allá de
+                los servicios que la pared enseña hoy. El oro las ata a los
                 cuadros sin una sola palabra de más. El texto no cambia. */}
             <p className="bajada-pared mt-3.5 text-[15px] font-light leading-[1.5] text-tinta/85">
               Llegué sin saber a quién acudir ni en quién confiar. Hoy
@@ -176,7 +176,7 @@ export default function Links() {
 
           <ParedGuiada />
 
-          <p className="cabecera-pared mt-6 text-center text-[13px] text-tinta/55">
+          <p className="cabecera-pared pared-pie mt-6 text-center text-[13px] text-tinta/55">
             © {new Date().getFullYear()} Orellana Group
           </p>
         </div>

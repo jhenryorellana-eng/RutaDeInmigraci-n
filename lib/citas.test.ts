@@ -34,10 +34,8 @@ describe("solicitudes para los cuatro servicios", () => {
   afterEach(() => vi.useRealTimers());
 
   it.each([
-    ["primera", 70],
     ["segunda", 150],
-    ["tercera", 250],
-    ["asesoria", 70],
+    ["tercera", 350],
   ])(
     "guarda %s con el precio del catálogo y mantiene el circuito de pago",
     async (servicio, precio) => {
@@ -64,11 +62,14 @@ describe("solicitudes para los cuatro servicios", () => {
     },
   );
 
-  it("rechaza un servicio desconocido antes de guardar una solicitud", async () => {
-    expect(await apartarCita({ ...datos, servicio: "inventado" })).toEqual({
-      ok: false,
-      motivo: "Ese servicio no está disponible.",
-    });
-    expect(rpc).not.toHaveBeenCalled();
-  });
+  it.each(["inventado", "primera", "asesoria"])(
+    "rechaza el servicio %s antes de guardar una solicitud",
+    async (servicio) => {
+      expect(await apartarCita({ ...datos, servicio })).toEqual({
+        ok: false,
+        motivo: "Ese servicio no está disponible.",
+      });
+      expect(rpc).not.toHaveBeenCalled();
+    },
+  );
 });

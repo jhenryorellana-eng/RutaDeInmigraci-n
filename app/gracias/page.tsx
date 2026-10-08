@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CitaConfirmada } from "@/components/cita-confirmada";
+import { CitaConfirmada, type MetodoDeVuelta } from "@/components/cita-confirmada";
 import { Sitio } from "@/components/sitio/estructura";
 
 export const metadata: Metadata = {
@@ -8,7 +8,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function Gracias() {
+export default async function Gracias({
+  searchParams,
+}: {
+  searchParams: Promise<{ pago?: string | string[] }>;
+}) {
+  const { pago } = await searchParams;
+  const metodo: MetodoDeVuelta =
+    pago === "tarjeta" || pago === "zelle" ? pago : null;
   return (
     <Sitio reserva>
       <main id="contenido" className="site-container receipt-page">
@@ -18,7 +25,7 @@ export default function Gracias() {
           <br />
           <em>confirmar tu encuentro.</em>
         </h1>
-        <CitaConfirmada />
+        <CitaConfirmada metodo={metodo} />
         <Link href="/" className="text-link">
           Volver al inicio <span aria-hidden="true">↗</span>
         </Link>

@@ -1,0 +1,820 @@
+/* ─────────────────────────────────────────────────────────────
+   EL BOLETO · la pieza que se repite en todo el sitio.
+
+   Va en su propia hoja, cargada al final, para no pelearse con las
+   capas de asesoria.css / mobile.css / movimiento.css. Sus colores
+   son literales a propósito: el boleto se pinta igual sobre el azul
+   de la portada que dentro de la tarjeta clara de la reserva.
+   ───────────────────────────────────────────────────────────── */
+.boleto {
+  --b-tinta: #061b3d;
+  --b-suave: #405a7a;
+  --b-fondo: #f6f9fc;
+  --b-fondo-2: #dde7f3;
+  --b-linea: #061b3d33;
+  --b-acento: #1b4fa0;
+  --talon: 158px;
+  --muesca: 14px;
+  position: relative;
+  display: block;
+  color: var(--b-tinta);
+  text-decoration: none;
+  border-radius: 20px;
+  filter: drop-shadow(0 18px 38px #020a1c66);
+  transition:
+    translate 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    rotate 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.45s;
+}
+.boleto[data-tono="oro"] {
+  --b-suave: #3c3a2b;
+  --b-fondo: #ffe496;
+  --b-fondo-2: #e7b43a;
+  --b-linea: #061b3d40;
+  --b-acento: #061b3d;
+}
+.boleto:focus-visible {
+  outline: 2px solid var(--gold, #efc44d);
+  outline-offset: 6px;
+}
+.boleto-cara {
+  --shine-x: 30;
+  --shine-y: 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--talon);
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at calc(var(--shine-x) * 1%) calc(var(--shine-y) * 1%),
+      #ffffff8c,
+      transparent 52%
+    ),
+    repeating-radial-gradient(
+      circle at 112% -20%,
+      transparent 0 11px,
+      color-mix(in srgb, var(--b-tinta) 6%, transparent) 11px 12px
+    ),
+    linear-gradient(135deg, var(--b-fondo), var(--b-fondo-2));
+  /* Las dos muescas del talón: medio círculo arriba y medio abajo,
+     justo donde corre la línea perforada. */
+  -webkit-mask:
+    radial-gradient(
+        circle at calc(100% - var(--talon)) 0,
+        #0000 var(--muesca),
+        #000 calc(var(--muesca) + 0.5px)
+      )
+      top / 100% 51% no-repeat,
+    radial-gradient(
+        circle at calc(100% - var(--talon)) 100%,
+        #0000 var(--muesca),
+        #000 calc(var(--muesca) + 0.5px)
+      )
+      bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(
+        circle at calc(100% - var(--talon)) 0,
+        #0000 var(--muesca),
+        #000 calc(var(--muesca) + 0.5px)
+      )
+      top / 100% 51% no-repeat,
+    radial-gradient(
+        circle at calc(100% - var(--talon)) 100%,
+        #0000 var(--muesca),
+        #000 calc(var(--muesca) + 0.5px)
+      )
+      bottom / 100% 51% no-repeat;
+}
+.boleto-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 30px 30px 28px 32px;
+  min-width: 0;
+}
+.boleto-etapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--b-suave);
+}
+.boleto-etapa::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--b-acento);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--b-acento) 18%, transparent);
+}
+.boleto-nombre {
+  font-size: clamp(30px, 3vw, 40px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+}
+.boleto-incluye {
+  display: grid;
+  gap: 9px;
+  margin: 16px 0 22px;
+}
+.boleto-incluye > span {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 8px;
+  font-size: 15.5px;
+  line-height: 1.4;
+  color: var(--b-tinta);
+}
+.boleto-incluye > span::before {
+  content: "↗";
+  font-weight: 700;
+  color: var(--b-acento);
+}
+.boleto-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  width: fit-content;
+  margin-top: auto;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid currentColor;
+  font-size: 16px;
+  font-weight: 600;
+}
+.boleto-accion svg {
+  width: 18px;
+  height: 18px;
+  transition: translate 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.boleto-talon {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px 14px;
+  border-left: 2px dashed var(--b-linea);
+  text-align: center;
+}
+.boleto-precio {
+  display: flex;
+  align-items: flex-start;
+  font-size: 58px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.06em;
+}
+.boleto-precio sup {
+  font-size: 0.42em;
+  line-height: 1;
+  margin: 0.5em 0.06em 0 0;
+  letter-spacing: 0;
+}
+.boleto-precio small {
+  align-self: flex-end;
+  margin: 0 0 0.3em 0.18em;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+.boleto-minutos {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--b-suave);
+  max-width: 11ch;
+}
+.boleto-sello {
+  width: 74px;
+  height: 74px;
+  margin-bottom: 4px;
+  fill: none;
+  stroke: var(--b-tinta);
+  stroke-width: 1.2;
+  opacity: 0.78;
+  overflow: visible;
+}
+.boleto-sello text {
+  fill: var(--b-tinta);
+  stroke: none;
+  font-size: 9.6px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  transform-origin: 50px 50px;
+  transform-box: view-box;
+}
+.boleto-sello path:last-child {
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (hover: hover) {
+  .boleto:hover {
+    translate: 0 -6px;
+    filter: drop-shadow(0 30px 50px #020a1c80);
+  }
+  .boleto:hover .boleto-accion svg {
+    translate: 3px -3px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .asesoria-site[data-motion="on"] .boleto:hover .boleto-sello text {
+    animation: sello-gira 9s linear infinite;
+  }
+}
+@keyframes sello-gira {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* El pequeño: sólo nombre y precio. Va encima de la foto de la portada
+   y junto al precio de la página de la asesoría. */
+.boleto.is-mini {
+  --talon: 96px;
+  --muesca: 9px;
+  border-radius: 14px;
+  filter: drop-shadow(0 14px 30px #020a1c80);
+}
+.boleto.is-mini .boleto-cuerpo {
+  gap: 3px;
+  padding: 14px 14px 14px 18px;
+  justify-content: center;
+}
+.boleto.is-mini .boleto-etapa {
+  font-size: 11.5px;
+  gap: 7px;
+}
+.boleto.is-mini .boleto-etapa::before {
+  width: 6px;
+  height: 6px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--b-acento) 18%, transparent);
+}
+.boleto.is-mini .boleto-nombre {
+  font-size: 19px;
+  letter-spacing: -0.03em;
+}
+.boleto.is-mini .boleto-talon {
+  padding: 10px 8px;
+  gap: 2px;
+}
+.boleto.is-mini .boleto-precio {
+  font-size: 32px;
+}
+.boleto.is-mini .boleto-precio small {
+  font-size: 9px;
+}
+.boleto.is-mini .boleto-minutos {
+  display: none;
+}
+
+/* En el teléfono el grande se pone de pie: el talón pasa abajo y la
+   perforación corre de lado a lado. */
+@media (max-width: 760px) {
+  .boleto.is-grande {
+    --talon-alto: 104px;
+  }
+  .boleto.is-grande .boleto-cara {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr var(--talon-alto);
+    -webkit-mask:
+      radial-gradient(
+          circle at 0 calc(100% - var(--talon-alto)),
+          #0000 var(--muesca),
+          #000 calc(var(--muesca) + 0.5px)
+        )
+        left / 51% 100% no-repeat,
+      radial-gradient(
+          circle at 100% calc(100% - var(--talon-alto)),
+          #0000 var(--muesca),
+          #000 calc(var(--muesca) + 0.5px)
+        )
+        right / 51% 100% no-repeat;
+    mask:
+      radial-gradient(
+          circle at 0 calc(100% - var(--talon-alto)),
+          #0000 var(--muesca),
+          #000 calc(var(--muesca) + 0.5px)
+        )
+        left / 51% 100% no-repeat,
+      radial-gradient(
+          circle at 100% calc(100% - var(--talon-alto)),
+          #0000 var(--muesca),
+          #000 calc(var(--muesca) + 0.5px)
+        )
+        right / 51% 100% no-repeat;
+  }
+  .boleto.is-grande .boleto-cuerpo {
+    padding: 24px 22px 22px;
+  }
+  .boleto.is-grande .boleto-nombre {
+    font-size: 30px;
+  }
+  .boleto.is-grande .boleto-incluye {
+    margin: 12px 0 18px;
+  }
+  .boleto.is-grande .boleto-incluye > span {
+    font-size: 15px;
+  }
+  .boleto.is-grande .boleto-talon {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0 22px;
+    border-left: 0;
+    border-top: 2px dashed var(--b-linea);
+    text-align: left;
+  }
+  .boleto.is-grande .boleto-sello {
+    order: -1;
+    width: 60px;
+    height: 60px;
+    margin: 0;
+  }
+  .boleto.is-grande .boleto-minutos {
+    flex: 1;
+    max-width: none;
+  }
+  .boleto.is-grande .boleto-precio {
+    font-size: 48px;
+  }
+}
+
+/* ── Portada · los dos boletos sobre la foto ── */
+.hero-boletos {
+  position: absolute;
+  right: -18px;
+  bottom: -8px;
+  z-index: 3;
+  display: grid;
+  gap: 12px;
+  width: 286px;
+}
+.hero-boletos .boleto:first-child {
+  rotate: -3deg;
+}
+.hero-boletos .boleto:last-child {
+  rotate: 2deg;
+  margin-left: 16px;
+  margin-right: -16px;
+}
+/* Los boletos ocupan la esquina donde iba el lugar: pasa a la otra. */
+.home-hero .photo-location {
+  right: auto;
+  left: 0;
+}
+/* La flecha del titular va pegada a la última palabra, sea cual sea su
+   largo, y sube con ella en la entrada. */
+.home-hero .hero-last-word svg {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-left: 0.14em;
+  vertical-align: 0.06em;
+  stroke: var(--gold);
+  stroke-width: 1.8;
+  fill: none;
+}
+@media (hover: hover) {
+  .hero-boletos:hover .boleto:first-child {
+    rotate: -6deg;
+    translate: -14px -4px;
+  }
+  .hero-boletos:hover .boleto:last-child {
+    rotate: 5deg;
+    translate: 10px 6px;
+  }
+  .hero-boletos .boleto:hover,
+  .hero-boletos:hover .boleto:hover {
+    rotate: 0deg;
+    translate: 0 -8px;
+  }
+}
+@media (max-width: 760px) {
+  .hero-boletos {
+    inset: auto 0 0;
+    width: auto;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .hero-boletos .boleto:first-child,
+  .hero-boletos .boleto:last-child {
+    rotate: 0deg;
+    margin: 0;
+  }
+  .hero-boletos .boleto.is-mini {
+    --talon: 70px;
+    --muesca: 7px;
+  }
+  .hero-boletos .boleto.is-mini .boleto-cuerpo {
+    padding: 11px 8px 11px 12px;
+  }
+  .hero-boletos .boleto.is-mini .boleto-etapa {
+    font-size: 10px;
+  }
+  .hero-boletos .boleto.is-mini .boleto-etapa::before {
+    display: none;
+  }
+  .hero-boletos .boleto.is-mini .boleto-nombre {
+    font-size: 15px;
+  }
+  .hero-boletos .boleto.is-mini .boleto-precio {
+    font-size: 25px;
+  }
+}
+
+/* ── La cinta del encabezado, en marcha ── */
+.brand-strip {
+  overflow: hidden;
+}
+.brand-strip > .brand-strip-track {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  width: max-content;
+  min-height: 75px;
+  padding-block: 0;
+}
+.brand-strip-set {
+  display: flex;
+  align-items: center;
+  gap: 46px;
+  padding-right: 46px;
+}
+/* Gana a las reglas viejas del teléfono, que escondían el cuarto elemento. */
+.brand-strip .brand-strip-set > .brand-strip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 46px;
+  text-align: left;
+}
+@media (max-width: 760px) {
+  .brand-strip > .brand-strip-track {
+    min-height: 54px;
+  }
+  .brand-strip-set,
+  .brand-strip .brand-strip-set > .brand-strip-item {
+    gap: 26px;
+  }
+  .brand-strip-set {
+    padding-right: 26px;
+  }
+}
+.asesoria-site[data-motion="on"] .brand-strip-track {
+  animation: cinta 38s linear infinite;
+}
+.asesoria-site[data-motion="on"] .brand-strip:hover .brand-strip-track {
+  animation-play-state: paused;
+}
+.asesoria-site:not([data-motion="on"]) .brand-strip > .brand-strip-track {
+  width: auto;
+  justify-content: center;
+}
+.asesoria-site:not([data-motion="on"]) .brand-strip-set + .brand-strip-set {
+  display: none;
+}
+@keyframes cinta {
+  to {
+    translate: -50% 0;
+  }
+}
+@media (max-width: 760px) {
+  .asesoria-site:not([data-motion="on"]) .brand-strip-set {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 22px;
+    padding: 14px 16px;
+  }
+}
+
+/* ── Portada · elige tu audiencia ── */
+.audiencias-section {
+  position: relative;
+  padding-block: 110px 120px;
+  scroll-margin-top: 100px;
+}
+.audiencias-section::before {
+  content: "";
+  position: absolute;
+  inset: 22% -10% auto;
+  height: 60%;
+  background: radial-gradient(ellipse at 50% 50%, #1b4fa04d, transparent 62%);
+  pointer-events: none;
+  z-index: -1;
+}
+.audiencias-boletos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+}
+.audiencias-boletos .boleto:first-child {
+  rotate: -1.4deg;
+}
+.audiencias-boletos .boleto:last-child {
+  rotate: 1.4deg;
+}
+@media (hover: hover) {
+  .audiencias-boletos .boleto:hover {
+    rotate: 0deg;
+  }
+}
+.audiencias-nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 640px;
+  margin-top: 34px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.audiencias-nota svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: var(--gold);
+}
+.audiencias-nota a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 1100px) {
+  .audiencias-boletos {
+    gap: 22px;
+  }
+  .boleto.is-grande {
+    --talon: 128px;
+  }
+  .boleto.is-grande .boleto-precio {
+    font-size: 48px;
+  }
+}
+@media (max-width: 760px) {
+  .audiencias-section {
+    padding-block: 64px 72px;
+    scroll-margin-top: 80px;
+  }
+  .audiencias-boletos {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .audiencias-boletos .boleto:first-child,
+  .audiencias-boletos .boleto:last-child {
+    rotate: 0deg;
+  }
+  .audiencias-nota {
+    margin-top: 24px;
+    font-size: 14px;
+  }
+}
+
+/* ── El cierre · las letras se asoman al señalar ── */
+.closing-link h2 .letra {
+  display: inline-block;
+  transition: translate 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--i) * 22ms);
+}
+@media (hover: hover) {
+  .asesoria-site[data-motion="on"] .closing-link:hover h2 .letra {
+    translate: 0 -0.07em;
+  }
+}
+
+/* ── Conoce a Henry · la frase que se enciende al leerla ── */
+.about-statement h2 .palabra {
+  display: inline-block;
+  white-space: pre;
+}
+
+/* ── La asesoría · los dos boletos junto al titular ── */
+.service-boletos {
+  display: grid;
+  gap: 14px;
+  align-content: center;
+  min-width: 330px;
+}
+.service-boletos .boleto.is-mini {
+  --talon: 118px;
+}
+.service-boletos .boleto.is-mini .boleto-cuerpo {
+  padding: 18px 18px 18px 22px;
+}
+.service-boletos .boleto.is-mini .boleto-etapa {
+  font-size: 12.5px;
+}
+.service-boletos .boleto.is-mini .boleto-nombre {
+  font-size: 24px;
+}
+.service-boletos .boleto.is-mini .boleto-precio {
+  font-size: 40px;
+}
+.service-boletos-nota {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+@media (max-width: 760px) {
+  .service-boletos {
+    min-width: 0;
+    margin-top: 28px;
+  }
+}
+
+/* ── La reserva · elegir la audiencia antes que la hora ── */
+.booking-picker h2 {
+  margin-bottom: 8px;
+}
+.booking-picker .audiencias-boletos {
+  margin-top: 26px;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+.booking-picker .audiencias-boletos .boleto:first-child,
+.booking-picker .audiencias-boletos .boleto:last-child {
+  rotate: 0deg;
+}
+.booking-picker .boleto {
+  filter: drop-shadow(0 10px 22px #061b3d26);
+}
+.booking-picker .boleto[data-tono="papel"] .boleto-cara {
+  box-shadow: inset 0 0 0 1px #c5d3e6;
+}
+@media (hover: hover) {
+  .booking-picker .boleto:hover {
+    filter: drop-shadow(0 18px 30px #061b3d3d);
+  }
+}
+.summary-price .summary-desde {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+  color: var(--muted);
+}
+.booking-picker-ayuda {
+  margin-top: 22px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.booking-picker-ayuda a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* La firma se revela de izquierda a derecha: el recorte tiene que medir lo
+   que mide el nombre, no el ancho de la columna. */
+.henry-signature {
+  width: fit-content;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   /LINKS · la pared de enlaces
+   ───────────────────────────────────────────────────────────── */
+
+/* El retrato recorta su foto: con el acercamiento lento, la imagen se
+   salía del marco y asomaba sin el velo como una línea en el borde. */
+.retrato-pared {
+  overflow: hidden;
+}
+
+/* La luz del color de cada servicio sigue al puntero por el cristal. */
+.panel-servicio::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(var(--tono) / 0.24),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .panel-servicio[data-luz="encendido"]:hover {
+    transform: translateY(-3px);
+    background: rgb(var(--tono-hondo) / 0.5);
+    border-color: rgb(var(--tono) / 0.75);
+  }
+  .panel-servicio:hover::before {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Los cuadros llegan uno detrás de otro antes de que hable el guía.
+     `backwards` y `translate` a propósito: al terminar no deja nada
+     pegado que pise el `transform` con el que el guía levanta cada uno. */
+  .pared-lista > div {
+    animation: panel-entra 0.75s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: calc(var(--i) * 90ms + 120ms);
+  }
+  .pared-nombre {
+    animation: panel-entra 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  /* El retrato respira: un acercamiento tan lento que no se ve moverse,
+     sólo se nota que está vivo. */
+  .retrato-imagen {
+    animation: retrato-respira 24s ease-in-out infinite alternate;
+  }
+}
+@keyframes panel-entra {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+}
+@keyframes retrato-respira {
+  to {
+    scale: 1.07;
+    translate: -1.5% 1%;
+  }
+}
+
+/* En la computadora la pared se abre en dos: el retrato a toda altura a
+   la izquierda, con el nombre encima, y los cuadros a la derecha. En una
+   columna de 480 px el resto de la pantalla quedaba vacío. */
+@media (min-width: 1024px) {
+  .pared-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(460px, 0.92fr);
+    grid-template-rows: auto 1fr auto;
+    max-width: none;
+    min-height: 100dvh;
+  }
+  .pared-main > .retrato-pared {
+    position: relative;
+    inset: auto;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    height: 100dvh;
+    min-height: 680px;
+  }
+  .pared-main > .retrato-pared::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to right, transparent 58%, var(--color-noche) 100%),
+      linear-gradient(to top, var(--color-noche) 0%, transparent 42%);
+  }
+  .pared-contenido {
+    display: contents;
+  }
+  .pared-marca {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 56px 72px 0 56px;
+  }
+  .pared-nombre {
+    position: relative;
+    z-index: 2;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: end;
+    max-width: 620px;
+    margin: 0;
+    padding: 0 56px 72px;
+  }
+  .pared-nombre h1 {
+    font-size: clamp(64px, 6vw, 98px);
+  }
+  .pared-nombre .bajada-pared {
+    max-width: 36ch;
+    margin-top: 22px;
+    font-size: 19px;
+  }
+  .pared-lista {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    width: 100%;
+    max-width: 520px;
+    margin: 0;
+    padding: 32px 72px 32px 56px;
+    gap: 14px;
+  }
+  .pared-lista .panel-servicio {
+    padding: 22px 22px;
+  }
+  .pared-pie {
+    grid-column: 2;
+    grid-row: 3;
+    margin: 0;
+    padding: 0 72px 40px 56px;
+    text-align: left;
+  }
+}
+

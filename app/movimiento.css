@@ -119,52 +119,6 @@ html.lenis {
   pointer-events: none;
   border-radius: 0 0 0 54px;
 }
-.session-ticket,
-.service-price {
-  --shine-x: 50;
-  --shine-y: 50;
-  isolation: isolate;
-}
-.session-ticket {
-  background: linear-gradient(
-    125deg,
-    #ffe38a 0%,
-    var(--gold) 42%,
-    #ddb443 100%
-  );
-  box-shadow:
-    0 20px 70px #0004,
-    inset 0 0 0 1px #fff5;
-}
-.session-ticket::after,
-.service-price::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at calc(var(--shine-x) * 1%) calc(var(--shine-y) * 1%),
-    #fff5 0%,
-    transparent 60%
-  );
-  mix-blend-mode: soft-light;
-  z-index: -1;
-}
-.session-ticket .ticket-top,
-.session-ticket .ticket-bottom {
-  position: relative;
-}
-.ticket-bottom {
-  border-top-style: dashed;
-}
-.asesoria-site[data-motion="on"] .session-ticket {
-  transition: box-shadow 0.3s;
-}
-.asesoria-site[data-motion="on"] .session-ticket:hover {
-  transform: rotate(3deg);
-  box-shadow: 0 28px 85px #0005;
-}
 .asesoria-site[data-motion="on"] .route-button {
   transition:
     background 0.25s,

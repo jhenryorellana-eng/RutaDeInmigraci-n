@@ -7,7 +7,7 @@ import {
   ZELLE_NOMBRE,
   ZELLE_TELEFONO,
   ZELLE_TELEFONO_CRUDO,
-  enlaceWhatsapp,
+  enlaceComprobante,
 } from "@/lib/pago";
 import type { Servicio } from "@/lib/servicios";
 import { codigoParaMostrar } from "@/lib/zelle/dominio";
@@ -21,6 +21,8 @@ export function PasoPago({
   solicitudId,
   codigoPago,
   correo,
+  cuandoUtah,
+  tema,
   hayTarjeta,
   onListo,
 }: {
@@ -28,6 +30,9 @@ export function PasoPago({
   solicitudId: number;
   codigoPago: string;
   correo: string;
+  /** La hora pedida, en la de Utah: la que Henry tiene en su agenda. */
+  cuandoUtah?: string;
+  tema?: string;
   /** Falso si Stripe no está configurado: entonces no se ofrece la tarjeta. */
   hayTarjeta: boolean;
   onListo: () => void;
@@ -175,7 +180,12 @@ export function PasoPago({
           </div>
 
           <a
-            href={enlaceWhatsapp()}
+            href={enlaceComprobante({
+              codigo: codigoParaMostrar(codigoPago),
+              servicio: servicio.nombre,
+              cuando: cuandoUtah,
+              tema,
+            })}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 flex min-h-[54px] w-full items-center justify-center gap-3 rounded-full border border-white/25 px-6 text-[16px] font-bold"

@@ -8,7 +8,8 @@ import { CalendarioMes } from "@/components/calendario-mes";
 import type { DiaConHuecos } from "@/lib/citas";
 import { reservar } from "@/app/reservar/accion";
 import { CLAVE_CITA } from "@/lib/pago";
-import type { Servicio } from "@/lib/servicios";
+import { MINUTOS_SESION, type Servicio } from "@/lib/servicios";
+import { TEMAS, temaPorId, type Tema } from "@/lib/temas";
 import { PasoPago } from "@/components/paso-pago";
 import { Flecha } from "@/components/sitio/estructura";
 const ZONAS = [
@@ -37,11 +38,14 @@ export function FormularioReserva({
   dias,
   conectada,
   servicio,
+  temaInicial = null,
   hayTarjeta,
 }: {
   dias: DiaConHuecos[];
   conectada: boolean;
   servicio: Servicio;
+  /** El tema con el que llega desde la portada, si llega con uno. */
+  temaInicial?: Tema["id"] | null;
   hayTarjeta: boolean;
 }) {
   const router = useRouter();
@@ -71,6 +75,8 @@ export function FormularioReserva({
   } | null>(null);
   const [correoPago, setCorreoPago] = useState("");
   const [enEeuu, setEnEeuu] = useState("");
+  const [idTema, setIdTema] = useState<Tema["id"] | null>(temaInicial);
+  const tema = temaPorId(idTema);
   useEffect(() => {
     try {
       const local = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -180,6 +186,7 @@ export function FormularioReserva({
               utah: `${fechaLarga(cuando)} a las ${horaEnZona(cuando)}`,
               servicio: servicio.nombre,
               precio: servicio.precioUsd,
+              tema: tema?.titulo,
             }),
           );
         } catch {
@@ -426,6 +433,28 @@ export function FormularioReserva({
                 </label>
               ) : null}
             </div>
+            <fieldset className="booking-topics">
+              <legend>
+                ¿Por dónde te gustaría empezar? <span>Opcional</span>
+              </legend>
+              <div>
+                {TEMAS.map((t) => (
+                  <button
+                    type="button"
+                    key={t.id}
+                    aria-pressed={idTema === t.id}
+                    disabled={enCurso}
+                    onClick={() => setIdTema(idTema === t.id ? null : t.id)}
+                  >
+                    <strong>{t.titulo}</strong>
+                  </button>
+                ))}
+              </div>
+              <small>
+                Se añade al mensaje que le envías a Henry por WhatsApp, para
+                que sepa por dónde empezar.
+              </small>
+            </fieldset>
             <p className="booking-privacy">
               No necesitas contar tu caso ni enviar documentos aquí. Lo
               conversarás directamente con Henry.
@@ -456,15 +485,36 @@ export function FormularioReserva({
           </form>
         </>
       ) : null}
-      {paso === "pago" && solicitud ? (
+      {paso === "pago" && solicitud && horaElegida ? (
         <div className="payment-panel">
+          {/* Lo que se va a pagar, a la vista. Sin «Cambiar»: la solicitud
+              ya existe, y cambiar la hora aquí dejaría otra colgando. */}
+          <div className="reservation-detail is-summary">
+            <div>
+              {fechaLarga(new Date(horaElegida), zona)}
+              <span>
+                {horaEnZona(new Date(horaElegida), zona)} tu hora ·{" "}
+                {horaEnZona(new Date(horaElegida))} en Utah
+              </span>
+            </div>
+            <div className="reservation-detail-service">
+              {servicio.nombre}
+              <span>
+                {tema
+                  ? `Tu punto de partida: ${tema.titulo}`
+                  : `${MINUTOS_SESION} minutos con Henry`}
+              </span>
+            </div>
+          </div>
           <PasoPago
             servicio={servicio}
             solicitudId={solicitud.solicitudId}
             codigoPago={solicitud.codigoPago}
             correo={correoPago}
+            cuandoUtah={`${fechaLarga(new Date(horaElegida))} a las ${horaEnZona(new Date(horaElegida))}`}
+            tema={tema?.titulo}
             hayTarjeta={hayTarjeta}
-            onListo={() => router.push("/gracias")}
+            onListo={() => router.push("/gracias?pago=zelle")}
           />
         </div>
       ) : null}

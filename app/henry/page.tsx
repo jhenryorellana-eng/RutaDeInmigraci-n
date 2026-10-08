@@ -8,7 +8,7 @@ import {
 export const metadata: Metadata = {
   title: "Conoce a Henry · La ruta del inmigrante",
   description:
-    "Conoce a Henry Orellana y su espacio de asesoría personalizada, en español y de persona a persona.",
+    "Conoce a Henry Orellana y su preparación de audiencias, en español y de persona a persona.",
 };
 export default function Henry() {
   return (
@@ -28,9 +28,9 @@ export default function Henry() {
               Me gustaría conocer el tuyo.
             </p>
             <p>
-              Empezar una nueva etapa trae ilusión. También trae preguntas. Por
-              eso existe este espacio: para que puedas conversar conmigo sobre
-              dónde estás y lo que viene.
+              Una audiencia trae preguntas, y es normal no saber qué esperar.
+              Por eso existe este espacio: para que llegues a ese día
+              preparado, después de conversarlo conmigo.
             </p>
             <BotonReserva texto="Conversemos" />
           </div>
@@ -52,9 +52,9 @@ export default function Henry() {
           <div className="site-container">
             <span className="eyebrow">EL PUNTO DE PARTIDA</span>
             <h2>
-              Primero, <em>tu historia.</em>
+              <Palabras texto="Primero," /> <em><Palabras texto="tu historia." /></em>
               <br />
-              Después, el camino.
+              <Palabras texto="Después, el camino." />
             </h2>
             <div className="statement-bottom">
               <p>
@@ -104,4 +104,14 @@ export default function Henry() {
       </main>
     </Sitio>
   );
+}
+
+/** Una palabra por pieza, para que la frase se encienda al ir leyéndola. */
+function Palabras({ texto }: { texto: string }) {
+  const palabras = texto.split(" ");
+  return palabras.map((palabra, i) => (
+    <span key={i} className="palabra">
+      {i < palabras.length - 1 ? `${palabra} ` : palabra}
+    </span>
+  ));
 }

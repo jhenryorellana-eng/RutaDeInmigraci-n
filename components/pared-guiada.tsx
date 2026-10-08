@@ -10,14 +10,14 @@ import { ENLACES, type Enlace } from "@/lib/enlaces";
 /**
  * LA PARED, CON GUÍA.
  *
- * Al entrar, alguien señala los cuatro servicios de uno en uno, dice para
+ * Al entrar, alguien señala los servicios de uno en uno, dice para
  * qué es cada uno, invita a preguntar y se retira a la esquina.
  *
  * ── Por qué hace falta ──
  *
- * Porque los cuatro se parecen. «Preparación de audiencia», «Comunidad»,
- * «Servicio Migratorio» y «Bootcamp» son cuatro cosas distintas para cuatro
- * momentos distintos, y quien llega de una biografía de Instagram no tiene
+ * Porque se parecen. «Preparación de audiencia», «La ruta del inmigrante» y
+ * «Servicio Migratorio» son tres cosas distintas para tres momentos
+ * distintos, y quien llega de una biografía de Instagram no tiene
  * forma de saber cuál es el suyo. Antes se resolvía con un párrafo que nadie
  * leía; ahora se resuelve señalando.
  *
@@ -34,7 +34,7 @@ import { ENLACES, type Enlace } from "@/lib/enlaces";
  * lo vuelve a lanzar. Al segundo paso por aquí ya estorbaría.
  */
 
-/** -1 nada dicho aún · 0-3 los cuatro servicios · 4 la invitación · 5 retirado. */
+/** -1 nada dicho aún · 0…n-1 los servicios · n la invitación · n+1 retirado. */
 type Paso = number;
 const INVITAR = ENLACES.length;
 const TERMINADO = INVITAR + 1;
@@ -44,8 +44,8 @@ const VISTO = "ruta:guia-vista";
 /**
  * Cuánto se queda cada frase en pantalla.
  *
- * Por caracteres y no un tiempo fijo: la frase del bootcamp es la mitad de
- * larga que la de la comunidad, y darles lo mismo deja una a medio leer y la
+ * Por caracteres y no un tiempo fijo: unas frases son la mitad de largas
+ * que otras, y darles lo mismo deja una a medio leer y la
  * otra esperando. A ~30 ms por carácter se lee sin prisa y sin sobra.
  */
 function duracion(texto: string) {
@@ -72,7 +72,7 @@ export function ParedGuiada() {
     relojes.current = [];
   }
 
-  /* Terminar es ir directo al final: las cuatro encendidas y la burbuja en su
+  /* Terminar es ir directo al final: todas encendidas y la burbuja en su
      sitio. Nunca se «cancela» dejando la pared a medias.
      Y es AQUÍ donde se anota que ya se vio —no al empezar—: anotarlo al
      arrancar lo daba por enseñado sin haberlo enseñado. En desarrollo, donde
@@ -152,7 +152,20 @@ export function ParedGuiada() {
 
   return (
     <>
-      <div className="relative mt-7 flex flex-col gap-2.5">
+      {/* La luz que sigue al puntero por cada cuadro. Un solo oyente para
+          todos: el cuadro se busca desde el punto que se toca. */}
+      <div
+        className="pared-lista relative mt-7 flex flex-col gap-3.5"
+        onPointerMove={(e) => {
+          const panel = (e.target as HTMLElement).closest<HTMLElement>(
+            ".panel-servicio",
+          );
+          if (!panel) return;
+          const caja = panel.getBoundingClientRect();
+          panel.style.setProperty("--mx", `${e.clientX - caja.left}px`);
+          panel.style.setProperty("--my", `${e.clientY - caja.top}px`);
+        }}
+      >
         {ENLACES.map((enlace, i) => {
           const activo = guiando && i === paso;
           /* El globo sale debajo de su tarjeta, salvo en la última: allí se
@@ -171,6 +184,7 @@ export function ParedGuiada() {
             <div
               key={enlace.href}
               className={`relative tono-${enlace.tono} ${activo ? "z-30" : "z-10"}`}
+              style={{ "--i": i } as React.CSSProperties}
             >
               <Panel
                 enlace={enlace}
@@ -247,8 +261,8 @@ export function ParedGuiada() {
 const INVITACION = "¿No sabes cuál te toca? Pregúntame — me quedo aquí abajo.";
 
 function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
-  /* Cuatro luces girando en fase parecen un mecanismo; desfasadas, cuatro
-     cosas vivas. El desfase sale de la posición del servicio en la lista. */
+  /* Luces girando en fase parecen un mecanismo; desfasadas, cosas
+     vivas. El desfase sale de la posición del servicio en la lista. */
   const desfase = (ENLACES.findIndex((e) => e.href === enlace.href) * 7) / 4;
 
   const dentro = (
@@ -282,7 +296,7 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
                      con puntos suspensivos. La jerarquía se mantiene igual —lo
                      que la hace es el contraste con los 16 px de al lado, no el
                      número. */
-                  "block truncate text-[17px] font-bold tracking-[-0.02em] min-[360px]:text-[18px]"
+                  "block truncate text-[17px] font-semibold tracking-[-0.015em] min-[360px]:text-[18px]"
                 : "block truncate text-[16px] font-semibold tracking-[-0.01em]"
             }
           >
@@ -291,8 +305,8 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
           <span
             className={
               enlace.destacado
-                ? "mt-0.5 block truncate text-[13px] font-normal text-tinta/80"
-                : "mt-0.5 block truncate text-[12px] font-light text-tinta/75"
+                ? "mt-1 block text-[13.5px] font-light leading-snug text-tinta/80"
+                : "mt-1 block text-[13px] font-light leading-snug text-tinta/75"
             }
           >
             {enlace.descripcion}
@@ -322,7 +336,7 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
   );
 
   const clases =
-    "panel-servicio relative block overflow-hidden rounded-2xl border px-4 py-3.5 text-left backdrop-blur-[14px]";
+    "panel-servicio relative block overflow-hidden rounded-2xl border px-4 py-4 text-left backdrop-blur-[14px]";
 
   if (enlace.abreServicios) {
     return (
