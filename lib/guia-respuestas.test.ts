@@ -7,9 +7,9 @@ describe("el guía de /links", () => {
     expect(ofrecidas.filter((id) => !respuestaPorId(id))).toEqual([]);
   });
 
-  it("no ofrece Andex ni el bootcamp mientras no estén en la pared", () => {
+  it("sólo ofrece lo que está en la pared: ni Andex, ni el bootcamp, ni las audiencias aparte de La ruta", () => {
     const destinos = RESPUESTAS.flatMap((r) => r.enlaces ?? []).map((e) => e.href);
     expect(destinos.some((href) => /andex|starbiz/.test(href))).toBe(false);
-    expect(respuestaPorId("ruta")?.enlaces?.[0].href).toBe("/");
+    expect(respuestaPorId("preparacion")).toBeNull();
   });
 });

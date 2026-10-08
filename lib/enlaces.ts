@@ -1,7 +1,7 @@
 import { PRECIO_DESDE } from "@/lib/servicios";
 
 /**
- * LOS TRES SITIOS DE HENRY.
+ * LOS SITIOS DE HENRY.
  *
  * Todo lo que se pinta en `/links` sale de aquí, para que añadir o quitar un
  * proyecto sea tocar esta lista y nada más.
@@ -22,9 +22,9 @@ export type Enlace = {
   /**
    * En vez de llevar a un sitio, abre la hoja de las preparaciones.
    *
-   * Es lo que hace que elegir entre tres precios no cueste perder la
-   * pared: se ven las tres, se elige una y se sale hacia la reserva ya
-   * sabiendo qué se aparta.
+   * Es lo que hace que elegir entre los precios no cueste perder la pared:
+   * se ven las dos, se elige una y se sale hacia la reserva ya sabiendo qué
+   * se aparta.
    */
   abreServicios?: boolean;
   /**
@@ -54,32 +54,26 @@ export type Enlace = {
 };
 
 export const ENLACES: Enlace[] = [
+  /* La ruta del inmigrante es la puerta a todo lo de la audiencia: abre la
+     hoja donde se elige la preparación, y de ahí se pasa a las horas libres
+     y a la reserva, que viven en este mismo sitio. Quien prefiere conocer a
+     Henry antes de elegir lo encuentra en la misma hoja.
+
+     Va en el tono arena porque es el oro de esa página, y así se reconoce
+     al llegar. */
   {
-    titulo: "Preparación de audiencia",
-    etiqueta: `Dos preparaciones · desde $${PRECIO_DESDE}`,
+    titulo: "La ruta del inmigrante",
+    etiqueta: `Prepara tu audiencia · desde $${PRECIO_DESDE}`,
     /* Corta a propósito: en una tarjeta del teléfono, una frase que acaba
        en «…» parece rota. El precio va aquí porque es lo primero que se
        pregunta. */
-    descripcion: `Desde $${PRECIO_DESDE} · 45 min con Henry`,
-    href: "/reservar",
-    interno: true,
-    abreServicios: true,
-    tono: "agua",
-    destacado: true,
-    guia: "Si ya tienes fecha de audiencia: elige la preparación para tu segunda o tercera audiencia.",
-  },
-  /* La página de Henry, para quien quiere conocerlo antes de elegir. Va en
-     el tono arena porque es el oro de esa página, y así se reconoce al
-     llegar. */
-  {
-    titulo: "La ruta del inmigrante",
-    etiqueta: "Conoce a Henry",
-    descripcion: "Conoce a Henry y cómo trabaja",
+    descripcion: `Prepara tu audiencia · desde $${PRECIO_DESDE}`,
     href: "/",
     interno: true,
+    abreServicios: true,
     tono: "arena",
     destacado: true,
-    guia: "Si quieres conocer a Henry y ver cómo es la sesión antes de reservar, empieza por aquí.",
+    guia: "Si tienes fecha de audiencia: aquí eliges tu preparación con Henry y ves sus horas libres.",
   },
   {
     titulo: "Servicio Migratorio",

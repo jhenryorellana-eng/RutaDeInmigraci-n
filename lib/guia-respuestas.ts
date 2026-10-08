@@ -49,35 +49,37 @@ export const RESPUESTAS: Respuesta[] = [
     corto: "¿Cuál me toca?",
     dice: [
       "Depende de en qué punto estés:",
-      "Si tienes una audiencia → la preparación de segunda o tercera audiencia.",
-      "Si quieres conocer antes a Henry y cómo trabaja → La ruta del inmigrante.",
+      "Si tienes una audiencia → La ruta del inmigrante: ahí eliges tu preparación con Henry y su hora.",
       "Si hay un trámite que presentar → los servicios migratorios.",
       "Dime cuál te suena y te cuento más.",
     ],
     /* Con «otra» al final: si ninguno le encaja, esta es justo la persona
        que necesita hablar con Henry, y sin esta salida se queda mirando
        botones que ya ha descartado. */
-    luego: ["preparacion", "ruta", "migratorio", "otra"],
+    luego: ["ruta", "migratorio", "otra"],
   },
 
-  // ── 1 · La preparación de audiencia ────────────────────
+  // ── 1 · La ruta del inmigrante: la preparación de audiencia ──
   {
-    id: "preparacion",
-    pregunta: "La preparación de audiencia",
-    corto: "Las audiencias",
-    tono: "agua",
+    id: "ruta",
+    pregunta: "La ruta del inmigrante",
+    corto: "La ruta",
+    tono: "arena",
     dice: [
-      "Son 45 minutos uno a uno con Henry para preparar tu audiencia.",
+      "Es el espacio de Henry para preparar tu audiencia: 45 minutos uno a uno.",
       ...AUDIENCIAS.map(
         (s) => `${s.nombre} (${s.etapa}): $${s.precioUsd} USD.`,
       ),
-      "Elige la audiencia que necesitas preparar.",
+      "Elige la que vas a preparar y verás sus horas libres.",
     ],
-    enlaces: AUDIENCIAS.map((s) => ({
-      texto: `${s.nombre} · $${s.precioUsd}`,
-      href: `/reservar?servicio=${s.id}`,
-      interno: true,
-    })),
+    enlaces: [
+      ...AUDIENCIAS.map((s) => ({
+        texto: `${s.nombre} · $${s.precioUsd}`,
+        href: `/reservar?servicio=${s.id}`,
+        interno: true,
+      })),
+      { texto: "Conocer a Henry", href: "/", interno: true },
+    ],
     luego: ["pago", "sesion", "abogado", "otra"],
   },
   {
@@ -114,7 +116,7 @@ export const RESPUESTAS: Respuesta[] = [
       "No. Henry no es abogado y esto no es asesoría legal.",
       "La sesión ofrece orientación personal. Para cuestiones legales o representación, consulta a un profesional autorizado.",
     ],
-    luego: ["preparacion", "cual", "otra"],
+    luego: ["ruta", "cual", "otra"],
   },
 
   // ── 2 · Los trámites ───────────────────────────────────
@@ -130,22 +132,9 @@ export const RESPUESTAS: Respuesta[] = [
     enlaces: [
       { texto: "Ver los servicios", href: "https://landing.contygo.app" },
     ],
-    luego: ["cual", "preparacion", "ruta", "otra"],
+    luego: ["cual", "ruta", "otra"],
   },
 
-  // ── 3 · La página de Henry ─────────────────────────────
-  {
-    id: "ruta",
-    pregunta: "La ruta del inmigrante",
-    corto: "La ruta",
-    tono: "arena",
-    dice: [
-      "Es la página de Henry: quién es, cómo es la preparación y qué esperar de la sesión.",
-      "Desde allí también puedes elegir tu audiencia y reservar.",
-    ],
-    enlaces: [{ texto: "Ir a La ruta del inmigrante", href: "/", interno: true }],
-    luego: ["preparacion", "abogado", "otra"],
-  },
 
   // ── La salida ──────────────────────────────────────────
   {
@@ -157,7 +146,7 @@ export const RESPUESTAS: Respuesta[] = [
       "Lo que no encuentres aquí lo ve él contigo en la sesión: son 45 minutos y puedes llevar tus dudas apuntadas.",
     ],
     enlaces: [{ texto: "Ver horas libres", href: "/reservar", interno: true }],
-    luego: ["cual", "preparacion", "pago"],
+    luego: ["cual", "ruta", "pago"],
   },
 ];
 
@@ -167,7 +156,7 @@ export const RESPUESTAS: Respuesta[] = [
  * la preparación, y sacarlas al menú principal es lo que hacía parecer que
  * el guía sólo sabía de un servicio.
  */
-export const PRIMERAS = ["cual", "preparacion", "ruta", "migratorio"];
+export const PRIMERAS = ["cual", "ruta", "migratorio"];
 
 export function respuestaPorId(id: string): Respuesta | null {
   return RESPUESTAS.find((r) => r.id === id) ?? null;
