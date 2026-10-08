@@ -12,7 +12,7 @@ import { MINUTOS_SESION, PRECIO_DESDE } from "@/lib/servicios";
 import { URL_SITIO } from "@/lib/sitio";
 
 export const metadata: Metadata = {
-  /* La base con la que Next convierte `/og-preparacion.jpg` en una dirección
+  /* La base con la que Next convierte `/og-audiencia.jpg` en una dirección
      absoluta. Sin esto, WhatsApp recibe una ruta relativa, no sabe de qué
      servidor pedir la foto y enseña el enlace pelado. */
   metadataBase: new URL(URL_SITIO),
@@ -27,14 +27,14 @@ export const metadata: Metadata = {
     siteName: "Preparación de audiencia · Henry Orellana",
     images: [
       {
-        url: "/og-preparacion.jpg",
+        url: "/og-audiencia.jpg",
         width: 1200,
         height: 630,
-        alt: "Henry Orellana en Utah. Preparación de audiencia: 45 minutos uno a uno con Henry.",
+        alt: "Henry Orellana, de brazos cruzados en su oficina. Preparación de audiencia: 45 minutos uno a uno con Henry.",
       },
     ],
   },
-  twitter: { card: "summary_large_image", images: ["/og-preparacion.jpg"] },
+  twitter: { card: "summary_large_image", images: ["/og-audiencia.jpg"] },
 };
 
 export const viewport: Viewport = {

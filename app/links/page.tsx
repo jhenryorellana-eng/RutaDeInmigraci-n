@@ -59,10 +59,10 @@ import { PRECIO_DESDE } from "@/lib/servicios";
  *
  * ── La imagen ──
  *
- * `og-preparacion.jpg`, 1200 × 630: Henry en Utah —la foto de la portada—
- * con el nombre del servicio, la frase y el «desde» del precio. Se generó a partir
- * de `public/imagenes/henry-utah.webp`; si cambia el precio más bajo, hay
- * que volver a generarla, porque el texto va dentro de la foto.
+ * `og-audiencia.jpg`, 1200 × 630: Henry de brazos cruzados en su oficina,
+ * con el nombre del servicio, la frase y el «desde» del precio. Si cambia
+ * el precio más bajo, hay que volver a generarla, porque el texto va dentro
+ * de la foto.
  *
  * ── Lo que WhatsApp exige, y no perdona ──
  *
@@ -81,10 +81,10 @@ import { PRECIO_DESDE } from "@/lib/servicios";
 const TITULO = "Henry Orellana · Preparación de audiencia";
 const DESCRIPCION = `Prepara tu audiencia con Henry Orellana: 45 minutos uno a uno, en español, desde $${PRECIO_DESDE}. Y tus trámites migratorios con Contygo.`;
 const IMAGEN = {
-  url: "/og-preparacion.jpg",
+  url: "/og-audiencia.jpg",
   width: 1200,
   height: 630,
-  alt: "Henry Orellana en Utah. Preparación de audiencia: 45 minutos uno a uno con Henry.",
+  alt: "Henry Orellana, de brazos cruzados en su oficina. Preparación de audiencia: 45 minutos uno a uno con Henry.",
 };
 
 export const metadata: Metadata = {
@@ -125,13 +125,16 @@ export default function Links() {
             nota como una banda. Así la cara queda limpia y sólo se apaga
             del pecho hacia abajo. */}
         <div className="retrato-pared pointer-events-none absolute inset-x-0 top-0 h-[58%] select-none">
+          {/* En la computadora el retrato ocupa la columna izquierda entera,
+              así que pide la foto a ese tamaño y no a los 480 px del
+              teléfono, que estirados se veían blandos. */}
           <Image
-            src="/henry-retrato.jpg"
+            src="/imagenes/henry-links.jpg"
             alt="Henry Orellana Domínguez"
-            width={940}
-            height={1672}
+            width={1024}
+            height={1536}
             priority
-            sizes="(min-width: 480px) 480px, 100vw"
+            sizes="(min-width: 1024px) 55vw, (min-width: 480px) 480px, 100vw"
             className="retrato-imagen absolute inset-0 size-full object-cover object-[50%_12%]"
           />
           <div

@@ -4,8 +4,8 @@
  * Existe por las vistas previas de los enlaces. Cuando Henry pega su enlace
  * en WhatsApp, WhatsApp entra a la página, lee sus etiquetas y pinta la
  * tarjeta con la foto y el texto. Para traerse la foto necesita una
- * dirección ABSOLUTA —`https://…/og-preparacion.jpg`—, y una ruta relativa como
- * `/og-preparacion.jpg` no le dice desde qué servidor pedirla: la descarta y
+ * dirección ABSOLUTA —`https://…/og-audiencia.jpg`—, y una ruta relativa como
+ * `/og-audiencia.jpg` no le dice desde qué servidor pedirla: la descarta y
  * enseña un enlace pelado.
  *
  * Next construye esas direcciones absolutas a partir de `metadataBase`, y
