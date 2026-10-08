@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { AgenteChat } from "@/components/agente-chat";
-import { HojaServicios } from "@/components/hoja-servicios";
 import { ENLACES, type Enlace } from "@/lib/enlaces";
 
 /**
@@ -337,16 +336,6 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
 
   const clases =
     "panel-servicio relative block overflow-hidden rounded-2xl border px-4 py-4 text-left backdrop-blur-[14px]";
-
-  if (enlace.abreServicios) {
-    return (
-      <HojaServicios>
-        <span className={clases} data-luz={luz}>
-          {dentro}
-        </span>
-      </HojaServicios>
-    );
-  }
 
   return enlace.interno ? (
     <Link href={enlace.href} className={clases} data-luz={luz}>

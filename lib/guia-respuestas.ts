@@ -70,15 +70,15 @@ export const RESPUESTAS: Respuesta[] = [
       ...AUDIENCIAS.map(
         (s) => `${s.nombre} (${s.etapa}): $${s.precioUsd} USD.`,
       ),
-      "Elige la que vas a preparar y verás sus horas libres.",
+      "En su web eliges la que vas a preparar y ves sus horas libres.",
     ],
     enlaces: [
+      { texto: "Ir a La ruta del inmigrante", href: "/", interno: true },
       ...AUDIENCIAS.map((s) => ({
         texto: `${s.nombre} · $${s.precioUsd}`,
         href: `/reservar?servicio=${s.id}`,
         interno: true,
       })),
-      { texto: "Conocer a Henry", href: "/", interno: true },
     ],
     luego: ["pago", "sesion", "abogado", "otra"],
   },

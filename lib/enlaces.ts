@@ -20,14 +20,6 @@ export type Enlace = {
   href: string;
   interno?: boolean;
   /**
-   * En vez de llevar a un sitio, abre la hoja de las preparaciones.
-   *
-   * Es lo que hace que elegir entre los precios no cueste perder la pared:
-   * se ven las dos, se elige una y se sale hacia la reserva ya sabiendo qué
-   * se aparta.
-   */
-  abreServicios?: boolean;
-  /**
    * Su temperatura, no su color: sale de `globals.css`, nunca de un hex
    * suelto. Ahora hace más que teñir un filo — es el color con el que la
    * tarjeta se queda encendida, así que es lo que distingue un servicio de
@@ -54,10 +46,10 @@ export type Enlace = {
 };
 
 export const ENLACES: Enlace[] = [
-  /* La ruta del inmigrante es la puerta a todo lo de la audiencia: abre la
-     hoja donde se elige la preparación, y de ahí se pasa a las horas libres
-     y a la reserva, que viven en este mismo sitio. Quien prefiere conocer a
-     Henry antes de elegir lo encuentra en la misma hoja.
+  /* La ruta del inmigrante es la puerta a todo lo de la audiencia: lleva a
+     su web, y el recorrido entero ocurre allí — los precios de las dos
+     preparaciones, las horas libres y la reserva. Sin ventanas por medio:
+     quien toca entra en La ruta y ya no sale de ella hasta reservar.
 
      Va en el tono arena porque es el oro de esa página, y así se reconoce
      al llegar. */
@@ -70,10 +62,9 @@ export const ENLACES: Enlace[] = [
     descripcion: `Prepara tu audiencia · desde $${PRECIO_DESDE}`,
     href: "/",
     interno: true,
-    abreServicios: true,
     tono: "arena",
     destacado: true,
-    guia: "Si tienes fecha de audiencia: aquí eliges tu preparación con Henry y ves sus horas libres.",
+    guia: "Si tienes fecha de audiencia: aquí preparas tu audiencia con Henry — precios, horas libres y reserva.",
   },
   {
     titulo: "Servicio Migratorio",
