@@ -25,7 +25,7 @@ export type Enlace = {
    * tarjeta se queda encendida, así que es lo que distingue un servicio de
    * otro de un vistazo.
    */
-  tono: "agua" | "arena" | "coral" | "verde";
+  tono: "agua" | "arena" | "coral" | "verde" | "oro";
   /**
    * Los dos que presta Henry directamente van con más cuerpo.
    *
@@ -59,7 +59,9 @@ export const ENLACES: Enlace[] = [
     descripcion: `Desde $${PRECIO_DESDE} · 45 min con Henry`,
     href: "/",
     interno: true,
-    tono: "agua",
+    /* En oro sólido: es el servicio que se paga y lo que se viene a buscar.
+       En azul se perdía contra el fondo, que también es azul. */
+    tono: "oro",
     destacado: true,
     guia: "Si tienes fecha de audiencia: aquí preparas tu audiencia con Henry — precios, horas libres y reserva.",
   },

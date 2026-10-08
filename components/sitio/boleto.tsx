@@ -48,8 +48,14 @@ export function Boleto({
                   <span key={punto}>{punto}</span>
                 ))}
               </span>
+              {/* El botón no es un enlace aparte: todo el boleto lo es. Pero
+                  tiene que PARECER un botón, porque un texto subrayado
+                  dentro de una tarjeta no se lee como «aquí se reserva». */}
               <span className="boleto-accion">
-                Reservar esta preparación <Flecha diagonal />
+                <span>Reservar ahora</span>
+                <span className="boleto-accion-flecha">
+                  <Flecha diagonal />
+                </span>
               </span>
             </>
           ) : null}

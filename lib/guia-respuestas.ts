@@ -36,7 +36,7 @@ export type Respuesta = {
    * Las preguntas sueltas —el pago, la sesión— no llevan ninguno, porque no
    * son un sitio al que ir.
    */
-  tono?: "agua" | "arena" | "coral" | "verde";
+  tono?: "agua" | "arena" | "coral" | "verde" | "oro";
 };
 
 export const SALUDO =
@@ -64,7 +64,7 @@ export const RESPUESTAS: Respuesta[] = [
     id: "preparacion",
     pregunta: "La preparación de audiencia",
     corto: "Las audiencias",
-    tono: "agua",
+    tono: "oro",
     dice: [
       "Son 45 minutos uno a uno con Henry para preparar tu audiencia.",
       ...AUDIENCIAS.map(
@@ -113,7 +113,7 @@ export const RESPUESTAS: Respuesta[] = [
     pregunta: "¿Henry es abogado?",
     corto: "¿Es abogado?",
     dice: [
-      "No. Henry no es abogado y esto no es asesoría legal.",
+      "No. Henry es consultor migratorio certificado en el estado de Utah, no abogado, y esto no es asesoría legal.",
       "La sesión ofrece orientación personal. Para cuestiones legales o representación, consulta a un profesional autorizado.",
     ],
     luego: ["preparacion", "cual", "otra"],

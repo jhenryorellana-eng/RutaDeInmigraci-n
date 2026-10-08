@@ -141,8 +141,9 @@ export default function Portada() {
               <path d="M12 11v5M12 8v.01" />
             </svg>
             <span>
-              Henry no es abogado. La sesión es orientación personal para que
-              llegues preparado; no incluye representación legal.{" "}
+              Henry es consultor migratorio certificado en el estado de Utah,
+              no abogado. La sesión es orientación personal para que llegues
+              preparado; no incluye representación legal.{" "}
               <Link href="/asesoria">Cómo funciona la sesión</Link>
             </span>
           </p>
@@ -190,7 +191,8 @@ export default function Portada() {
                 tiempo, atención y una conversación de verdad.
               </p>
               <p>
-                Soy Henry Orellana, fundador de ANDEX. Creé este espacio para
+                Soy Henry Orellana, consultor migratorio certificado en el
+                estado de Utah y fundador de ANDEX. Creé este espacio para
                 que nadie llegue a la corte sin saber qué esperar, de persona a
                 persona.
               </p>

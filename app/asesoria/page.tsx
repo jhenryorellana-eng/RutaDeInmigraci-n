@@ -50,7 +50,7 @@ const PREGUNTAS: Pregunta[] = [
   {
     pregunta: "¿Es una consulta con un abogado?",
     respuesta:
-      "No. Henry no es abogado. Es un espacio de orientación personal y no incluye representación, asesoría legal ni garantías sobre el resultado de un trámite.",
+      "No. Henry es consultor migratorio certificado en el estado de Utah, no abogado. Es un espacio de orientación personal y no incluye representación, asesoría legal ni garantías sobre el resultado de un trámite.",
   },
   {
     pregunta: "¿Qué pasa si necesito cambiar mi hora?",

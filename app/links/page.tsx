@@ -163,6 +163,23 @@ export default function Links() {
               <br />
               <span className="italic">Orellana D.</span>
             </h1>
+            {/* Lo primero que se pregunta quien llega: con quién voy a hablar.
+                La credencial va pegada al nombre, antes de la historia. */}
+            <p className="pared-credencial">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2.8 14.4 5l3.2-.4.6 3.2 2.8 1.6-1.4 2.9 1.4 2.9-2.8 1.6-.6 3.2-3.2-.4L12 21.8 9.6 19.6l-3.2.4-.6-3.2L3 15.2l1.4-2.9L3 9.4l2.8-1.6.6-3.2 3.2.4Z" />
+                <path d="m8.8 12.2 2.2 2.2 4.4-4.6" />
+              </svg>
+              Consultor migratorio certificado en el estado de Utah
+            </p>
             {/* Quién es y qué construyó, no cómo le gustaría sonar.
 
                 La primera frase ya la firma él en ANDEX —«Sé lo que se siente

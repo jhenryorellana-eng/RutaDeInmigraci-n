@@ -134,21 +134,62 @@
   font-weight: 700;
   color: var(--b-acento);
 }
+/* El botón de reservar: azul noche sólido sobre el papel o el oro, con la
+   flecha en un cuadro dorado. Es lo único oscuro del boleto, y por eso es
+   lo primero que se ve. */
 .boleto-accion {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  width: fit-content;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 250px;
+  min-height: 58px;
   margin-top: auto;
-  padding-bottom: 6px;
-  border-bottom: 1.5px solid currentColor;
-  font-size: 16px;
-  font-weight: 600;
+  padding: 8px 8px 8px 24px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #061b3d;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  box-shadow:
+    0 12px 26px -10px rgb(6 27 61 / 0.7),
+    inset 0 1px 0 rgb(255 255 255 / 0.14);
+  transition:
+    background-color 0.3s,
+    box-shadow 0.3s;
 }
-.boleto-accion svg {
-  width: 18px;
-  height: 18px;
+.boleto-accion-flecha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #efc44d;
+  color: #061b3d;
+}
+.boleto-accion-flecha svg {
+  width: 20px;
+  height: 20px;
   transition: translate 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Un brillo que cruza el botón al señalar el boleto. */
+.boleto-accion::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgb(255 255 255 / 0.2) 50%,
+    transparent 70%
+  );
+  translate: -120% 0;
+  pointer-events: none;
 }
 .boleto-talon {
   position: relative;
@@ -218,13 +259,23 @@
     translate: 0 -6px;
     filter: drop-shadow(0 30px 50px #020a1c80);
   }
-  .boleto:hover .boleto-accion svg {
-    translate: 3px -3px;
+  .boleto:hover .boleto-accion {
+    background: #0c2c5e;
+    box-shadow:
+      0 16px 30px -10px rgb(6 27 61 / 0.8),
+      inset 0 1px 0 rgb(255 255 255 / 0.18);
+  }
+  .boleto:hover .boleto-accion-flecha svg {
+    translate: 2px -2px;
   }
 }
 @media (prefers-reduced-motion: no-preference) {
   .asesoria-site[data-motion="on"] .boleto:hover .boleto-sello text {
     animation: sello-gira 9s linear infinite;
+  }
+  .boleto:hover .boleto-accion::after {
+    translate: 120% 0;
+    transition: translate 0.8s cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 @keyframes sello-gira {
@@ -320,6 +371,10 @@
   }
   .boleto.is-grande .boleto-incluye > span {
     font-size: 15px;
+  }
+  .boleto.is-grande .boleto-accion {
+    width: 100%;
+    min-width: 0;
   }
   .boleto.is-grande .boleto-talon {
     flex-direction: row;
@@ -749,7 +804,7 @@
 @media (min-width: 1024px) {
   .pared-main {
     display: grid;
-    grid-template-columns: minmax(0, 1.08fr) minmax(460px, 0.92fr);
+    grid-template-columns: minmax(0, 1fr) minmax(520px, 1fr);
     grid-template-rows: auto 1fr auto;
     max-width: none;
     min-height: 100dvh;
@@ -776,7 +831,7 @@
   .pared-marca {
     grid-column: 2;
     grid-row: 1;
-    padding: 56px 72px 0 56px;
+    padding: 56px 64px 0;
   }
   .pared-nombre {
     position: relative;
@@ -796,25 +851,134 @@
     margin-top: 22px;
     font-size: 19px;
   }
+  /* Cuadros de verdad en la pantalla grande: a 520 px y con letra de
+     teléfono se veían como botones perdidos en una columna vacía. */
   .pared-lista {
     grid-column: 2;
     grid-row: 2;
     align-self: center;
     width: 100%;
-    max-width: 520px;
+    max-width: 680px;
     margin: 0;
-    padding: 32px 72px 32px 56px;
-    gap: 14px;
+    padding: 32px 64px;
+    gap: 20px;
   }
   .pared-lista .panel-servicio {
-    padding: 22px 22px;
+    padding: 30px 30px;
+    border-radius: 24px;
+  }
+  .pared-lista .panel-titulo {
+    font-size: 25px;
+  }
+  .pared-lista .panel-desc {
+    margin-top: 6px;
+    font-size: 17px;
+  }
+  .pared-lista .panel-punto {
+    width: 11px;
+    height: 11px;
+  }
+  .pared-lista .panel-flecha svg {
+    width: 22px;
+    height: 22px;
   }
   .pared-pie {
     grid-column: 2;
     grid-row: 3;
     margin: 0;
-    padding: 0 72px 40px 56px;
+    padding: 0 64px 40px;
     text-align: left;
   }
 }
 
+
+/* El color de cada servicio sale de su tono, en vez de ir escrito en el
+   componente: así uno de ellos puede pintarse distinto sin tocar el resto. */
+.filo-tono {
+  color: rgb(var(--tono));
+}
+.panel-punto {
+  background: rgb(var(--tono));
+}
+.panel-flecha {
+  color: rgb(var(--tono));
+}
+
+/* La preparación, en oro sólido con letra noche: el mismo oro de los
+   botones de reservar del sitio. Es lo que se viene a buscar, y en azul
+   se perdía contra un fondo que también es azul. */
+.tono-oro {
+  --tono: 239 196 77;
+  --tono-hondo: 217 155 43;
+}
+.tono-oro > .panel-servicio,
+.tono-oro > .panel-servicio[data-luz] {
+  background: linear-gradient(118deg, #ffe596 0%, #efc44d 48%, #dfae36 100%);
+  border-color: #fff0bf;
+  color: #061b3d;
+  backdrop-filter: none;
+}
+.tono-oro > .panel-servicio[data-luz="encendido"] {
+  box-shadow:
+    0 0 0 1px rgb(239 196 77 / 0.4),
+    0 16px 44px -14px rgb(239 196 77 / 0.6);
+}
+.tono-oro .panel-desc {
+  font-weight: 500;
+  color: rgb(6 27 61 / 0.78);
+}
+.tono-oro .panel-punto {
+  background: #061b3d;
+}
+.tono-oro .panel-flecha {
+  color: #061b3d;
+}
+.tono-oro .filo-tono {
+  color: #ffffff;
+}
+.tono-oro .filo-vivo > span {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 58%,
+    rgb(255 255 255 / 0.2) 68%,
+    rgb(255 255 255 / 0.95) 76%,
+    rgb(255 255 255 / 0.2) 84%,
+    transparent 94% 100%
+  );
+}
+.tono-oro > .panel-servicio::before {
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(255 255 255 / 0.45),
+    transparent 65%
+  );
+}
+@media (hover: hover) {
+  .tono-oro > .panel-servicio[data-luz="encendido"]:hover {
+    background: linear-gradient(118deg, #fff0b8 0%, #f5cf5e 48%, #e6b63f 100%);
+    border-color: #fff6d6;
+  }
+}
+
+/* La credencial de Henry, bajo su nombre. */
+.pared-credencial {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #efc44d;
+}
+.pared-credencial svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+@media (min-width: 1024px) {
+  .pared-credencial {
+    margin-top: 16px;
+    font-size: 16px;
+  }
+}

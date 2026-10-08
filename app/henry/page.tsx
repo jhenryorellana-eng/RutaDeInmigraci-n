@@ -41,7 +41,8 @@ export default function Henry() {
               priority
             />
             <span className="image-label">
-              HENRY ORELLANA <span>FUNDADOR DE ANDEX</span>
+              HENRY ORELLANA{" "}
+              <span>CONSULTOR MIGRATORIO CERTIFICADO EN UTAH</span>
             </span>
             <span className="about-image-corner" aria-hidden="true">
               ↗
@@ -89,7 +90,7 @@ export default function Henry() {
               [
                 "03",
                 "Ser honesto contigo",
-                "Soy un punto de orientación personal. No soy abogado; las cuestiones legales requieren un profesional autorizado.",
+                "Soy consultor migratorio certificado en el estado de Utah, no abogado: las cuestiones legales requieren un profesional autorizado.",
               ],
             ].map(([n, t, p]) => (
               <article key={n}>

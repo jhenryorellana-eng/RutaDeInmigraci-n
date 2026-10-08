@@ -271,8 +271,7 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
           cada visita las colocaría en otro sitio. */}
       <span
         aria-hidden="true"
-        className="filo-luz absolute inset-x-[22%] top-0 h-px"
-        style={{ color: "rgb(var(--tono))" }}
+        className="filo-luz filo-tono absolute inset-x-[22%] top-0 h-px"
       />
       <span aria-hidden="true" className="filo-vivo">
         <span style={{ animationDelay: `-${desfase}s` }} />
@@ -281,8 +280,7 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
       <div className="relative flex items-center gap-3">
         <span
           aria-hidden="true"
-          className="size-2 shrink-0 rounded-full"
-          style={{ background: "rgb(var(--tono))" }}
+          className="panel-punto size-2 shrink-0 rounded-full"
         />
 
         <span className="min-w-0 flex-1">
@@ -294,8 +292,8 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
                      con puntos suspensivos. La jerarquía se mantiene igual —lo
                      que la hace es el contraste con los 16 px de al lado, no el
                      número. */
-                  "block truncate text-[17px] font-semibold tracking-[-0.015em] min-[360px]:text-[18px]"
-                : "block truncate text-[16px] font-semibold tracking-[-0.01em]"
+                  "panel-titulo block truncate text-[17px] font-semibold tracking-[-0.015em] min-[360px]:text-[18px]"
+                : "panel-titulo block truncate text-[16px] font-semibold tracking-[-0.01em]"
             }
           >
             {enlace.titulo}
@@ -303,19 +301,15 @@ function Panel({ enlace, luz }: { enlace: Enlace; luz: string }) {
           <span
             className={
               enlace.destacado
-                ? "mt-1 block text-[13.5px] font-light leading-snug text-tinta/80"
-                : "mt-1 block text-[13px] font-light leading-snug text-tinta/75"
+                ? "panel-desc mt-1 block text-[13.5px] font-light leading-snug text-tinta/80"
+                : "panel-desc mt-1 block text-[13px] font-light leading-snug text-tinta/75"
             }
           >
             {enlace.descripcion}
           </span>
         </span>
 
-        <span
-          aria-hidden="true"
-          className="shrink-0"
-          style={{ color: "rgb(var(--tono))" }}
-        >
+        <span aria-hidden="true" className="panel-flecha shrink-0">
           <svg
             width="16"
             height="16"
