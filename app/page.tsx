@@ -52,8 +52,8 @@ export default function Portada() {
           <div className="hero-visual">
             <div className="hero-image">
               <FotoHenry
-                src="/imagenes/henry-utah.webp"
-                alt="Henry Orellana en Utah, con las montañas de fondo"
+                src="/imagenes/henry-montanas.jpg"
+                alt="Henry Orellana en su oficina, con las montañas de Utah de fondo"
                 priority
                 sizes="(max-width: 760px) 100vw, 58vw"
               />
@@ -171,8 +171,8 @@ export default function Portada() {
           <div className="site-container henry-feature-grid">
             <div className="feature-photo">
               <FotoHenry
-                src="/imagenes/henry-conversacion.webp"
-                alt="Henry en un espacio de conversación"
+                src="/imagenes/henry-escritorio.jpg"
+                alt="Henry Orellana sentado en su escritorio"
                 sizes="(max-width: 760px) 100vw, 50vw"
               />
               <span className="feature-image-note">

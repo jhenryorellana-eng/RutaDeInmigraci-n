@@ -1,14 +1,18 @@
-# Imágenes editoriales de Henry
+# Imágenes de Henry
 
-Generadas con la herramienta de imágenes de OpenAI a partir de la fotografía proporcionada por el usuario el 5 de septiembre de 2026. Son escenas creadas para el sitio, no documentación de sesiones reales. Se preservó la referencia de identidad. Las fuentes PNG se conservan en el directorio de generación; las versiones WebP del sitio están optimizadas sin recortar la composición.
+Retratos proporcionados por el usuario el 9 de octubre de 2026 (originales de 1792 × 2400). En `public/imagenes/` se guardan reducidos a 1600 px de ancho, en JPG al 80 %; `next/image` sirve a cada pantalla una versión del tamaño que necesita.
 
-- Retrato: `public/imagenes/henry-oficina.webp` (1024 × 1536)
-- Conversación: `public/imagenes/henry-conversacion.webp` (1536 × 1024)
+| Archivo | Escena | Dónde se usa |
+| --- | --- | --- |
+| `henry-montanas.jpg` | Oficina con ventanal y montañas, brazos cruzados | Portada, foto principal |
+| `henry-oficina.jpg` | Oficina luminosa, brazos cruzados, plano más abierto | `/links`, retrato a sangre |
+| `henry-escritorio.jpg` | Sentado en su escritorio | Portada, sección «Soy Henry» |
+| `henry-vestibulo.jpg` | Vestíbulo de oficina, brazos cruzados | Original de `henry-asesoria.jpg` |
+| `henry-asesoria.jpg` | Versión apaisada (2560 × 1000): `henry-vestibulo.jpg` a la derecha sobre la oficina desenfocada | `/asesoria`, franja ancha |
+| `henry-primer-plano.jpg` | Primer plano, fondo oscuro de estudio | Resumen de la reserva, avatar del teléfono y menú; es la foto por defecto de `FotoHenry` |
+| `henry-estudio.jpg` | Estudio gris, brazos cruzados | «Conoce a Henry» |
+| `henry-video.jpg` | Recorte horizontal (1280 × 720) de `henry-escritorio.jpg` | Portada de los videos de cada audiencia |
 
-## Prompt del retrato
+Las verticales llevan a Henry centrado, así que el encuadre de cada hueco se ajusta en `app/boletos.css` («Las fotos de Henry») con un solo `object-position` para todos los tamaños de pantalla; sólo la franja de `/asesoria` cambia de encuadre en el teléfono.
 
-Create an editorial photographic portrait for a premium, warm Spanish-language personal consultation website. The attached reference image is the IDENTITY REFERENCE for Henry: preserve his exact recognizable face, age, facial structure, salt-and-pepper short hair, round thin dark glasses, skin tone and friendly expression. Generate a new realistic scene, not a layout. Vertical portrait 2:3. Henry stands in a bright elegant contemporary office in Utah next to a large window, wearing a textured navy blazer and open-collar white shirt, no tie. Mid-thigh upward, relaxed hands naturally in front, gentle approachable smile looking at the camera. Behind him soft mountain silhouettes through a tall window, pale warm limestone walls, subtle oak. Natural soft morning light, realistic skin texture, understated editorial photography, 50mm lens, muted cream and navy palette, subtle film grain, beautifully composed asymmetrically with Henry at the center and enough headroom for cropping. No text, no branding, no watermark, no other people, no legal props or scales. This is an authored brand portrait based on the supplied identity.
-
-## Prompt de conversación
-
-Generate a new realistic editorial brand photograph using the supplied image as IDENTITY REFERENCE for Henry. Preserve exactly his recognizable face, short salt-and-pepper hair, round wire glasses, skin tone, age and features. Landscape 3:2 composition. Henry sits comfortably at a pale oak meeting table in a bright warm modern office, wearing his navy textured blazer and white open-collar shirt, friendly thoughtful smile, looking slightly toward camera as if listening. He is on the RIGHT half of the image. His hands rest naturally beside an open blank notebook and simple pen. LEFT half has softly lit warm limestone wall, an out-of-focus olive branch and generous clean negative space. Large window shows soft Utah mountain shapes, linen textures, subtle navy and warm ivory palette. Medium wide cinematic editorial photograph, authentic skin detail, gentle natural light, elegant calm human atmosphere, tasteful subtle film grain. No other people, no clients, no text, no logos, no legal props. Not a website or collage, one full-bleed photograph.
+La vista previa al compartir (`public/og-audiencia.jpg`) es una imagen aparte, generada con la foto de brazos cruzados de la tanda anterior; si se rehace, conviene usar `henry-montanas.jpg`.

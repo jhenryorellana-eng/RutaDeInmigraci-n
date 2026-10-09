@@ -87,8 +87,8 @@ export default function Asesoria() {
         </section>
         <section className="service-wide-photo site-container">
           <FotoHenry
-            src="/imagenes/henry-conversacion.webp"
-            alt="Imagen editorial de Henry en un espacio de conversación tranquilo"
+            src="/imagenes/henry-asesoria.jpg"
+            alt="Henry Orellana de brazos cruzados en su oficina"
             priority
             sizes="(max-width: 760px) 100vw, 1200px"
           />

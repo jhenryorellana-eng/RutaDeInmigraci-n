@@ -153,7 +153,7 @@ export function NavegacionSitio() {
               </nav>
               <div className="mobile-menu-session">
                 <Image
-                  src="/imagenes/henry-utah.webp"
+                  src="/imagenes/henry-primer-plano.jpg"
                   alt="Henry Orellana"
                   width={58}
                   height={64}

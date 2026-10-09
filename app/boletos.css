@@ -982,3 +982,37 @@
     font-size: 16px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   LAS FOTOS DE HENRY
+   Todas son verticales y con Henry al centro, así que cada hueco lleva un
+   solo encuadre para todos los tamaños de pantalla, en vez de los que
+   pedían las fotos anteriores (horizontales, con Henry a un lado).
+   ───────────────────────────────────────────────────────────── */
+.asesoria-site .hero-image .editorial-photo {
+  object-position: 50% 10%;
+}
+.asesoria-site .feature-photo img {
+  object-position: 50% 22%;
+}
+/* La franja ancha de /asesoria usa una versión apaisada (henry-asesoria.jpg):
+   Henry a la derecha y la oficina desenfocada a la izquierda, donde va el
+   texto. En el teléfono, donde el hueco es casi cuadrado, se centra en él. */
+.asesoria-site .service-wide-photo img {
+  object-position: 50% center;
+}
+@media (max-width: 760px) {
+  .asesoria-site .service-wide-photo img {
+    object-position: 71% center;
+  }
+}
+.asesoria-site .about-image > img {
+  object-position: 50% 18%;
+}
+.asesoria-site .booking-portrait img {
+  object-position: 50% 28%;
+}
+.asesoria-site .booking-mobile-avatar img,
+.asesoria-site .mobile-menu-session img {
+  object-position: 50% 24%;
+}

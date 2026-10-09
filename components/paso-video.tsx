@@ -67,7 +67,7 @@ export function PasoVideo({
             controls
             playsInline
             preload="none"
-            poster="/henry-retrato.jpg"
+            poster="/imagenes/henry-video.jpg"
             onError={() => setFalla(true)}
             className="block aspect-video w-full bg-fondo object-cover"
           >

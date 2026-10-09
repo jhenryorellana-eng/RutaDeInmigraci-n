@@ -186,7 +186,7 @@ export function CierreInvitacion() {
   );
 }
 export function FotoHenry({
-  src = "/imagenes/henry-oficina.webp",
+  src = "/imagenes/henry-primer-plano.jpg",
   alt,
   className = "",
   priority = false,

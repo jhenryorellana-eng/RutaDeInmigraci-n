@@ -60,7 +60,7 @@ export default async function Reservar({
             <div className="booking-mobile-summary">
               <div className="booking-mobile-avatar">
                 <FotoHenry
-                  src="/imagenes/henry-utah.webp"
+                  src="/imagenes/henry-primer-plano.jpg"
                   alt=""
                   sizes="56px"
                 />

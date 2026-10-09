@@ -129,10 +129,10 @@ export default function Links() {
               así que pide la foto a ese tamaño y no a los 480 px del
               teléfono, que estirados se veían blandos. */}
           <Image
-            src="/imagenes/henry-links.jpg"
+            src="/imagenes/henry-oficina.jpg"
             alt="Henry Orellana Domínguez"
-            width={1024}
-            height={1536}
+            width={1600}
+            height={2143}
             priority
             sizes="(min-width: 1024px) 55vw, (min-width: 480px) 480px, 100vw"
             className="retrato-imagen absolute inset-0 size-full object-cover object-[50%_12%]"

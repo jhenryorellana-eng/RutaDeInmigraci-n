@@ -36,8 +36,8 @@ export default function Henry() {
           </div>
           <div className="about-image">
             <FotoHenry
-              src="/henry-retrato.jpg"
-              alt="Henry Orellana en un espacio de trabajo"
+              src="/imagenes/henry-estudio.jpg"
+              alt="Retrato de Henry Orellana"
               priority
             />
             <span className="image-label">
